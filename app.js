@@ -385,10 +385,14 @@ if (!standalone && /iphone|ipad|ipod/i.test(navigator.userAgent)) {
   $('install-box').hidden = false;
   $('install-ios').hidden = false;
 }
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => {});
 
 function escapeHtml(t) {
   return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 
 renderSetup();
+caches?.keys?.().then(keys => {
+  const v = keys.find(k => k.startsWith('pendule-'));
+  if (v) $('version').textContent = 'Version ' + v.replace('pendule-', '');
+}).catch(() => {});

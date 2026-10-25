@@ -1,9 +1,9 @@
 // Offline cache for the clock. Bump VERSION when the files change.
-const VERSION = 'pendule-v3';
+const VERSION = 'pendule-v4';
 const FILES = ['./', 'index.html', 'style.css', 'app.js', 'clock.js', 'sound.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES.map(f => new Request(f, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', e => {
@@ -16,7 +16,9 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   e.respondWith(
-    fetch(e.request)
+    // no-cache: always ask GitHub Pages whether the file changed, instead of
+    // reusing the phone's HTTP cache (Pages caches files for 10 minutes).
+    fetch(e.request, { cache: 'no-cache' })
       .then(res => {
         if (res.ok && (new URL(e.request.url).origin === location.origin || e.request.url.includes('fonts.g'))) {
           const copy = res.clone();
