@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Pendule Chessboxing</title>
+<meta name="theme-color" content="#0a0a0f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Pendule CB">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ── RÉGLAGES ── -->
+<section id="setup">
+  <header class="setup-head">
+    <h1>PENDULE <span class="gold">CHESSBOXING</span></h1>
+    <p class="muted">Paris Chessboxing</p>
+  </header>
+
+  <button type="button" id="btn-resume-saved" class="btn btn-gold wide" hidden>Reprendre le combat en cours</button>
+
+  <h2>Format</h2>
+  <div class="presets" id="presets"></div>
+
+  <h2>Combattants</h2>
+  <div class="names">
+    <label><span>♔ Blancs</span><input id="name-0" maxlength="20" placeholder="Blancs"></label>
+    <label><span>♚ Noirs</span><input id="name-1" maxlength="20" placeholder="Noirs"></label>
+  </div>
+
+  <h2>Options</h2>
+  <label class="toggle">
+    <input type="checkbox" id="opt-autopause">
+    <span><b>Auto-pause</b> à la fin de chaque round d'échecs (<span data-v="chessRound">3</span> min). L'appli chronomètre aussi la pause et le round de boxe, puis relance les échecs. Sinon, tu mets en pause et relances toi-même.</span>
+  </label>
+  <label class="toggle">
+    <input type="checkbox" id="opt-movelimit">
+    <span><b>Limite par coup</b> : alerte à <span data-v="moveWarn">20</span> s, compte à rebours de <span data-v="moveGrace">10</span> s à partir de <span data-v="moveCountdown">30</span> s, puis partie perdue. Chaque compte à rebours et chaque coup illégal compte : <span data-v="countsPerRound">3</span> comptes dans un round ou <span data-v="countsTotal">4</span> au total, match perdu.</span>
+  </label>
+
+  <details class="advanced">
+    <summary>Réglages avancés</summary>
+    <div class="grid">
+      <label>Round d'échecs (min)<input type="number" id="cfg-chessRound" min="0.5" max="10" step="0.5"></label>
+      <label>Round de boxe (min)<input type="number" id="cfg-boxRound" min="0.5" max="5" step="0.5"></label>
+      <label>Pause entre rounds (s)<input type="number" id="cfg-break" min="10" max="300" step="5"></label>
+      <label>Alerte coup (s)<input type="number" id="cfg-moveWarn" min="5" max="120" step="1"></label>
+      <label>Début compte à rebours (s)<input type="number" id="cfg-moveCountdown" min="5" max="180" step="1"></label>
+      <label>Durée compte à rebours (s)<input type="number" id="cfg-moveGrace" min="3" max="30" step="1"></label>
+      <label>Comptes perdants par round d'échecs<input type="number" id="cfg-countsPerRound" min="1" max="10" step="1"></label>
+      <label>Comptes perdants au total<input type="number" id="cfg-countsTotal" min="1" max="20" step="1"></label>
+    </div>
+    <button type="button" id="btn-defaults" class="btn btn-ghost">Valeurs par défaut</button>
+  </details>
+
+  <button type="button" id="btn-start" class="btn btn-gold wide big">Préparer le combat</button>
+  <button type="button" id="btn-test-sound" class="btn btn-ghost wide">Tester le son et les couleurs</button>
+
+  <div id="install-box" class="install" hidden>
+    <button type="button" id="btn-install" class="btn btn-blue wide" hidden>Installer l'appli sur ce téléphone</button>
+    <p id="install-ios" class="muted small" hidden>Sur iPhone : touche <b>Partager</b> puis <b>Sur l'écran d'accueil</b>.</p>
+  </div>
+  <p class="muted small help">Pose le téléphone à côté de l'échiquier. Chaque joueur touche sa moitié d'écran pour finir son coup. Le gros bouton du milieu met en pause. Clavier ou bouton Bluetooth : Espace = pause, Entrée = coup joué.</p>
+</section>
+
+<!-- ── COMBAT ── -->
+<section id="fight" hidden>
+  <div class="half top" data-p="1"></div>
+  <div class="bar">
+    <div class="bar-info">
+      <div class="bar-round" id="bar-round">Round 1/7</div>
+      <div class="bar-phase" id="bar-phase">Échecs</div>
+    </div>
+    <div class="bar-timer" id="bar-timer">3:00</div>
+    <button type="button" class="bar-btn" id="bar-btn">PAUSE</button>
+  </div>
+  <div class="half bottom" data-p="0"></div>
+  <div id="toast" class="toast" hidden><span id="toast-text"></span><button type="button" id="toast-undo">Annuler</button></div>
+</section>
+
+<!-- ── MENU PAUSE ── -->
+<div id="pause-menu" class="overlay" hidden>
+  <div class="panel">
+    <h2>PAUSE</h2>
+    <button type="button" class="btn btn-gold wide big" id="pm-resume">▶ Reprendre</button>
+    <button type="button" class="btn wide" id="pm-skip">Passer à la phase suivante</button>
+    <button type="button" class="btn wide" id="pm-undo">Annuler le dernier compte</button>
+    <div class="adjust" id="pm-adjust"></div>
+    <button type="button" class="btn wide" id="pm-end">Terminer le combat…</button>
+    <button type="button" class="btn btn-ghost wide" id="pm-new">Nouveau combat</button>
+  </div>
+</div>
+
+<!-- ── FIN DE COMBAT MANUELLE ── -->
+<div id="end-menu" class="overlay" hidden>
+  <div class="panel">
+    <h2>Terminer le combat</h2>
+    <p class="muted">Vainqueur</p>
+    <div class="choice" id="end-winner"></div>
+    <p class="muted">Méthode</p>
+    <div class="choice" id="end-method"></div>
+    <button type="button" class="btn btn-gold wide big" id="end-ok" disabled>Valider</button>
+    <button type="button" class="btn btn-ghost wide" id="end-cancel">Retour</button>
+  </div>
+</div>
+
+<!-- ── RÉSULTAT ── -->
+<div id="result" class="overlay" hidden>
+  <div class="panel">
+    <p class="result-kicker" id="res-kicker">VICTOIRE</p>
+    <h2 class="result-name" id="res-name"></h2>
+    <p class="result-method" id="res-method"></p>
+    <p class="muted small" id="res-detail"></p>
+    <button type="button" class="btn btn-gold wide" id="res-continue" hidden>Continuer quand même</button>
+    <button type="button" class="btn wide" id="res-undo" hidden>Annuler le dernier compte</button>
+    <button type="button" class="btn wide" id="res-decide" hidden>Désigner le vainqueur…</button>
+    <button type="button" class="btn btn-ghost wide" id="res-new">Nouveau combat</button>
+  </div>
+</div>
+
+<div id="flash"></div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
