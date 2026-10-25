@@ -109,10 +109,8 @@ function buildHalves() {
         <span>Round<span class="dots" data-k="round"></span></span>
         <span>Total<span class="dots" data-k="total"></span></span>
       </div>
-      <div class="h-actions">
-        <button type="button" class="btn btn-illegal">Coup illégal adverse</button>
-      </div>`;
-    h.querySelector('.btn-illegal').addEventListener('pointerdown', e => {
+      <button type="button" class="yellow-card" aria-label="Coup illégal adverse" title="Coup illégal adverse"></button>`;
+    h.querySelector('.yellow-card').addEventListener('pointerdown', e => {
       e.stopPropagation();
       act(illegalMove(s, 1 - p, performance.now()));
       showToast(`Coup illégal de ${s.cfg.names[1 - p]} : 1 compte`);
@@ -231,7 +229,7 @@ function render() {
     else move.textContent = '';
     h.querySelector('[data-k=round]').innerHTML = dots(countsOf(s, p, roundForCounts), s.cfg.countsPerRound);
     h.querySelector('[data-k=total]').innerHTML = dots(countsOf(s, p), s.cfg.countsTotal);
-    h.querySelector('.btn-illegal').hidden = s.phase !== 'chess' || s.paused;
+    h.querySelector('.yellow-card').hidden = s.phase !== 'chess' || s.paused;
   });
 
   $('bar-round').textContent = `Round ${shownRound}/${s.cfg.rounds}`;

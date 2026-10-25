@@ -10,7 +10,7 @@ Pendule d'échecs pour les combats de chessboxing, faite pour le club Paris Ches
 - Chaque joueur touche sa moitié d'écran pour finir son coup ; gros bouton pause au milieu.
 - Option auto-pause : fin du round d'échecs à 3 min, puis pause et round de boxe chronométrés. Sans l'option, le coach met en pause et relance lui-même.
 - Limite par coup : alerte à 20 s, compte à rebours de 10 s à partir de 30 s, puis partie perdue (avec « Continuer quand même »). Le temps de réflexion repart à zéro après la boxe.
-- Comptes : chaque compte à rebours et chaque coup illégal (bouton « Coup illégal adverse ») est un compte. 3 comptes dans un round ou 4 au total : match perdu.
+- Comptes : chaque compte à rebours et chaque coup illégal (carton jaune dans le coin de chaque moitié, côté centre) est un compte. 3 comptes dans un round ou 4 au total : match perdu.
 - Chaque alerte a toujours un son et un changement de couleur.
 - Écran toujours allumé, plein écran, clavier ou bouton Bluetooth (Espace = pause, Entrée = coup joué).
 - Tous les réglages (durées, seuils, nombre de comptes) sont modifiables dans « Réglages avancés ».
