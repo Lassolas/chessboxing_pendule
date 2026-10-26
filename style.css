@@ -203,6 +203,9 @@ body {
 #fight:not([data-orient="normal"]) .h-in { width: 100cqh; height: 100cqw; padding: 12px; }
 #fight[data-orient="right"] .h-in { transform: translate(-50%, -50%) rotate(-90deg); }
 #fight[data-orient="left"] .h-in { transform: translate(-50%, -50%) rotate(90deg); }
+/* Turned: both flags in mirror, against the centre bar */
+#fight[data-orient="right"] .half.bottom .illegal-wrap,
+#fight[data-orient="left"] .half.top .illegal-wrap { left: auto; right: 12px; flex-direction: row-reverse; }
 #fight:not([data-orient="normal"]) .h-clock { font-size: calc(var(--clock-scale) * min(40cqh, 46cqw, 240px)); }
 .bar-compass { width: 48px; height: 48px; padding: 6px; color: var(--text-2); background: var(--bg-alt);
   border: 1px solid var(--border); border-radius: 12px; touch-action: none; }
@@ -400,6 +403,8 @@ body {
 @media (max-width: 380px) {
   .lim-t { display: none; }
   .illegal-wrap { top: 6px; left: 6px; gap: 8px; }
+  #fight[data-orient="right"] .half.bottom .illegal-wrap,
+  #fight[data-orient="left"] .half.top .illegal-wrap { left: auto; right: 6px; }
   .illegal-minus { width: 30px; height: 30px; font-size: 22px; }
   .illegal-btn { font-size: 13px; padding: 3px 8px 3px 3px; gap: 4px; }
   .illegal-btn .ico { width: 20px; height: 20px; }
