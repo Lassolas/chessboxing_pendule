@@ -54,7 +54,7 @@ const roundNo = (c, n) => c.boxTimer ? n : Math.ceil(n / 2);
 const fmtValue = (v, kind) => kind === 'n' ? String(v) : v === 0 ? '∞'
   : v < 60000 ? `${v / 1000}″` : `${Math.floor(v / 60000)}'${String((v % 60000) / 1000).padStart(2, '0')}`;
 
-// Home tiles. A tap switches the tile on or off; when on, ✎ opens a wheel.
+// Home tiles. A tap switches the tile on or off; its strip sets the value.
 // Row 1: the fight (chess rounds, pause, boxing). Row 2, under ♟ when it is
 // on: the anti-play settings. The icons are the signs seen during the fight.
 const watch = `<svg viewBox="0 0 32 32" class="ico"><circle cx="16" cy="18" r="11" fill="none" stroke="#ff9a1f" stroke-width="3"/><rect x="13" y="2" width="6" height="4" rx="1" fill="#ff9a1f"/><path d="M16 18 L16 11" stroke="#ff9a1f" stroke-width="3" stroke-linecap="round"/><path d="M25 8 l3-3" stroke="#ff9a1f" stroke-width="3" stroke-linecap="round"/></svg>`;
@@ -62,7 +62,7 @@ const watch = `<svg viewBox="0 0 32 32" class="ico"><circle cx="16" cy="18" r="1
 // home screen would leave them without fill.
 const TILE_HAND = { ...REFEREE, fill: 'url(#skin-tile)', defs: REFEREE.defs.replace('id="skin"', 'id="skin-tile"') };
 const dots = n => `<span class="ico-dots">${'<span></span>'.repeat(Math.min(n, 5))}</span>`;
-// key: value in cfg, on/tap: state, icon, label, wheel step/min/max, kind
+// key: value in cfg, on/tap: state, icon, label, strip step/min/max, kind
 const TILES = [
   { key: 'chessRoundMs', row: 1, icon: () => '♟', label: 'Échecs', step: 30000, min: 30000, max: 600000,
     on: () => cfg.intervals, tap: () => { cfg.intervals = !cfg.intervals; } },
@@ -83,7 +83,6 @@ TILES.filter(t => t.flag).forEach(t => {
 });
 const tileOf = key => TILES.find(t => t.key === key);
 const tileValue = t => t.key === 'breakMs' && !t.on() ? '∞' : fmtValue(cfg[t.key], t.kind);
-const ROW = 52;  // wheel row height, as in style.css
 
 // One line on what a tile does now.
 function tileText(t) {
@@ -98,17 +97,29 @@ function tileText(t) {
     default: return on ? `${v} comptes au total : perdu.` : 'Pas de limite au total.';
   }
 }
+// Each tile: icon and label (tap = on/off), and on the right a strip
+// showing the value like a wheel: press and slide up or down to set it.
+const valuesOf = t => { const v = []; for (let x = t.min; x <= t.max; x += t.step) v.push(x); return v; };
+function stripHTML(t) {
+  if (!t.on()) return `<span class="sv"></span><span class="sv cur">${tileValue(t)}</span><span class="sv"></span>`;
+  const vals = valuesOf(t), i = Math.max(0, vals.indexOf(cfg[t.key]));
+  const at = k => vals[k] === undefined ? '' : fmtValue(vals[k], t.kind);
+  return `<span class="sv">${at(i + 1)}</span><span class="sv cur">${at(i)}</span><span class="sv">${at(i - 1)}</span>`;
+}
 function renderTiles() {
   const html = t => `<div class="dur${t.row === 2 ? ' small' : ''}${t.on() ? ' on' : ''}" role="button" tabindex="0" data-tile="${t.key}">
-      <i>${t.icon()}</i><b>${tileValue(t)}</b><small>${t.label}</small>
-      ${t.on() ? `<button type="button" class="edit" data-edit="${t.key}" aria-label="Modifier">✎</button>` : ''}</div>`;
+      <div class="dur-body"><i>${t.icon()}</i><small>${t.label}</small></div>
+      <div class="strip" data-strip="${t.key}">${stripHTML(t)}</div></div>`;
   $('durations').innerHTML = TILES.filter(t => t.row === 1).map(html).join('');
   $('chess-set').classList.toggle('dim', !cfg.intervals);  // dimmed, not hidden: nothing moves
   $('chess-set').innerHTML = TILES.filter(t => t.row === 2).map(html).join('');
 }
+function showTileText(t) {
+  $('opt-help').hidden = false;
+  $('opt-help').textContent = tileText(t);
+}
 function onTiles(e) {
-  const edit = e.target.closest('[data-edit]');
-  if (edit) { openWheel(edit.dataset.edit); return; }
+  if (e.target.closest('[data-strip]')) return;
   const el = e.target.closest('[data-tile]');
   if (!el) return;
   const t = tileOf(el.dataset.tile);
@@ -117,48 +128,53 @@ function onTiles(e) {
   save(CFG_KEY, cfg);
   helpShown = null;
   renderSetup();
-  $('opt-help').hidden = false;
-  $('opt-help').textContent = tileText(t);
+  showTileText(t);
 }
 $('durations').addEventListener('click', onTiles);
 $('chess-set').addEventListener('click', onTiles);
 
-let wheelKey = null, wheelValues = [];
-function openWheel(key) {
-  const t = tileOf(key);
-  wheelKey = key;
-  wheelValues = [];
-  for (let v = t.min; v <= t.max; v += t.step) wheelValues.push(v);
-  $('wheel-title').innerHTML = `<span class="wt-ico">${t.icon()}</span> ${t.label}`;
-  $('wheel-list').innerHTML = wheelValues.map((v, i) => `<div class="wheel-item" data-i="${i}">${fmtValue(v, t.kind)}</div>`).join('');
-  $('wheel').hidden = false;
-  $('wheel-list').scrollTop = Math.max(0, wheelValues.indexOf(cfg[key])) * ROW;
-  markWheel();
+// Slide on a strip: one step every STEP_PX, up = more.
+const STEP_PX = 16;
+let drag = null;
+function onStripDown(e) {
+  const strip = e.target.closest('[data-strip]');
+  if (!strip) return;
+  const t = tileOf(strip.dataset.strip);
+  if (!t.on()) return;
+  const vals = valuesOf(t);
+  drag = { t, strip, vals, y: e.clientY, i0: Math.max(0, vals.indexOf(cfg[t.key])) };
+  strip.setPointerCapture(e.pointerId);
+  strip.classList.add('drag');
+  e.preventDefault();
 }
-const wheelIndex = () => Math.min(wheelValues.length - 1, Math.max(0, Math.round($('wheel-list').scrollTop / ROW)));
-function markWheel() {
-  const i = wheelIndex();
-  $('wheel-list').querySelectorAll('.wheel-item').forEach(el => el.classList.toggle('sel', +el.dataset.i === i));
-}
-$('wheel-list').addEventListener('scroll', markWheel, { passive: true });
-$('wheel-list').addEventListener('click', e => {
-  const it = e.target.closest('.wheel-item');
-  if (it) $('wheel-list').scrollTo({ top: +it.dataset.i * ROW, behavior: 'smooth' });
-});
-function closeWheel() {
-  cfg[wheelKey] = wheelValues[wheelIndex()];
+function onStripMove(e) {
+  if (!drag) return;
+  const { t, strip, vals } = drag;
+  const i = Math.min(vals.length - 1, Math.max(0, drag.i0 + Math.round((drag.y - e.clientY) / STEP_PX)));
+  if (vals[i] === cfg[t.key]) return;
+  cfg[t.key] = vals[i];
   // The count cannot start before the warning.
-  if (wheelKey === 'moveWarnMs' && cfg.moveCountdownMs < cfg.moveWarnMs) cfg.moveCountdownMs = cfg.moveWarnMs;
-  if (wheelKey === 'moveCountdownMs' && cfg.moveWarnMs > cfg.moveCountdownMs) cfg.moveWarnMs = cfg.moveCountdownMs;
-  save(CFG_KEY, cfg);
-  $('wheel').hidden = true;
-  renderSetup();
-  $('opt-help').hidden = false;
-  $('opt-help').textContent = tileText(tileOf(wheelKey));
+  if (t.key === 'moveWarnMs' && cfg.moveCountdownMs < cfg.moveWarnMs) cfg.moveCountdownMs = cfg.moveWarnMs;
+  if (t.key === 'moveCountdownMs' && cfg.moveWarnMs > cfg.moveCountdownMs) cfg.moveWarnMs = cfg.moveCountdownMs;
+  strip.innerHTML = stripHTML(t);
+  strip.closest('[data-tile]').querySelector('i').innerHTML = t.icon();  // dots follow the count
+  renderPresets();
+  showTileText(t);
+  if (navigator.vibrate) navigator.vibrate(5);
 }
-$('wheel-ok').addEventListener('click', closeWheel);
-// A tap outside the wheel validates too.
-$('wheel').addEventListener('click', e => { if (!e.target.closest('.wheel-panel')) closeWheel(); });
+function onStripUp() {
+  if (!drag) return;
+  drag.strip.classList.remove('drag');
+  drag = null;
+  save(CFG_KEY, cfg);
+  renderSetup();
+}
+['durations', 'chess-set'].forEach(id => {
+  $(id).addEventListener('pointerdown', onStripDown);
+  $(id).addEventListener('pointermove', onStripMove);
+  $(id).addEventListener('pointerup', onStripUp);
+  $(id).addEventListener('pointercancel', onStripUp);
+});
 
 // One or two words per option; the "?" shows the explanation.
 const OPTIONS = [
@@ -167,12 +183,16 @@ const OPTIONS = [
 ];
 let helpShown = null;
 
-function renderSetup() {
-  document.body.className = cfg.eco ? 'eco' : '';
+function renderPresets() {
   $('presets').innerHTML = Object.keys(PRESETS).map(r =>
     cfg.intervals
       ? `<button type="button" class="btn preset" data-r="${r}"><b>${r}</b><small>rounds</small><em>${formatClock(playerTime({ ...cfg, rounds: +r })).replace(':', "'")}</em></button>`
       : `<button type="button" class="btn preset classic" data-r="${r}"><b>${formatClock(PRESETS[r]).replace(':', "'")}</b><small>classique</small></button>`).join('');
+}
+
+function renderSetup() {
+  document.body.className = cfg.eco ? 'eco' : '';
+  renderPresets();
   // Unchecking the intervals leaves a plain clock: only Éco still applies.
   // A plain clock has no illegal-move card: dimmed, so the layout stays put.
   $('options').innerHTML = OPTIONS.map(([key, label]) => `
