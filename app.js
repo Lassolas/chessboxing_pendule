@@ -188,7 +188,7 @@ function renderSetup() {
   renderTiles();
   const saved = load(FIGHT_KEY);
   const live = saved && saved.phase !== 'ready' && saved.phase !== 'over';
-  $('btn-resume-saved').hidden = !live;
+  $('resume-wrap').hidden = !live;
   // The fight in progress at a glance: White's time, Continue, Black's time.
   if (live) {
     const w = saved.white ?? 0;
@@ -242,6 +242,11 @@ $('btn-reset').addEventListener('click', () => $('btn-defaults').click());
 $('btn-defaults').addEventListener('click', () => {
   cfg = { ...homeDefaults(), rounds: cfg.rounds, names: cfg.names, eco: cfg.eco };
   save(CFG_KEY, cfg);
+  renderSetup();
+});
+// ✕ on the Continue button drops the saved fight.
+$('btn-drop-saved').addEventListener('click', () => {
+  save(FIGHT_KEY, null);
   renderSetup();
 });
 $('btn-resume-saved').addEventListener('click', () => {
@@ -465,19 +470,7 @@ $('pm-next').addEventListener('click', () => act(goToNextChess(s, performance.no
 $('pm-resume').addEventListener('click', () => act(togglePause(s, performance.now())));
 // A tap anywhere outside the buttons resumes too.
 $('pause-menu').addEventListener('click', e => { if (!e.target.closest('button')) $('pm-resume').click(); });
-let restartTimer = null;
 $('pm-restart').addEventListener('click', () => {
-  const b = $('pm-restart');
-  if (!b.classList.contains('confirm')) {
-    b.classList.add('confirm');
-    b.textContent = '↺ Sûr ?';
-    clearTimeout(restartTimer);
-    restartTimer = setTimeout(() => { b.classList.remove('confirm'); b.textContent = '↺ Rejouer'; }, 3000);
-    return;
-  }
-  clearTimeout(restartTimer);
-  b.classList.remove('confirm');
-  b.textContent = '↺ Rejouer';
   s = newFight(structuredClone(s.cfg));
   buildHalves();
   act(['undo']);

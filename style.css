@@ -266,7 +266,6 @@ body {
 .pm-next { font-size: 26px !important; padding: 20px 12px !important; }
 .pm-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .pm-row .btn { font-size: 22px; padding: 18px 6px; white-space: nowrap; }
-.pm-row .btn.confirm { background: var(--red-bg); border-color: var(--red); }
 .adjust { display: grid; grid-template-columns: 1fr auto auto; gap: 6px 8px; align-items: center; margin: 10px 0; text-align: left; }
 .adjust .btn { padding: 10px 12px; font-size: 16px; }
 .choice { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 8px; }
@@ -312,17 +311,22 @@ body {
 .eco .half.countdown { animation: none !important; }
 .options .opt:first-child { grid-column: 1 / -1; }
 
-.resume-live { display: grid !important; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; padding: 14px 12px !important; }
+.resume-live { display: grid !important; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 8px; padding: 14px 12px !important; }
 .resume-live span { font: 700 26px/1 var(--font-display); font-variant-numeric: tabular-nums; }
 .resume-live span { padding: 8px 10px; border-radius: 8px; }
 .resume-live .tw { background: #fff; color: #000; }
 .resume-live .tb { background: #000; color: #fff; }
 .resume-live b { font-size: 22px; white-space: nowrap; }
-.resume-live[hidden] { display: none !important; }
+.resume-wrap { position: relative; }
+.resume-x { position: absolute; top: -6px; right: -10px; width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--gold-mid);
+  background: var(--bg-panel); color: var(--text); font-size: 17px; line-height: 1; padding: 0; touch-action: manipulation; }
 #pause-menu { background: transparent; }  /* halves are dimmed already; keeps ⌀ readable */
 
 /* Small phones (iPhone SE…): keep the whole centre bar on screen */
 @media (max-width: 380px) {
+  .resume-live { gap: 6px; padding: 12px 8px !important; }
+  .resume-live span { font-size: 22px; padding: 6px 6px; }
+  .resume-live b { font-size: 18px; }
   .opt button { font-size: 16px; }
   .opt-toggle { gap: 8px; padding: 12px 8px; }
   .opt-q { width: 34px; }
