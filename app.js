@@ -319,7 +319,7 @@ function render() {
     // Average per move, shown when paused or at the end.
     const avg = averageMove(s, p);
     h.querySelector('.h-avg').textContent = (s.paused || s.phase === 'over') && avg !== null
-      ? `⌀ ${Math.round(avg / 1000)} s / coup` : '';
+      ? `⌀ ${(avg / 1000).toFixed(1).replace(".", ",")} s / coup` : '';
     // Counts: nothing until the first one, then one red dot each
     // (bright for this round, dim for earlier rounds).
     const mine = s.counts.filter(c => c.player === p);
