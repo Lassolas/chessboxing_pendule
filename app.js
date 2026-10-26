@@ -278,6 +278,7 @@ $('options').addEventListener('click', e => {
   if (d) { cfg.digits = d.dataset.digits; save(CFG_KEY, cfg); }
   if (t) {
     cfg[t.dataset.opt] = !cfg[t.dataset.opt];
+    if (t.dataset.opt === 'eco') cfg.sound = !cfg.eco;  // Éco mutes; leaving it brings the sound back
     save(CFG_KEY, cfg);
     setMuted(!!cfg.eco || !cfg.sound);
   }

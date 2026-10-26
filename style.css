@@ -379,6 +379,7 @@ body {
 
 /* ── ECO: no sound (set in JS), darker, no animations ── */
 .eco #fight { filter: brightness(.55); }
+.eco #setup { filter: brightness(.6); }
 .eco #setup .opt.on, .eco .btn-gold { filter: brightness(.8); }
 .eco .half, .eco .bar, .eco .bar-btn { transition: none !important; animation: none !important; }
 .eco .half.countdown { animation: none !important; }
