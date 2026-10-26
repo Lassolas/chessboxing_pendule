@@ -253,6 +253,26 @@ export function nextChessRound(s) {
   return !s.cfg.intervals || s.phase === 'ready' || s.phase === 'over' || target > s.cfg.rounds ? null : target;
 }
 
+// The step that follows the current one, in fight order: chess round →
+// pause → boxing → pause → chess…, or null after the last round.
+export function nextStep(s) {
+  if (!s.cfg.intervals || s.phase === 'ready' || s.phase === 'over') return null;
+  if (s.phase === 'break') return { phase: roundType(s.nextRound), round: s.nextRound };
+  if (s.round >= s.cfg.rounds) return null;
+  const next = s.round + (s.phase === 'chess' && !s.cfg.boxTimer ? 2 : 1);
+  if (s.cfg.breakMs === 0) return { phase: roundType(next), round: next };
+  return { phase: 'break', round: next };
+}
+
+// Jump to that step now, running.
+export function goToNextStep(s, now) {
+  if (!nextStep(s)) return [];
+  const events = skipPhase(s, now);
+  s.paused = false;
+  s.lastTick = now;
+  return events;
+}
+
 // Skip straight to the next chess round, running.
 export function goToNextChess(s, now) {
   tick(s, now);

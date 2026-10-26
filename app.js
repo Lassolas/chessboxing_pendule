@@ -1,6 +1,6 @@
 import {
   PRESETS, playerTime, defaultConfig, newFight, tick, start, press, togglePause, skipPhase,
-  illegalMove, removeIllegal, undoCount, averageMove, nextChessRound, goToNextChess, reopen, endFight, moveStage, moveCountdownLeft,
+  illegalMove, removeIllegal, undoCount, averageMove, nextChessRound, goToNextChess, nextStep, goToNextStep, reopen, endFight, moveStage, moveCountdownLeft,
   countsOf, roundType, formatClock,
 } from './clock.js';
 import { unlockAudio, play, setMuted } from './sound.js';
@@ -601,11 +601,13 @@ function render() {
 
 // Pause menu: big Continue, ↺ restart from zero (tap twice), ⌂ home.
 function renderPauseMenu() {
-  const next = nextChessRound(s);
+  // Next step in fight order: ⏸ pause, then 🥊 boxing or ♟ chess.
+  const next = nextStep(s);
   $('pm-next').hidden = next === null;
-  if (next !== null) $('pm-next').textContent = `♟ ${roundNo(s.cfg, next)} ▶`;
+  if (next) $('pm-next').textContent = next.phase === 'break' ? '⏸ ▶'
+    : `${next.phase === 'chess' ? '♟' : '🥊'} ${roundNo(s.cfg, next.round)} ▶`;
 }
-$('pm-next').addEventListener('click', () => act(goToNextChess(s, performance.now())));
+$('pm-next').addEventListener('click', () => act(goToNextStep(s, performance.now())));
 
 $('pm-resume').addEventListener('click', () => act(togglePause(s, performance.now())));
 // A tap anywhere outside the buttons resumes too.

@@ -3,7 +3,7 @@
 
 import {
   defaultConfig, newFight, tick, start, press, togglePause, skipPhase,
-  illegalMove, removeIllegal, undoCount, averageMove, nextChessRound, goToNextChess, reopen, adjustTime, moveStage, moveCountdownLeft, countsOf, playerTime, formatClock,
+  illegalMove, removeIllegal, undoCount, averageMove, nextChessRound, goToNextChess, nextStep, goToNextStep, reopen, adjustTime, moveStage, moveCountdownLeft, countsOf, playerTime, formatClock,
 } from '../clock.js';
 
 const errors = [];
@@ -248,6 +248,18 @@ for (const [r, min] of [[5, 4.5], [7, 6], [9, 7.5], [11, 9]]) {
 // The display drops a second as soon as the clock runs
 check(formatClock(270000) === '4:30' && formatClock(269900) === '4:29', 'clock shows 4:29 right after the start');
 check(formatClock(9960) === '9.9' && formatClock(10000) === '0:10', 'tenths under 10 s, rounded down');
+
+// The pause menu goes to the next step: chess → pause → boxing → pause → chess
+{
+  const s = fight({ moveLimit: false, rounds: 5, boxTimer: true, breakMs: 60000 });
+  togglePause(s, 1000);
+  const seen = [];
+  for (let i = 0; i < 5; i++) { const n = nextStep(s); seen.push(n.phase + n.round); goToNextStep(s, 2000 + i); }
+  check(seen.join(' ') === 'break2 boxing2 break3 chess3 break4', 'next step follows the fight order: ' + seen.join(' '));
+  check(!s.paused, 'the next step runs');
+  const n = fight({ moveLimit: false, rounds: 5, breakMs: null });
+  check(nextStep(n).phase === 'break' && nextStep(n).round === 3, 'no boxing: chess round → pause → chess 3');
+}
 
 if (errors.length) {
   console.error(`pendule-clock: ${errors.length} failure(s)`);
