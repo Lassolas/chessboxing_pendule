@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Pendule CB: a chess clock seen from the front, gold button and red button -->
+  <defs>
+    <pattern id="ck" width="10" height="10" patternUnits="userSpaceOnUse"><rect width="10" height="10" fill="#f0ead8"/><rect width="5" height="5" fill="#111"/><rect x="5" y="5" width="5" height="5" fill="#111"/></pattern>
+  </defs>
+  <rect width="100" height="100" fill="#0a0a0f"/>
+  <g id="clock" transform="translate(0 -2)">
+    <rect x="20" y="22" width="16" height="9" rx="3" fill="#f5c842"/>
+    <rect x="64" y="27" width="16" height="9" rx="3" fill="#ff3b3b"/>
+    <rect x="8" y="34" width="84" height="48" rx="8" fill="#1a1a26" stroke="#f5c842" stroke-width="3"/>
+    <circle cx="30" cy="58" r="15" fill="url(#ck)" stroke="#f0ead8" stroke-width="2"/>
+    <circle cx="70" cy="58" r="15" fill="#0a0a0f" stroke="#ff3b3b" stroke-width="3"/>
+    <line x1="70" y1="58" x2="70" y2="48.7" stroke="#ff3b3b" stroke-width="2.1" stroke-linecap="round"/>
+    <line x1="70" y1="58" x2="76.75" y2="61.3" stroke="#ff3b3b" stroke-width="2.1" stroke-linecap="round"/>
+  </g>
+</svg>
