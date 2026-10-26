@@ -601,11 +601,10 @@ function render() {
 
 // Pause menu: big Continue, ↺ restart from zero (tap twice), ⌂ home.
 function renderPauseMenu() {
-  // Next step in fight order: ⏸ pause, then 🥊 boxing or ♟ chess.
+  // Next step in fight order: → ⏸ pause, then → 🥊 boxing or → ♟ chess.
   const next = nextStep(s);
   $('pm-next').hidden = next === null;
-  if (next) $('pm-next').textContent = next.phase === 'break' ? '⏸ ▶'
-    : `${next.phase === 'chess' ? '♟' : '🥊'} ${roundNo(s.cfg, next.round)} ▶`;
+  if (next) $('pm-next').textContent = `→ ${next.phase === 'break' ? '⏸' : next.phase === 'chess' ? '♟' : '🥊'}`;  // same arrow as the bar
 }
 $('pm-next').addEventListener('click', () => act(goToNextStep(s, performance.now())));
 
