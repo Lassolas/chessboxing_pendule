@@ -300,9 +300,9 @@ function render() {
     else if (flagScreen && r.loser === p) move.textContent = `⚑ ${methodShort(r.method)}`;
     else if (flagScreen) move.textContent = r.winner === null ? '½' : 'VICTOIRE';
     else move.textContent = '';
-    // Colour as a big icon; a name only if one was typed in ⚙.
-    const icon = s.white === null ? '' : p === s.white ? '♔' : '♚';
-    h.querySelector('.h-name').textContent = [icon, s.cfg.names[p]].filter(Boolean).join(' ');
+    // Colour in big letters; a name only if one was typed in ⚙.
+    const icon = s.white === null ? '' : p === s.white ? 'BLANCS' : 'NOIRS';
+    h.querySelector('.h-name').textContent = [icon, s.cfg.names[p]].filter(Boolean).join(' · ');
     // Counts: nothing until the first one, then one red dot each
     // (bright for this round, dim for earlier rounds).
     const mine = s.counts.filter(c => c.player === p);
@@ -313,7 +313,7 @@ function render() {
 
   const roundIcon = roundType(shownRound) === 'chess' ? '♟' : '🥊';
   $('bar-round').textContent = !s.cfg.intervals ? '♟' : `${s.phase === 'break' ? '⏸' : roundIcon} ${shownRound}/${s.cfg.rounds}`;
-  $('bar-phase').textContent = s.phase === 'ready' ? '1er = ♚' : s.phase === 'break' ? `→ ${roundIcon}`
+  $('bar-phase').textContent = s.phase === 'ready' ? '1er = NOIRS' : s.phase === 'break' ? `→ ${roundIcon}`
     : flagScreen ? methodShort(r.method)
     : s.roundOver ? 'Temps !' : s.paused ? 'Pause' : '';
   $('bar-timer').textContent = s.phase === 'ready' || s.phase === 'over' || untimed ? '' : formatClock(s.phaseRemaining);
