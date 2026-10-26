@@ -303,7 +303,7 @@ function render() {
   renderResult();
 }
 
-// Pause menu: big Continue, ♻️ restart from zero (tap twice), ⌂ home.
+// Pause menu: big Continue, ↺ restart from zero (tap twice), ⌂ home.
 function renderPauseMenu() {}
 
 $('pm-resume').addEventListener('click', () => act(togglePause(s, performance.now())));
@@ -312,14 +312,14 @@ $('pm-restart').addEventListener('click', () => {
   const b = $('pm-restart');
   if (!b.classList.contains('confirm')) {
     b.classList.add('confirm');
-    b.textContent = '♻️ ?';
+    b.textContent = '↺ Sûr ?';
     clearTimeout(restartTimer);
-    restartTimer = setTimeout(() => { b.classList.remove('confirm'); b.textContent = '♻️'; }, 3000);
+    restartTimer = setTimeout(() => { b.classList.remove('confirm'); b.textContent = '↺ Rejouer'; }, 3000);
     return;
   }
   clearTimeout(restartTimer);
   b.classList.remove('confirm');
-  b.textContent = '♻️';
+  b.textContent = '↺ Rejouer';
   s = newFight(structuredClone(s.cfg));
   buildHalves();
   act(['undo']);
