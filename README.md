@@ -36,3 +36,7 @@ Aucune dépendance. `npm run dev` sert la page sur http://localhost:8000, `npm t
 
 Sons de coups : « Punch sound » de storegraphic sur Pixabay (licence Pixabay, utilisation libre).
 Son du claquoir : « Hammering » de Dragon Studio sur Pixabay (licence Pixabay, utilisation libre), découpé en 6 coups.
+
+## Licence
+
+Application créée par **Chessboxing Paris**. © 2026 Chessboxing Paris, sous licence MIT (voir LICENSE). Le logo du club apparaît en tête de l'accueil, en bas avec les crédits, et en filigrane derrière l'accueil et la pendule (`logo.svg`).

@@ -1,6 +1,6 @@
 // Offline cache for the clock. Bump VERSION when the files change.
-const VERSION = 'pendule-v57';
-const FILES = ['./', 'index.html', 'style.css', 'app.js', 'clock.js', 'sound.js', 'hands.js', 'digits.js', 'sounds/coup1.mp3', 'sounds/coup2.mp3', 'sounds/coup3.mp3', 'sounds/coup4.mp3', 'sounds/coup5.mp3', 'sounds/coup6.mp3', 'sounds/claquoir1.mp3', 'sounds/claquoir2.mp3', 'sounds/claquoir3.mp3', 'sounds/claquoir4.mp3', 'sounds/claquoir5.mp3', 'sounds/claquoir6.mp3', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
+const VERSION = 'pendule-v58';
+const FILES = ['./', 'index.html', 'style.css', 'app.js', 'clock.js', 'sound.js', 'hands.js', 'digits.js', 'logo.svg', 'sounds/coup1.mp3', 'sounds/coup2.mp3', 'sounds/coup3.mp3', 'sounds/coup4.mp3', 'sounds/coup5.mp3', 'sounds/coup6.mp3', 'sounds/claquoir1.mp3', 'sounds/claquoir2.mp3', 'sounds/claquoir3.mp3', 'sounds/claquoir4.mp3', 'sounds/claquoir5.mp3', 'sounds/claquoir6.mp3', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES.map(f => new Request(f, { cache: 'reload' })))).then(() => self.skipWaiting()));
