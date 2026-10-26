@@ -151,8 +151,8 @@ body {
 .half.warn .h-move { color: var(--orange); font-size: 34px; }
 .half.countdown { background: var(--red-bg) !important; box-shadow: inset 0 0 0 8px var(--red) !important; animation: pulse 1s infinite; }
 .half.countdown .h-move { color: #fff; line-height: 1; }
-.hands { display: inline-flex; gap: 10px; }
-.hand { width: clamp(70px, 22vw, 110px); height: auto; fill: #fff; }
+.hands { display: inline-flex; gap: 4px; }
+.hand { width: clamp(80px, 26vw, 130px); height: auto; }
 .half.countdown .h-clock { font-size: clamp(40px, 12vw, 72px); }
 .half.low .h-clock { color: var(--red) !important; }
 @keyframes pulse { 50% { filter: brightness(1.5); } }

@@ -1,6 +1,6 @@
 // Offline cache for the clock. Bump VERSION when the files change.
-const VERSION = 'pendule-v21';
-const FILES = ['./', 'index.html', 'style.css', 'app.js', 'clock.js', 'sound.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
+const VERSION = 'pendule-v22';
+const FILES = ['./', 'index.html', 'style.css', 'app.js', 'clock.js', 'sound.js', 'hands.js', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES.map(f => new Request(f, { cache: 'reload' })))).then(() => self.skipWaiting()));

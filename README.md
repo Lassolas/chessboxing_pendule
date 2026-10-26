@@ -12,7 +12,7 @@ Pendule d'échecs pour les combats de chessboxing, faite pour le club Paris Ches
 - Options à cocher (« ? » pour l'explication) :
   - **Coups illégaux** (décoché par défaut) : carton jaune dans le coin de chaque moitié, côté centre. Un coup illégal = 1 compte, le fautif rejoue.
   - **Auto rounds** : le round d'échecs s'arrête tout seul à 3 min (sinon alerte, et le coach arrête).
-  - **Anti-jeu** : alerte à 20 s, compte de 10 s dès 30 s, montré avec deux mains qui décomptent de 10 à 0, puis partie perdue (« Continuer quand même » possible). Chaque compte à rebours = 1 compte ; 3 dans un round ou 4 au total, match perdu.
+  - **Anti-jeu** : alerte à 20 s, compte de 10 s dès 30 s, montré par deux mains d'arbitre (manchettes) qui replient un doigt par seconde, de 10 à 0, sans chiffres, puis partie perdue (« Continuer quand même » possible). Chaque compte à rebours = 1 compte ; 3 dans un round ou 4 au total, match perdu.
   - **Timer boxe** : la pause et le round de boxe sont chronométrés, puis les échecs repartent seuls.
   - **Éco** : pas de son (vibrations seulement), écran plus sombre, pas d'animations.
 - En pause et en fin de partie, chaque côté affiche son temps moyen par coup (⌀ 12,4 s / coup).

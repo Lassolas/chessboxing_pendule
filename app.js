@@ -4,6 +4,7 @@ import {
   countsOf, roundType, formatClock,
 } from './clock.js';
 import { unlockAudio, play, setMuted } from './sound.js';
+import { countHands } from './hands.js';
 
 const $ = id => document.getElementById(id);
 const CFG_KEY = 'pendule-cb-config';
@@ -477,24 +478,6 @@ if (!standalone && /iphone|ipad|ipod/i.test(navigator.userAgent)) {
   $('install-ios').hidden = false;
 }
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => {});
-
-// The referee's count shown with hands: two hands of five fingers, 10 → 0.
-function hand(fingers, mirror) {
-  // Index, middle, ring, little finger, then the thumb.
-  const xs = [30, 44, 58, 72];
-  const f = xs.map((x, i) => {
-    const up = fingers > i;
-    return `<rect x="${x - 6}" y="${up ? 8 : 50}" width="12" height="${up ? 60 : 18}" rx="6"/>`;
-  }).join('');
-  const thumb = fingers >= 5
-    ? '<rect x="16" y="50" width="13" height="48" rx="6.5" transform="rotate(-32 22 98)"/>'
-    : '<rect x="12" y="66" width="12" height="22" rx="6" transform="rotate(-50 18 88)"/>';
-  return `<svg viewBox="-24 0 124 120" class="hand"${mirror ? ' style="transform:scaleX(-1)"' : ''}>
-    ${f}${thumb}<rect x="20" y="58" width="64" height="56" rx="18"/></svg>`;
-}
-function countHands(n) {
-  return `<span class="hands">${hand(Math.min(n, 5), false)}${hand(Math.max(n - 5, 0), true)}</span>`;
-}
 
 function escapeHtml(t) {
   return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
