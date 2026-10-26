@@ -212,7 +212,7 @@ const SOUNDS = {
   moveCountdown: () => { wood(0); wood(0.16); },
   moveTick: () => tick(0, Math.round(performance.now() / 1000) % 2 === 0),
   clockLow: () => tick(0, true),
-  phaseTen: () => clapper([0, 0.4, 0.8]),  // 10 s left in a round: 3 strikes in 0.8 s
+  phaseTen: () => clapper([0, 0.25, 0.5]),  // 10 s left in a round: 3 strikes in 0.5 s
   breakTen: () => clapper([0, 1, 2]),      // 10 s left in a break: 3 strikes, 1 s apart
   roundStart: () => bell(1),
   roundEnd: () => bell(3),
@@ -233,7 +233,7 @@ const VIBRATE = {
   roundTimeUp: [200, 100, 200, 100, 200],
   count: [300],
   over: [600, 150, 600],
-  phaseTen: [80, 320, 80, 320, 80],
+  phaseTen: [60, 190, 60, 190, 60],
   breakTen: [80, 920, 80, 920, 80],
 };
 
