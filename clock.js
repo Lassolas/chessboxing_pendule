@@ -25,11 +25,9 @@ export function defaultConfig() {
     names: ['', ''],       // optional, by half of the screen
     chessRoundMs: 3 * 60000,
     boxRoundMs: 3 * 60000,
-    breakMs: 60000,
+    breakMs: 0,             // 0 = open pause (∞): the coach starts the next round
     intervals: true,        // coached 3-min chess rounds; false = plain clock
-    autoStop: false,        // end the chess round on its own after chessRoundMs
-    boxTimer: false,        // time the breaks and the boxing round
-    noBoxing: false,        // chess rounds separated by timed pauses only
+    boxTimer: false,        // timed boxing rounds between the pauses
     illegalMoves: false,    // yellow card to claim an illegal move
     moveLimit: true,        // per-move thinking limit
     moveWarnMs: 20000,      // warning colour + sound
@@ -56,7 +54,7 @@ export function newFight(cfg) {
     remaining: [playerTime(cfg), playerTime(cfg)],
     moveElapsed: 0,
     phaseRemaining: cfg.intervals ? cfg.chessRoundMs : null,
-    roundOver: false,      // chess round time is up but autoStop is off
+    roundOver: false,      // last round reopened after the decision
     counts: [],            // {player, round, illegal}: move countdowns and illegal moves
     moves: [0, 0],         // moves played, for the average time per move
     spent: [0, 0],         // thinking time of those moves
@@ -107,39 +105,23 @@ function startPhase(s, round, events) {
     s.moveElapsed = 0;
   } else {
     s.phase = 'boxing';
-    // Without boxTimer the coach times boxing and breaks: no countdown here.
-    s.phaseRemaining = s.cfg.boxTimer ? s.cfg.boxRoundMs : null;
+    s.phaseRemaining = s.cfg.boxRoundMs;
   }
   events.push('roundStart');
 }
 
+// Every round ends on a pause (timed, or open until the coach restarts).
+// Without boxing, the pause leads straight to the next chess round.
 function endRound(s, events) {
   events.push('roundEnd');
   if (s.round >= s.cfg.rounds) {
     finish(s, null, 'decision', events);
     return;
   }
-  if (s.cfg.noBoxing) {
-    // Chess without boxing: a timed pause, then the next chess round.
-    s.phase = 'break';
-    s.nextRound = s.round + 2;
-    s.phaseRemaining = s.cfg.breakMs;
-    s.roundOver = false;
-    return;
-  }
-  if (!s.cfg.boxTimer) {
-    // No timed breaks: boxing is followed straight by the next chess round,
-    // and chess by an untimed boxing phase that covers boxing and breaks.
-    if (s.phase === 'boxing') { events.pop(); startPhase(s, s.round + 1, events); return; }
-    s.round += 1;
-    s.phase = 'boxing';
-    s.phaseRemaining = null;
-    s.roundOver = false;
-    return;
-  }
+  const skipBoxing = s.phase === 'chess' && !s.cfg.boxTimer;
   s.phase = 'break';
-  s.nextRound = s.round + 1;
-  s.phaseRemaining = s.cfg.breakMs;
+  s.nextRound = s.round + (skipBoxing ? 2 : 1);
+  s.phaseRemaining = s.cfg.breakMs || null;
   s.roundOver = false;
 }
 
@@ -186,10 +168,7 @@ export function tick(s, now) {
     const r0 = s.phaseRemaining;
     s.phaseRemaining = Math.max(0, r0 - dt);
     if (crossedSecond(r0, s.phaseRemaining, 10) === 10) events.push('phaseTen');
-    if (r0 > 0 && s.phaseRemaining === 0) {
-      if (s.cfg.autoStop) endRound(s, events);
-      else { s.roundOver = true; events.push('roundTimeUp'); }
-    }
+    if (r0 > 0 && s.phaseRemaining === 0) endRound(s, events);
     return events;
   }
 
@@ -232,7 +211,7 @@ export function press(s, player, now) {
 export function togglePause(s, now) {
   tick(s, now);
   if (s.phase === 'ready' || s.phase === 'over') return [];
-  // Chess round time is up (no auto stop): the pause button ends the round.
+  // Fight reopened after the last round: the pause button ends it again.
   if (s.phase === 'chess' && s.roundOver && !s.paused) {
     const events = [];
     endRound(s, events);

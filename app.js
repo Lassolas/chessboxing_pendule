@@ -24,13 +24,17 @@ if (!cfg.v || cfg.v < 2) {  // v2: illegal moves off by default
   cfg.illegalMoves = false;
   cfg.v = 2;
 }
-if ('autoPause' in cfg) {  // older versions had one option for both
-  cfg.autoStop = cfg.boxTimer = cfg.autoPause;
-  delete cfg.autoPause;
+if (cfg.v < 3) {  // v3: rounds always stop; open pause (∞) by default; ⏸ tile
+  cfg.breakMs = 0;
+  cfg.boxTimer = !!((cfg.boxTimer || cfg.autoPause) && !cfg.noBoxing);
+  ['autoStop', 'autoPause', 'noBoxing'].forEach(k => delete cfg[k]);
+  cfg.v = 3;
 }
 let s = null;
-if (cfg.boxTimer) cfg.autoStop = true;
 setMuted(!!cfg.eco);
+
+// Round number as shown: without boxing, only chess rounds are counted.
+const roundNo = (c, n) => c.boxTimer ? n : Math.ceil(n / 2);
 
 // ── SETUP SCREEN ──
 // ⚙ settings: one stepper per value. [key, icon, label, step, min, max, kind]
@@ -40,7 +44,7 @@ const STEPPERS = [
   ['countsPerRound', '⚑', '/ round', 1, 1, 10, 'n'],
   ['countsTotal', '⚑', 'Total', 1, 1, 20, 'n'],
 ];
-const fmtValue = (v, kind) => kind === 'n' ? String(v)
+const fmtValue = (v, kind) => kind === 'n' ? String(v) : v === 0 ? '∞'
   : v < 60000 ? `${v / 1000} s` : `${Math.floor(v / 60000)}'${String((v % 60000) / 1000).padStart(2, '0')}`;
 
 function renderSteppers() {
@@ -66,36 +70,33 @@ $('steppers').addEventListener('click', e => {
 // [key, icon, label, step, min, max]
 const DURATIONS = [
   ['chessRoundMs', '♟', 'Échecs', 30000, 30000, 600000],
+  ['breakMs', '⏸', 'Pause', 15000, 0, 300000],   // 0 = ∞, the coach restarts
   ['boxRoundMs', '🥊', 'Boxe', 30000, 30000, 300000],
-  ['breakMs', '⏸', 'Pause', 15000, 15000, 300000],
 ];
 const LONG_PRESS = 450;
 const ROW = 52;  // wheel row height, as in style.css
 
-// A tap picks the mode: ♟ chessboxing rounds on/off, 🥊 timed boxing,
-// ⏸ chess rounds with pauses and no boxing.
+// A tap picks the mode: ♟ chessboxing rounds on/off (pauses come with
+// them), 🥊 a timed boxing round inside each pause.
 const MODE_ON = {
   chessRoundMs: () => cfg.intervals,
-  boxRoundMs: () => cfg.intervals && cfg.boxTimer && !cfg.noBoxing,
-  breakMs: () => cfg.intervals && cfg.noBoxing,
+  breakMs: () => cfg.intervals,
+  boxRoundMs: () => cfg.intervals && cfg.boxTimer,
 };
 const MODE_TAP = {
   chessRoundMs: () => { cfg.intervals = !cfg.intervals; },
+  breakMs: () => { cfg.intervals = true; },
   boxRoundMs: () => {
     if (MODE_ON.boxRoundMs()) cfg.boxTimer = false;
-    else Object.assign(cfg, { intervals: true, boxTimer: true, autoStop: true, noBoxing: false });
-  },
-  breakMs: () => {
-    if (MODE_ON.breakMs()) cfg.noBoxing = false;
-    else Object.assign(cfg, { intervals: true, noBoxing: true });
+    else Object.assign(cfg, { intervals: true, boxTimer: true });
   },
 };
 function modeText() {
   if (!cfg.intervals) return 'Pendule classique, sans rounds.';
   const r = fmtValue(cfg.chessRoundMs, 'time');
-  if (cfg.noBoxing) return `Rounds d'échecs de ${r} et pauses, sans boxe.`;
-  if (cfg.boxTimer) return `Chessboxing : rounds d'échecs de ${r}, boxe et pauses chronométrées.`;
-  return `Chessboxing : rounds d'échecs de ${r}.`;
+  const p = cfg.breakMs ? `pauses de ${fmtValue(cfg.breakMs, 'time')}` : 'pauses libres (tu relances)';
+  return cfg.boxTimer ? `Rounds d'échecs de ${r}, ${p}, boxe de ${fmtValue(cfg.boxRoundMs, 'time')}.`
+    : `Rounds d'échecs de ${r}, ${p}, sans boxe.`;
 }
 function renderDurations() {
   $('durations').innerHTML = DURATIONS.map(([key, icon, label]) => `
@@ -163,7 +164,6 @@ $('wheel').addEventListener('click', e => { if (!e.target.closest('.wheel-panel'
 // One or two words per option; the "?" shows the explanation.
 const OPTIONS = [
   ['illegalMoves', 'Coups illégaux', () => `Carton jaune dans ton coin : coup illégal adverse = 1 compte, il rejoue.`],
-  ['autoStop', 'Auto rounds', () => `Round d'échecs stoppé à ${cfg.chessRoundMs / 60000} min. Sinon : alerte, tu stoppes.`],
   ['moveLimit', 'Anti-jeu', () => `${cfg.moveWarnMs / 1000} s : alerte. ${cfg.moveCountdownMs / 1000} s : compte de 10 s, puis perdu. ${cfg.countsPerRound} comptes / round ou ${cfg.countsTotal} au total : perdu.`],
   ['eco', 'Éco', () => `Économie d'énergie : pas de son (vibrations seulement), écran plus sombre, pas d'animations.`],
 ];
@@ -219,8 +219,7 @@ $('presets').addEventListener('click', e => {
 // A plain clock (no intervals) has no counts and no chessboxing options.
 function fightConfig() {
   const c = structuredClone(cfg);
-  if (!c.intervals) Object.assign(c, { moveLimit: false, illegalMoves: false, autoStop: false, boxTimer: false, noBoxing: false });
-  if (c.noBoxing) c.boxTimer = false;
+  if (!c.intervals) Object.assign(c, { moveLimit: false, illegalMoves: false, boxTimer: false });
   return c;
 }
 $('options').addEventListener('click', e => {
@@ -229,7 +228,6 @@ $('options').addEventListener('click', e => {
   if (t) {
     cfg[t.dataset.opt] = !cfg[t.dataset.opt];
     // The boxing timer only makes sense with automatic rounds.
-    if (t.dataset.opt === 'autoStop' && !cfg.autoStop) cfg.boxTimer = false;
     save(CFG_KEY, cfg);
     setMuted(!!cfg.eco);
   }
@@ -301,7 +299,7 @@ $('bar-btn').addEventListener('click', () => {
     act(s.result.method === 'réflexion' ? reopen(s, performance.now()) : undoCount(s, performance.now()));
     return;
   }
-  if (s.phase === 'boxing' && s.phaseRemaining === null) act(skipPhase(s, performance.now()));
+  if (s.phase === 'break' && s.phaseRemaining === null && !s.paused) act(skipPhase(s, performance.now()));
   else act(togglePause(s, performance.now()));
 });
 
@@ -409,7 +407,7 @@ function render() {
     h.querySelector('.h-clock').textContent = formatClock(s.remaining[p]);
     const phaseEl = h.querySelector('.h-phase');
     phaseEl.textContent = s.phase === 'boxing' ? (untimed ? 'BOXE' : `BOXE ${formatClock(s.phaseRemaining)}`)
-      : s.phase === 'break' ? `PAUSE ${formatClock(s.phaseRemaining)}` : '';
+      : s.phase === 'break' ? (untimed ? 'PAUSE' : `PAUSE ${formatClock(s.phaseRemaining)}`) : '';
     const move = h.querySelector('.h-move');
     if (active && cd !== null) move.innerHTML = countHands(cd);
     else if (active && stage === 'warn') move.textContent = `${Math.floor(s.moveElapsed / 1000)} s`;
@@ -434,8 +432,7 @@ function render() {
 
   const roundIcon = roundType(shownRound) === 'chess' ? '♟' : '🥊';
   $('bar-round').textContent = !s.cfg.intervals ? '♟'
-    : s.cfg.noBoxing ? `${s.phase === 'break' ? '⏸' : '♟'} ${Math.ceil(shownRound / 2)}/${Math.ceil(s.cfg.rounds / 2)}`
-    : `${s.phase === 'break' ? '⏸' : roundIcon} ${shownRound}/${s.cfg.rounds}`;
+    : `${s.phase === 'break' ? '⏸' : roundIcon} ${roundNo(s.cfg, shownRound)}/${roundNo(s.cfg, s.cfg.rounds)}`;
   $('bar-phase').textContent = s.phase === 'ready' ? '1er = NOIRS' : s.phase === 'break' ? `→ ${roundIcon}`
     : flagScreen ? methodShort(r.method)
     : s.roundOver ? 'Temps !' : s.paused ? 'Pause' : '';
@@ -445,9 +442,9 @@ function render() {
   const overAction = flagScreen ? (r.method === 'réflexion' ? 'Continuer' : r.method.includes('comptes') ? 'Annuler' : null) : null;
   $('bar-btn').hidden = s.phase === 'ready' || (s.phase === 'over' && !overAction);
   $('bar-btn').textContent = overAction ? overAction : s.paused ? '▶ GO'
-    : untimed && s.phase === 'boxing' ? `▶ ROUND ${s.round + 1}` : s.roundOver ? 'STOP' : 'PAUSE';
+    : untimed && s.phase === 'break' ? `▶ ${roundIcon} ${roundNo(s.cfg, shownRound)}` : s.roundOver ? 'STOP' : 'PAUSE';
   $('bar-btn').classList.toggle('long', $('bar-btn').textContent.length > 6);
-  $('bar-btn').classList.toggle('go', untimed && s.phase === 'boxing' && !s.paused);
+  $('bar-btn').classList.toggle('go', untimed && s.phase === 'break' && !s.paused);
 
   $('pause-menu').hidden = !(s.paused && s.phase !== 'over') || !$('end-menu').hidden;
   if (!$('pause-menu').hidden) renderPauseMenu();
@@ -458,7 +455,7 @@ function render() {
 function renderPauseMenu() {
   const next = nextChessRound(s);
   $('pm-next').hidden = next === null;
-  if (next !== null) $('pm-next').textContent = `♟ Round ${next} ▶`;
+  if (next !== null) $('pm-next').textContent = `♟ Round ${roundNo(s.cfg, next)} ▶`;
 }
 $('pm-next').addEventListener('click', () => act(goToNextChess(s, performance.now())));
 
