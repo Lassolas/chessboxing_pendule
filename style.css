@@ -101,7 +101,7 @@ body {
 }
 .half.top { transform: rotate(180deg); padding-top: max(12px, env(safe-area-inset-bottom)); }
 .half.bottom { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
-.h-name { font: 600 22px var(--font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--text-2); }
+.h-name { font: 600 40px/1 var(--font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--text-2); }
 .h-clock {
   font: 700 clamp(72px, 24vw, 160px)/0.9 var(--font-display);
   font-variant-numeric: tabular-nums;
@@ -109,9 +109,10 @@ body {
 }
 .h-move { font: 600 24px var(--font-display); color: var(--text-2); font-variant-numeric: tabular-nums; min-height: 1.2em; }
 .h-phase { font: 700 clamp(40px, 12vw, 72px)/1 var(--font-display); font-variant-numeric: tabular-nums; display: none; }
-.h-counts { display: flex; gap: 18px; font-size: 14px; color: var(--text-2); align-items: center; }
+.h-counts { display: flex; gap: 8px; min-height: 18px; align-items: center; }
+.dot.old { opacity: .45; }
 .dots { display: inline-flex; gap: 4px; margin-left: 6px; vertical-align: middle; }
-.dot { width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--text-2); }
+.dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--text-2); }
 .dot.on { background: var(--red); border-color: var(--red); }
 /* Illegal move: yellow card in the corner nearest the centre bar
    (the top half is rotated, so its top corner also faces the centre) */

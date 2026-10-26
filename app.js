@@ -134,10 +134,7 @@ function buildHalves() {
       <div class="h-phase"></div>
       <div class="h-clock"></div>
       <div class="h-move"></div>
-      <div class="h-counts">
-        <span>Round<span class="dots" data-k="round"></span></span>
-        <span>Total<span class="dots" data-k="total"></span></span>
-      </div>
+      <div class="h-counts"></div>
       <button type="button" class="yellow-card" aria-label="Coup illégal adverse" title="Coup illégal adverse"></button>`;
     h.querySelector('.yellow-card').addEventListener('pointerdown', e => {
       e.stopPropagation();
@@ -240,11 +237,6 @@ $('toast-undo').addEventListener('click', () => {
   act(undoCount(s, performance.now()));
 });
 
-function dots(n, max) {
-  return Array.from({ length: max }, (_, i) => `<i class="dot${i < n ? ' on' : ''}"></i>`).join('');
-}
-
-const PHASE_LABEL = { ready: 'Prêt', chess: 'Échecs', boxing: 'Boxe', break: 'Pause', over: 'Fin' };
 const METHOD_SHORT = { temps: 'Drapeau', 'réflexion': 'Anti-jeu', decision: 'Fin' };
 const methodShort = m => METHOD_SHORT[m] || m.replace(/ dans le round| au total/, '');
 
@@ -276,23 +268,27 @@ function render() {
       : s.phase === 'break' ? `PAUSE ${formatClock(s.phaseRemaining)}` : '';
     const move = h.querySelector('.h-move');
     if (active && cd !== null) move.textContent = cd;
-    else if (active && s.cfg.moveLimit) move.textContent = `${Math.floor(s.moveElapsed / 1000)} s`;
+    else if (active && stage === 'warn') move.textContent = `${Math.floor(s.moveElapsed / 1000)} s`;
     else if (s.phase === 'ready') move.textContent = '▶ Touche';
     else if (flagScreen && r.loser === p) move.textContent = `⚑ ${methodShort(r.method)}`;
     else if (flagScreen) move.textContent = r.winner === null ? '½' : 'VICTOIRE';
     else move.textContent = '';
-    const icon = s.white === null ? '' : p === s.white ? '♔ ' : '♚ ';
-    h.querySelector('.h-name').textContent = icon + nameOf(p);
-    h.querySelector('[data-k=round]').innerHTML = dots(countsOf(s, p, roundForCounts), s.cfg.countsPerRound);
-    h.querySelector('[data-k=total]').innerHTML = dots(countsOf(s, p), s.cfg.countsTotal);
+    // Colour as a big icon; a name only if one was typed in ⚙.
+    const icon = s.white === null ? '' : p === s.white ? '♔' : '♚';
+    h.querySelector('.h-name').textContent = [icon, s.cfg.names[p]].filter(Boolean).join(' ');
+    // Counts: nothing until the first one, then one red dot each
+    // (bright for this round, dim for earlier rounds).
+    const mine = s.counts.filter(c => c.player === p);
+    h.querySelector('.h-counts').innerHTML = mine.map(c =>
+      `<i class="dot on${c.round === roundForCounts ? '' : ' old'}"></i>`).join('');
     h.querySelector('.yellow-card').hidden = !s.cfg.illegalMoves || s.phase !== 'chess' || s.paused;
   });
 
-  $('bar-round').textContent = `Round ${shownRound}/${s.cfg.rounds}`;
-  $('bar-phase').textContent = s.phase === 'ready' ? '1er = Noirs' : s.phase === 'break'
-    ? `Pause → ${roundType(s.nextRound) === 'chess' ? 'échecs' : 'boxe'}`
+  const roundIcon = roundType(shownRound) === 'chess' ? '♟' : '🥊';
+  $('bar-round').textContent = `${s.phase === 'break' ? '⏸' : roundIcon} ${shownRound}/${s.cfg.rounds}`;
+  $('bar-phase').textContent = s.phase === 'ready' ? '1er = ♚' : s.phase === 'break' ? `→ ${roundIcon}`
     : flagScreen ? methodShort(r.method)
-    : s.roundOver ? 'Temps !' : (s.paused ? 'Pause' : PHASE_LABEL[s.phase]);
+    : s.roundOver ? 'Temps !' : s.paused ? 'Pause' : '';
   $('bar-timer').textContent = s.phase === 'ready' || s.phase === 'over' || untimed ? '' : formatClock(s.phaseRemaining);
   document.querySelector('.bar').classList.toggle('alert', s.roundOver && !s.paused && s.phase !== 'over');
   // On the flag screen the bar button carries the one useful action.
