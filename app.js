@@ -512,8 +512,6 @@ function act(events) {
     play(ev);
     if (FLASH[ev] && !cfg.eco) flash(FLASH[ev]);
   }
-  // A new step is announced like a title card: numeral, rule, name.
-  if (s && (events.includes('roundStart') || (events.includes('roundEnd') && s.phase === 'break'))) showCard();
   render();
   persist();
 }
@@ -554,15 +552,6 @@ function setHTML(el, html) {
 function stepCard() {
   if (s.phase === 'break') return { num: ICONS.hourglass, label: 'Pause' };
   return { num: roman(roundNo(s.cfg, s.round)), label: s.phase === 'boxing' ? 'Boxe' : 'Échecs' };
-}
-let cardTimer = null;
-function showCard() {
-  const f = $('fight');
-  f.classList.remove('carding');
-  void f.offsetWidth;
-  f.classList.add('carding');
-  clearTimeout(cardTimer);
-  cardTimer = setTimeout(() => f.classList.remove('carding'), 1800);
 }
 function trackHTML() {
   const c = s.cfg, rounds = [];
@@ -606,7 +595,13 @@ function render() {
     setDigits(h.querySelector('.h-clock'), cfg.eco ? roundClock(s.remaining[p]) : formatClock(s.remaining[p]), cfg.digits);  // Éco: no tenths
     const phaseEl = h.querySelector('.h-phase');
     // Boxing / pause: small label, the round timer in big digits.
-    setHTML(phaseEl.firstChild, s.phase === 'boxing' ? `<em>${roman(roundNo(s.cfg, s.round))}</em>Boxe` : s.phase === 'break' ? `${ICONS.hourglass}Pause` : '');
+    // Nothing ever covers a running clock: the next round is announced in
+    // the last 10 s of the pause (and before the first one), above the timer.
+    const soon = s.phase === 'break' && s.phaseRemaining !== null && s.phaseRemaining <= 10000;
+    const upcoming = n => `<em>${roman(roundNo(s.cfg, n))}</em>${roundType(n) === 'chess' ? 'Échecs' : 'Boxe'}`;
+    phaseEl.classList.toggle('soon', soon || s.phase === 'ready');
+    setHTML(phaseEl.firstChild, s.phase === 'boxing' ? upcoming(s.round) : soon ? upcoming(s.nextRound)
+      : s.phase === 'break' ? `${ICONS.hourglass}Pause` : s.phase === 'ready' ? upcoming(1) : '');
     const card = stepCard();
     setHTML(h.querySelector('.hc-num'), card.num);
     h.querySelector('.hc-label').textContent = card.label;
