@@ -100,6 +100,20 @@ function wood(start, vol = 1) {
   hit(start, 700, 6, 0.9 * vol, 0.09);
   tone(420, start, 0.06, { type: 'triangle', vol: 0.35 * vol });
 }
+// Hard wooden block struck by a stick (the referee's 10-second warning):
+// a sharp broadband impact, then the block's own resonant modes ringing
+// out (inharmonic, like a bar: ~1 : 2.4 : 4.1 : 6.2), higher modes dying first.
+function woodBlock(start, vol = 0.45) {
+  if (!ctx) return;
+  hit(start, 5000, 0.6, 2.2 * vol, 0.006, 'highpass');      // stick contact
+  hit(start, 1800, 1.2, 1.4 * vol, 0.018);                  // impact body
+  tone(190, start, 0.04, { type: 'sine', vol: 0.5 * vol, glide: 120 }); // thump
+  [[860, 0.55, 0.26], [2060, 0.32, 0.13], [3520, 0.2, 0.07], [5330, 0.1, 0.04]]
+    .forEach(([f, v, d]) => tone(f * (0.995 + Math.random() * 0.01), start, d, { vol: v * vol, attack: 0.001 }));
+}
+// For tests: render sounds into an OfflineAudioContext.
+export function useContext(c) { ctx = c; }
+
 // Knuckle on a wooden table: duller and lower.
 function knock(start, vol = 1) {
   hit(start, 450, 3, 1.2 * vol, 0.08);
@@ -125,7 +139,8 @@ const SOUNDS = {
   moveCountdown: () => { wood(0); wood(0.16); },
   moveTick: () => tick(0, Math.round(performance.now() / 1000) % 2 === 0),
   clockLow: () => tick(0, true),
-  phaseTen: () => { wood(0); wood(0.2); wood(0.4); },
+  phaseTen: () => [0, 0.5, 1, 1.5].forEach(t => woodBlock(t)),  // 10 s left in a round: 4 strikes in 1.5 s
+  breakTen: () => [0, 1, 2].forEach(t => woodBlock(t)),          // 10 s left in a break: 3 strikes, 1 s apart
   roundStart: () => bell(1),
   roundEnd: () => bell(3),
   roundTimeUp: () => bell(3),
@@ -145,7 +160,8 @@ const VIBRATE = {
   roundTimeUp: [200, 100, 200, 100, 200],
   count: [300],
   over: [600, 150, 600],
-  phaseTen: [100, 80, 100],
+  phaseTen: [80, 420, 80, 420, 80, 420, 80],
+  breakTen: [80, 920, 80, 920, 80],
 };
 
 export function play(event) {

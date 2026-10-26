@@ -179,7 +179,7 @@ export function tick(s, now) {
   if (s.phaseRemaining === null) return events;
   const r0 = s.phaseRemaining;
   s.phaseRemaining = Math.max(0, r0 - dt);
-  if (crossedSecond(r0, s.phaseRemaining, 10) === 10) events.push('phaseTen');
+  if (crossedSecond(r0, s.phaseRemaining, 10) === 10) events.push(s.phase === 'break' ? 'breakTen' : 'phaseTen');
   if (s.phaseRemaining === 0) {
     if (s.phase === 'break') startPhase(s, s.nextRound, events);
     else endRound(s, events);

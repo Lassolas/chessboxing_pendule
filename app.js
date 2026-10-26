@@ -160,7 +160,7 @@ $('btn-resume-saved').addEventListener('click', () => {
 // Sound and colour test, one after the other.
 $('btn-test-sound').addEventListener('click', () => {
   unlockAudio();
-  const steps = [['press', '#2fbf71'], ['roundStart', '#f5c842'], ['phaseTen', '#4a9eff'], ['moveWarn', '#ff9a1f'], ['moveCountdown', '#ff3b3b'], ['count', '#ff3b3b'], ['roundEnd', '#f5c842'], ['over', '#ffffff']];
+  const steps = [['press', '#2fbf71'], ['roundStart', '#f5c842'], ['phaseTen', '#4a9eff'], ['breakTen', '#4a9eff'], ['moveWarn', '#ff9a1f'], ['moveCountdown', '#ff3b3b'], ['count', '#ff3b3b'], ['roundEnd', '#f5c842'], ['over', '#ffffff']];
   steps.forEach(([ev, color], i) => setTimeout(() => { play(ev); flash(color); }, i * 1400));
 });
 
@@ -253,7 +253,7 @@ function closeFight() {
 const FLASH = {
   roundStart: '#f5c842', roundEnd: '#f5c842', roundTimeUp: '#ff3b3b',
   moveWarn: '#ff9a1f', moveCountdown: '#ff3b3b', count: '#ff3b3b', over: '#ffffff',
-  phaseTen: '#4a9eff', pause: '#2fbf71', resume: '#2fbf71', undo: '#a3a3b8',
+  phaseTen: '#4a9eff', breakTen: '#4a9eff', pause: '#2fbf71', resume: '#2fbf71', undo: '#a3a3b8',
 };
 function act(events) {
   if (!events) return;
