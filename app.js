@@ -411,6 +411,34 @@ const compassUp = () => {
 $('bar-compass').addEventListener('pointerup', compassUp);
 $('bar-compass').addEventListener('pointercancel', compassUp);
 
+// The phone's tilt turns the digits too: right side down = right, left side
+// down = left, held upright = face to face. Lying flat on the table changes
+// nothing, so the compass choice stays. iOS asks for permission on a tap.
+let tilt = { o: null, since: 0 };
+// iOS reports gravity with the opposite sign to Android and the spec.
+const MOTION_SIGN = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ? 1 : -1;
+function onMotion(e) {
+  const g = e.accelerationIncludingGravity;
+  if (!g || g.x === null || $('fight').hidden) return;
+  const x = g.x * MOTION_SIGN, y = g.y * MOTION_SIGN, z = g.z;
+  if (Math.abs(z) > 7) { tilt.o = null; return; }  // flat
+  const o = Math.abs(x) > Math.abs(y) + 2 ? (x > 0 ? 'right' : 'left') : Math.abs(y) > Math.abs(x) + 2 ? 'normal' : null;
+  if (!o) return;
+  const now = performance.now();
+  if (o !== tilt.o) { tilt = { o, since: now }; return; }
+  if (now - tilt.since > 600 && o !== cfg.orient) { setOrient(o); save(CFG_KEY, cfg); }
+}
+let motionAsked = false;
+function askMotion() {
+  if (motionAsked) return;
+  motionAsked = true;
+  if (typeof DeviceMotionEvent === 'undefined') return;
+  window.addEventListener('devicemotion', onMotion);
+  DeviceMotionEvent.requestPermission?.().catch(() => {});  // iOS: asks once, on this tap
+}
+document.addEventListener('click', askMotion);
+document.addEventListener('touchend', askMotion);
+
 $('bar-home').addEventListener('click', () => {
   if (s.phase === 'ready' || s.phase === 'over') { closeFight(); return; }
   if (!s.paused) togglePause(s, performance.now());
