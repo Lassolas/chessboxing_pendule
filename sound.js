@@ -235,6 +235,7 @@ function doorShut() {
 const SOUNDS = {
   press: punch,
   moveWarn: () => knock(0),
+  ready: () => { knock(0); knock(0.22); },  // end of the pause: two knocks, Prêt ?
   moveCountdown: () => { wood(0); wood(0.16); },
   moveTick: () => tick(0, Math.round(performance.now() / 1000) % 2 === 0),
   clockLow: () => tick(0, true),

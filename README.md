@@ -1,5 +1,14 @@
 # Pendule Chessboxing
 
+## v2
+
+- Home: one big **COMBAT** button (5 rounds · 3′ chess · 3′ boxing · 1′ pause by default); everything else is in **Réglages**.
+- **Prêt ?** before each chess round that follows a timed pause: the clocks wait until someone taps (option in Réglages).
+- The fight bar keeps the round and the pause button; orientation is set in Réglages or by the phone's tilt.
+- Look after Enki Bilal (cold slate, bone, ochre gold, rust) and Iepe Rubingh (tape ring corners).
+- The v1 app is kept on the `v1` branch.
+
+
 Pendule d'échecs pour les combats de chessboxing, faite pour le club Paris Chessboxing. C'est une page web installable sur téléphone (PWA) qui marche hors ligne.
 
 **En ligne :** https://lassolas.github.io/chessboxing_pendule/

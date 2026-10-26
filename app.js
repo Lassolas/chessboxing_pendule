@@ -22,11 +22,11 @@ function save(key, value) {
 // them into the clock's settings.
 const homeDefaults = () => ({
   ...defaultConfig(),
-  breakMs: 60000, breakOn: false,   // pause off = open pause (∞)
+  breakMs: 60000, breakOn: true,    // pause off = open pause (∞)
   warnOn: false, countdownOn: false,   // counts off by default
   digits: 'oxanium',                  // clock digits: oxanium | dgt | teko
   sound: true,
-  v: 7,
+  v: 8,
 });
 let cfg = { ...homeDefaults(), ...(load(CFG_KEY) || {}) };
 cfg.names = ['', ''];  // no player names: BLANCS / NOIRS only
@@ -58,6 +58,10 @@ if (cfg.v < 6) {  // v6: counts off by default
 if (cfg.v < 7) {  // v7: sound back on for everyone, on by default
   cfg.sound = true;
   cfg.v = 7;
+}
+if (cfg.v < 8) {  // v8: the club's usual fight by default: 5 × (3' chess, 3' boxing), 1' pauses, Prêt ?
+  Object.assign(cfg, { rounds: 5, intervals: true, chessRoundMs: 180000, boxRoundMs: 180000, boxTimer: true,
+    breakOn: true, breakMs: 60000, readyCheck: true, v: 8 });
 }
 cfg.moveCountdownMs = Math.max(10000, cfg.moveCountdownMs);
 let s = null;
@@ -215,13 +219,26 @@ function onStripUp() {
 const OPTIONS = [
   ['sound', on => (on ? '🔊' : '🔇'), 'Son'],
   ['eco', () => '🔋<small>Éco</small>', 'Éco'],
+  ['readyCheck', () => '<small>Prêt ?</small>', 'Prêt ? avant chaque round d\'échecs'],
 ];
 
+// Rounds: one tap picks the number (the time per player follows).
 function renderPresets() {
   $('presets').innerHTML = Object.keys(PRESETS).map(r =>
-    cfg.intervals
-      ? `<button type="button" class="btn preset" data-r="${r}"><b>${r}</b><small>rounds</small><em>${formatClock(playerTime({ ...cfg, rounds: +r })).replace(':', "'")}</em></button>`
-      : `<button type="button" class="btn preset classic" data-r="${r}"><b>${formatClock(PRESETS[r]).replace(':', "'")}</b><small>classique</small></button>`).join('');
+    `<button type="button" class="preset${+r === cfg.rounds ? ' on' : ''}" data-r="${r}"><b>${cfg.intervals ? r : formatClock(PRESETS[r]).replace(':', "'")}</b><small>${formatClock(playerTime({ ...cfg, rounds: +r })).replace(':', "'")}</small></button>`).join('');
+  renderSummary();
+}
+// The big COMBAT button says what it starts.
+const mins = ms => ms % 60000 ? `${Math.floor(ms / 60000)}′${String((ms % 60000) / 1000).padStart(2, '0')}` : `${ms / 60000}′`;
+function renderSummary() {
+  const c = cfg, parts = [];
+  if (!c.intervals) parts.push(`Pendule ${formatClock(PRESETS[c.rounds]).replace(':', "'")}`);
+  else {
+    parts.push(`${c.rounds} rounds`, `♟ ${mins(c.chessRoundMs)}`);
+    if (c.boxTimer) parts.push(`🥊 ${mins(c.boxRoundMs)}`);
+    parts.push(c.breakOn ? (c.breakMs ? `⏸ ${mins(c.breakMs)}` : 'sans pause') : '⏸ libre');
+  }
+  $('fight-sum').textContent = parts.join(' · ');
 }
 
 function renderSetup() {
@@ -236,6 +253,8 @@ function renderSetup() {
   $('digit-pick').innerHTML = `<div class="digit-pick">${DIGIT_STYLES.map(d =>
     `<button type="button" class="digit-opt${cfg.digits === d ? ' on' : ''}" data-digits="${d}" aria-label="Chiffres ${d}"><span></span></button>`).join('')}</div>`;
   $('digit-pick').querySelectorAll('.digit-opt span').forEach(sp => setDigits(sp, '4:30', sp.parentNode.dataset.digits));
+  $('orient-pick').innerHTML = ORIENT_PICK.map(([o, icon, label]) =>
+    `<button type="button" class="orient-opt${(cfg.orient || 'normal') === o ? ' on' : ''}" data-orient="${o}" aria-label="${label}">${icon}<small>${label}</small></button>`).join('');
   renderTiles();
   const saved = load(FIGHT_KEY);
   const live = saved && saved.phase !== 'ready' && saved.phase !== 'over';
@@ -249,15 +268,32 @@ function renderSetup() {
 }
 
 
-// A preset button starts the fight straight away.
 $('presets').addEventListener('click', e => {
   const b = e.target.closest('[data-r]');
   if (!b) return;
-  unlockAudio();
   cfg.rounds = +b.dataset.r;
   save(CFG_KEY, cfg);
+  renderSetup();
+});
+// COMBAT: the fight as set, straight away.
+$('btn-fight').addEventListener('click', () => {
+  unlockAudio();
   s = newFight(fightConfig());
   openFight();
+});
+// Orientation of the digits: face to face, or both turned to one side
+// (the phone's tilt also sets it during the fight).
+const ORIENT_PICK = [
+  ['normal', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M7 8l5-5 5 5M7 16l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>', 'Face à face'],
+  ['right', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h18M16 7l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>', 'Côté droit'],
+  ['left', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12H3M8 7l-5 5 5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>', 'Côté gauche'],
+];
+$('orient-pick').addEventListener('click', e => {
+  const b = e.target.closest('[data-orient]');
+  if (!b) return;
+  setOrient(b.dataset.orient);
+  save(CFG_KEY, cfg);
+  renderSetup();
 });
 // A plain clock (no intervals) has no counts and no chessboxing options.
 const NEVER = 1e9;
@@ -286,9 +322,8 @@ function onOptions(e) {
 }
 $('options').addEventListener('click', onOptions);
 $('digit-pick').addEventListener('click', onOptions);
-$('btn-reset').addEventListener('click', () => $('btn-defaults').click());
 $('btn-defaults').addEventListener('click', () => {
-  cfg = { ...homeDefaults(), rounds: cfg.rounds, names: cfg.names, eco: cfg.eco, digits: cfg.digits };
+  cfg = { ...homeDefaults(), readyCheck: true, names: cfg.names, eco: cfg.eco, sound: cfg.sound, digits: cfg.digits, orient: cfg.orient };
   save(CFG_KEY, cfg);
   renderSetup();
 });
@@ -388,40 +423,16 @@ document.addEventListener('keydown', e => {
 
 // Back to the home screen: a fight in progress is paused and kept, so
 // "Reprendre le combat" brings it back.
-// Compass in the bar: press and swipe right or left to turn both clocks'
-// digits that way, up or down for the usual face-to-face layout. A tap
-// goes round the three.
-const ORIENTS = ['normal', 'right', 'left'];
+// Digits face to face, or both turned right / left (Réglages, or the phone's tilt).
 function setOrient(o) {
   cfg.orient = o;
   $('fight').dataset.orient = o;
 }
 setOrient(cfg.orient || 'normal');
-let compass = null;
-$('bar-compass').addEventListener('pointerdown', e => {
-  e.stopPropagation();
-  compass = { x: e.clientX, y: e.clientY, moved: false };
-  $('bar-compass').setPointerCapture(e.pointerId);
-});
-$('bar-compass').addEventListener('pointermove', e => {
-  if (!compass) return;
-  const dx = e.clientX - compass.x, dy = e.clientY - compass.y;
-  if (Math.hypot(dx, dy) < 24) return;
-  compass.moved = true;
-  setOrient(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : 'normal');
-});
-const compassUp = () => {
-  if (!compass) return;
-  if (!compass.moved) setOrient(ORIENTS[(ORIENTS.indexOf(cfg.orient) + 1) % ORIENTS.length]);
-  compass = null;
-  save(CFG_KEY, cfg);
-};
-$('bar-compass').addEventListener('pointerup', compassUp);
-$('bar-compass').addEventListener('pointercancel', compassUp);
 
 // The phone's tilt turns the digits too: right side down = right, left side
 // down = left, held upright = face to face. Lying flat on the table changes
-// nothing, so the compass choice stays. iOS asks for permission on a tap.
+// nothing, so the choice made in Réglages stays. iOS asks for permission on a tap.
 let tilt = { o: null, since: 0 };
 // iOS reports gravity with the opposite sign to Android and the spec.
 const MOTION_SIGN = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ? 1 : -1;
@@ -444,7 +455,7 @@ function askMotion() {
   DeviceMotionEvent.requestPermission?.().catch(() => {});  // iOS: asks once, on this tap
   updateMotion();
 }
-// Éco switches the tilt sensor off (the compass still turns the digits).
+// Éco switches the tilt sensor off (Réglages still turns the digits).
 let motionOn = false;
 function updateMotion() {
   const want = motionAsked && !cfg.eco && typeof DeviceMotionEvent !== 'undefined';
@@ -486,7 +497,7 @@ function closeFight() {
 
 // Play the sounds and colour flashes of a list of events, then redraw.
 const FLASH = {
-  roundStart: '#f5c842', roundEnd: '#f5c842', roundTimeUp: '#ff3b3b',
+  ready: '#f5c842', roundStart: '#f5c842', roundEnd: '#f5c842', roundTimeUp: '#ff3b3b',
   moveWarn: '#ff9a1f', moveCountdown: '#ff3b3b', count: '#ff3b3b', over: '#ffffff',
   phaseTen: '#4a9eff', breakTen: '#4a9eff', pause: '#2fbf71', resume: '#2fbf71', undo: '#a3a3b8',
 };
@@ -535,7 +546,7 @@ function render() {
   const body = document.body;
   const r = s.result;
   const flagScreen = r && r.method !== 'decision';
-  body.className = `phase-${s.phase}${s.paused ? ' paused' : ''}${cfg.eco ? ' eco' : ''}${flagScreen ? ' flag' : ''}`;
+  body.className = `phase-${s.phase}${s.paused ? ' paused' : ''}${s.awaitReady ? ' await' : ''}${cfg.eco ? ' eco' : ''}${flagScreen ? ' flag' : ''}`;
   const shownRound = s.phase === 'break' ? s.nextRound : s.round;
   const stage = moveStage(s);
   const cd = moveCountdownLeft(s);
@@ -555,7 +566,7 @@ function render() {
     setDigits(h.querySelector('.h-clock'), cfg.eco ? roundClock(s.remaining[p]) : formatClock(s.remaining[p]), cfg.digits);  // Éco: no tenths
     const phaseEl = h.querySelector('.h-phase');
     // Boxing / pause: small label, the round timer in big digits.
-    phaseEl.firstChild.textContent = s.phase === 'boxing' ? 'BOXE' : s.phase === 'break' ? 'PAUSE' : '';
+    phaseEl.firstChild.textContent = s.phase === 'boxing' ? 'BOXE' : s.phase === 'break' ? 'PAUSE' : s.awaitReady ? `♟ ROUND ${roundNo(s.cfg, s.round)}` : '';
     setDigits(phaseEl.lastChild, (s.phase === 'boxing' || s.phase === 'break') && !untimed ? roundClock(s.phaseRemaining) : (s.phase === 'break' ? '∞' : ''), cfg.digits);
     const move = h.querySelector('.h-move');
     if (active && cd !== null) move.innerHTML = countHands(cd);
@@ -608,6 +619,9 @@ function render() {
   $('bar-btn').classList.toggle('go', untimed && s.phase === 'break' && !s.paused);
 
   $('pause-menu').hidden = !(s.paused && s.phase !== 'over') || !$('end-menu').hidden;
+  $('pause-menu').classList.toggle('ready', !!s.awaitReady);
+  // ⌂ in the bar only before the start and at the end; during the fight it is in the pause strip.
+  $('bar-home').hidden = !(s.phase === 'ready' || s.phase === 'over');
   if (!$('pause-menu').hidden) renderPauseMenu();
   renderResult();
 }
@@ -615,8 +629,10 @@ function render() {
 // Pause menu: big Continue, ↺ restart from zero (tap twice), ⌂ home.
 function renderPauseMenu() {
   // Next step in fight order: → ⏸ pause, then → 🥊 boxing or → ♟ chess.
-  const next = nextStep(s);
+  const next = s.awaitReady ? null : nextStep(s);
   $('pm-next').hidden = next === null;
+  $('pm-restart').hidden = !!s.awaitReady;
+  $('pm-resume').textContent = s.awaitReady ? 'PRÊT ?' : '▶ GO';
   if (next) $('pm-next').textContent = `→ ${next.phase === 'break' ? '⏸' : next.phase === 'chess' ? '♟' : '🥊'}`;  // same arrow as the bar
 }
 $('pm-next').addEventListener('click', () => act(goToNextStep(s, performance.now())));

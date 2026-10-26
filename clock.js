@@ -21,13 +21,14 @@ export function playerTime(cfg) {
 
 export function defaultConfig() {
   return {
-    rounds: 7,
+    rounds: 5,
     names: ['', ''],       // optional, by half of the screen
     chessRoundMs: 3 * 60000,
     boxRoundMs: 3 * 60000,
     breakMs: null,          // null = open pause (∞): the coach starts the next round; 0 = no pause
     intervals: true,        // coached 3-min chess rounds; false = plain clock
-    boxTimer: false,        // timed boxing rounds between the pauses
+    boxTimer: true,         // timed boxing rounds between the pauses
+    readyCheck: true,       // "Prêt ?" before each chess round after a timed pause
     illegalMoves: false,    // yellow card to claim an illegal move
     moveLimit: true,        // per-move thinking limit
     moveWarnMs: 20000,      // warning colour + sound
@@ -96,11 +97,18 @@ function finish(s, loser, method, events) {
   events.push('over');
 }
 
-function startPhase(s, round, events) {
+// `auto`: the round follows a timed pause on its own. A chess round then
+// waits on "Prêt ?" (the boxers need time to take their gloves off).
+function startPhase(s, round, events, auto = false) {
   s.round = round;
   s.roundOver = false;
+  s.awaitReady = false;
   if (roundType(round) === 'chess') {
     s.phase = 'chess';
+    if (auto && round > 1 && s.cfg.readyCheck) {
+      s.paused = true;
+      s.awaitReady = true;
+    }
     // The last chess round lasts as long as the players' clocks.
     s.phaseRemaining = s.cfg.intervals && round + 2 <= s.cfg.rounds ? s.cfg.chessRoundMs : null;
     s.moveElapsed = 0;
@@ -108,7 +116,7 @@ function startPhase(s, round, events) {
     s.phase = 'boxing';
     s.phaseRemaining = s.cfg.boxRoundMs;
   }
-  events.push('roundStart');
+  events.push(s.awaitReady ? 'ready' : 'roundStart');
 }
 
 // Every round ends on a pause (timed, or open until the coach restarts).
@@ -121,7 +129,7 @@ function endRound(s, events) {
   }
   const skipBoxing = s.phase === 'chess' && !s.cfg.boxTimer;
   const next = s.round + (skipBoxing ? 2 : 1);
-  if (s.cfg.breakMs === 0) { startPhase(s, next, events); return; }  // no pause
+  if (s.cfg.breakMs === 0) { startPhase(s, next, events, true); return; }  // no pause
   s.phase = 'break';
   s.nextRound = next;
   s.phaseRemaining = s.cfg.breakMs ?? null;
@@ -180,7 +188,7 @@ export function tick(s, now) {
   s.phaseRemaining = Math.max(0, r0 - dt);
   if (crossedSecond(r0, s.phaseRemaining, 10) === 10) events.push(s.phase === 'break' ? 'breakTen' : 'phaseTen');
   if (s.phaseRemaining === 0) {
-    if (s.phase === 'break') startPhase(s, s.nextRound, events);
+    if (s.phase === 'break') startPhase(s, s.nextRound, events, true);
     else endRound(s, events);
   }
   return events;
@@ -221,8 +229,14 @@ export function togglePause(s, now) {
     s.lastTick = now;
     return events;
   }
-  s.paused = !s.paused;
   s.lastTick = now;
+  // "Prêt ?" answered: the chess round starts, with the bell.
+  if (s.awaitReady && s.paused) {
+    s.awaitReady = false;
+    s.paused = false;
+    return ['roundStart'];
+  }
+  s.paused = !s.paused;
   return [s.paused ? 'pause' : 'resume'];
 }
 
@@ -269,6 +283,7 @@ export function goToNextStep(s, now) {
   if (!nextStep(s)) return [];
   const events = skipPhase(s, now);
   s.paused = false;
+  s.awaitReady = false;
   s.lastTick = now;
   return events;
 }
@@ -281,6 +296,7 @@ export function goToNextChess(s, now) {
   const events = [];
   startPhase(s, target, events);
   s.paused = false;
+  s.awaitReady = false;
   s.lastTick = now;
   return events;
 }

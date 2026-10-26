@@ -6,11 +6,13 @@ import {
   illegalMove, removeIllegal, undoCount, averageMove, nextChessRound, goToNextChess, nextStep, goToNextStep, reopen, adjustTime, moveStage, moveCountdownLeft, countsOf, playerTime, formatClock,
 } from '../clock.js';
 
+// Most checks were written for the v1 defaults.
+const V1 = { rounds: 7, boxTimer: false, readyCheck: false };
 const errors = [];
 const check = (cond, msg) => { if (!cond) errors.push(msg); };
 
 function fight(over = {}) {
-  const s = newFight({ ...defaultConfig(), ...over });
+  const s = newFight({ ...defaultConfig(), ...V1, ...over });
   start(s, 0, 1);
   return s;
 }
@@ -23,7 +25,7 @@ function run(s, from, to) {
 
 // Presets: time per player
 for (const [r, min] of [[5, 4.5], [7, 6], [9, 7.5], [11, 9]]) {
-  const s = newFight({ ...defaultConfig(), rounds: r });
+  const s = newFight({ ...defaultConfig(), ...V1, rounds: r });
   check(s.remaining[0] === min * 60000 && s.remaining[1] === min * 60000, `preset ${r} rounds should give ${min} min`);
 }
 
@@ -156,7 +158,7 @@ for (const [r, min] of [[5, 4.5], [7, 6], [9, 7.5], [11, 9]]) {
 
 // The first press picks the colours
 {
-  const s = newFight(defaultConfig());
+  const s = newFight({ ...defaultConfig(), ...V1 });
   press(s, 0, 0);
   check(s.phase === 'chess' && s.white === 1 && s.turn === 1, 'first to press is Black, White to move');
   run(s, 0, 2000);
@@ -197,11 +199,11 @@ for (const [r, min] of [[5, 4.5], [7, 6], [9, 7.5], [11, 9]]) {
 
 // Thinking time follows the chess round length
 {
-  check(playerTime({ ...defaultConfig(), rounds: 5 }) === 270000, '5 rounds of 3 min: 4\'30 each');
-  check(playerTime({ ...defaultConfig(), rounds: 11 }) === 540000, '11 rounds of 3 min: 9\'00 each');
-  check(playerTime({ ...defaultConfig(), rounds: 5, chessRoundMs: 120000 }) === 180000, '5 rounds of 2 min: 3\'00 each');
-  check(playerTime({ ...defaultConfig(), rounds: 7, intervals: false }) === 360000, 'plain clock keeps the preset');
-  const s = newFight({ ...defaultConfig(), rounds: 5, chessRoundMs: 120000 });
+  check(playerTime({ ...defaultConfig(), ...V1, rounds: 5 }) === 270000, '5 rounds of 3 min: 4\'30 each');
+  check(playerTime({ ...defaultConfig(), ...V1, rounds: 11 }) === 540000, '11 rounds of 3 min: 9\'00 each');
+  check(playerTime({ ...defaultConfig(), ...V1, rounds: 5, chessRoundMs: 120000 }) === 180000, '5 rounds of 2 min: 3\'00 each');
+  check(playerTime({ ...defaultConfig(), ...V1, rounds: 7, intervals: false }) === 360000, 'plain clock keeps the preset');
+  const s = newFight({ ...defaultConfig(), ...V1, rounds: 5, chessRoundMs: 120000 });
   check(s.remaining[0] === 180000 && s.remaining[1] === 180000, 'a new fight uses it');
 }
 
@@ -259,6 +261,35 @@ check(formatClock(9960) === '9.9' && formatClock(10000) === '0:10', 'tenths unde
   check(!s.paused, 'the next step runs');
   const n = fight({ moveLimit: false, rounds: 5, breakMs: null });
   check(nextStep(n).phase === 'break' && nextStep(n).round === 3, 'no boxing: chess round → pause → chess 3');
+}
+
+// v2 defaults: 5 rounds, boxing, 1-min pauses, "Prêt ?" before each chess round
+{
+  const s = newFight({ ...defaultConfig(), breakMs: 60000, moveLimit: false });
+  check(s.cfg.rounds === 5 && s.remaining[0] === 4.5 * 60000, 'v2 default: 5 rounds, 4:30 each');
+  start(s, 0, 1);
+  run(s, 0, 180000);
+  check(s.phase === 'break' && s.nextRound === 2, 'chess round 1 → pause');
+  run(s, 180000, 240000);
+  check(s.phase === 'boxing' && !s.paused && !s.awaitReady, 'boxing starts on its own after the pause');
+  run(s, 240000, 420000);
+  const ev = run(s, 420000, 480000);
+  check(s.phase === 'chess' && s.round === 3 && s.paused && s.awaitReady, 'chess round 3 waits on Prêt ?');
+  check(ev.includes('ready') && !ev.includes('roundStart'), 'no bell before Prêt ?');
+  const before = s.remaining[0];
+  run(s, 480000, 500000);
+  check(s.remaining[0] === before && s.phaseRemaining === 180000, 'clocks stay still while waiting');
+  const go = togglePause(s, 500000);
+  check(go.includes('roundStart') && !s.paused && !s.awaitReady, 'Prêt ? answered: bell and the round runs');
+  run(s, 500000, 501000);
+  check(s.phaseRemaining === 179000, 'round timer runs after Prêt ?');
+}
+{
+  const s = newFight({ ...defaultConfig(), breakMs: 60000, moveLimit: false });
+  start(s, 0, 1);
+  run(s, 0, 420000);
+  goToNextStep(s, 420000);
+  check(s.phase === 'chess' && !s.paused && !s.awaitReady, 'coach skipping to chess: no Prêt ?');
 }
 
 if (errors.length) {
