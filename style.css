@@ -224,7 +224,9 @@ body {
   letter-spacing: .01em;
 }
 .h-move { font: 600 24px var(--font-display); color: var(--text-2); font-variant-numeric: tabular-nums; min-height: 1.2em; }
-.h-phase { font: 700 clamp(40px, 12vw, 72px)/1 var(--font-display); font-variant-numeric: tabular-nums; display: none; }
+.h-phase { display: none; text-align: center; }
+.h-phase small { display: block; font: 700 24px/1 var(--font-display); letter-spacing: .16em; color: var(--text-2); margin-bottom: 6px; }
+.h-phase b { display: block; font: var(--clock-weight) calc(var(--clock-scale) * min(34cqw, 50cqh, 240px))/0.9 var(--font-clock); font-variant-numeric: tabular-nums; color: var(--text); }
 .h-counts { display: flex; gap: 8px; min-height: 18px; align-items: center; }
 .dot.old { opacity: .45; }
 .dots { display: inline-flex; gap: 4px; margin-left: 6px; vertical-align: middle; }
@@ -281,7 +283,10 @@ body {
 .phase-boxing .half { background: var(--box-bg); }
 .phase-break .half { background: var(--break-bg); }
 .phase-boxing .h-phase, .phase-break .h-phase { display: block; }
-.phase-boxing .h-clock, .phase-break .h-clock { font-size: clamp(36px, 10vw, 56px); color: var(--text-2); }
+.phase-boxing .h-clock, .phase-break .h-clock { color: var(--text-2); }
+/* Any orientation: the round timer big, the chess clock small */
+.phase-boxing #fight .h-clock, .phase-break #fight .h-clock { font-size: calc(var(--clock-scale) * min(12cqw, 16cqh, 64px)); }
+.phase-boxing #fight:not([data-orient="normal"]) .h-phase b, .phase-break #fight:not([data-orient="normal"]) .h-phase b { font-size: calc(var(--clock-scale) * min(36cqh, 40cqw, 240px)); }
 .phase-boxing .h-move, .phase-break .h-move { display: none; }
 .paused .h-in > :not(.h-avg) { opacity: .35; }
 .h-avg { position: absolute; bottom: 40px; left: 0; right: 0; text-align: center; font: 700 30px var(--font-display); color: var(--gold); letter-spacing: .04em; font-variant-numeric: tabular-nums; }

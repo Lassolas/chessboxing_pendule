@@ -329,7 +329,7 @@ function buildHalves() {
     const p = +h.dataset.p;
     h.innerHTML = `<div class="h-in">
       <div class="h-name"></div>
-      <div class="h-phase"></div>
+      <div class="h-phase"><small></small><b></b></div>
       <div class="h-clock"></div>
       <div class="h-move"></div>
       <div class="h-counts"></div>
@@ -533,8 +533,9 @@ function render() {
     h.classList.toggle('loser', !!flagScreen && r.loser === p);
     setDigits(h.querySelector('.h-clock'), formatClock(s.remaining[p]), cfg.digits);
     const phaseEl = h.querySelector('.h-phase');
-    phaseEl.textContent = s.phase === 'boxing' ? (untimed ? 'BOXE' : `BOXE ${formatClock(s.phaseRemaining)}`)
-      : s.phase === 'break' ? (untimed ? 'PAUSE' : `PAUSE ${formatClock(s.phaseRemaining)}`) : '';
+    // Boxing / pause: small label, the round timer in big digits.
+    phaseEl.firstChild.textContent = s.phase === 'boxing' ? 'BOXE' : s.phase === 'break' ? 'PAUSE' : '';
+    setDigits(phaseEl.lastChild, (s.phase === 'boxing' || s.phase === 'break') && !untimed ? formatClock(s.phaseRemaining) : (s.phase === 'break' ? '∞' : ''), cfg.digits);
     const move = h.querySelector('.h-move');
     if (active && cd !== null) move.innerHTML = countHands(cd);
     else if (active && stage === 'warn') move.textContent = `${Math.floor(s.moveElapsed / 1000)} s`;
