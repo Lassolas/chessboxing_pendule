@@ -282,3 +282,22 @@ body {
 .resume-live b { font-size: 22px; white-space: nowrap; }
 .resume-live[hidden] { display: none !important; }
 #pause-menu { background: transparent; }  /* halves are dimmed already; keeps ⌀ readable */
+
+/* Small phones (iPhone SE…): keep the whole centre bar on screen */
+@media (max-width: 380px) {
+  .bar { gap: 6px; padding: 6px 8px; grid-template-columns: auto auto 1fr minmax(96px, 1fr); }
+  .bar-home { width: 40px; height: 40px; font-size: 22px; }
+  .bar-round { font-size: 17px; }
+  .bar-timer { font-size: 28px; text-align: center; }
+  .bar-btn { height: 60px; font-size: 22px; }
+  .bar-btn.long { font-size: 18px; }
+}
+/* Tablets: bigger centre bar */
+@media (min-width: 700px) {
+  .bar { padding: 12px 20px; }
+  .bar-round { font-size: 26px; }
+  .bar-timer { font-size: 46px; }
+  .bar-btn { height: 88px; font-size: 36px; }
+  .bar-home { width: 60px; height: 60px; font-size: 32px; }
+  .h-name { font-size: 56px; }
+}
