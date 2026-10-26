@@ -269,3 +269,9 @@ body {
 .eco .half, .eco .bar, .eco .bar-btn { transition: none !important; animation: none !important; }
 .eco .half.countdown { animation: none !important; }
 .options .opt:first-child { grid-column: 1 / -1; }
+
+.resume-live { display: grid !important; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; padding: 14px 12px !important; }
+.resume-live span { font: 700 26px/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.resume-live span small { display: block; font-size: 12px; letter-spacing: .12em; opacity: .7; margin-bottom: 4px; }
+.resume-live b { font-size: 22px; }
+.resume-live[hidden] { display: none !important; }

@@ -90,7 +90,14 @@ function renderSetup() {
   $('name-1').value = cfg.names[1];
   renderSteppers();
   const saved = load(FIGHT_KEY);
-  $('btn-resume-saved').hidden = !(saved && saved.phase !== 'ready' && saved.phase !== 'over');
+  const live = saved && saved.phase !== 'ready' && saved.phase !== 'over';
+  $('btn-resume-saved').hidden = !live;
+  // The fight in progress at a glance: White's time, Continue, Black's time.
+  if (live) {
+    const w = saved.white ?? 0;
+    $('btn-resume-saved').innerHTML = `<span><small>BLANCS</small>${formatClock(saved.remaining[w])}</span>
+      <b>▶ CONTINUER</b><span><small>NOIRS</small>${formatClock(saved.remaining[1 - w])}</span>`;
+  }
 }
 
 function readSetup() {
@@ -131,9 +138,10 @@ $('btn-defaults').addEventListener('click', () => {
 $('btn-resume-saved').addEventListener('click', () => {
   unlockAudio();
   s = load(FIGHT_KEY);
-  s.paused = true;
+  s.paused = false;  // straight back into the fight, no pause screen
   s.lastTick = performance.now();
   openFight();
+  act(['resume']);
 });
 
 // Sound and colour test, one after the other.
