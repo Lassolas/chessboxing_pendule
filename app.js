@@ -810,6 +810,6 @@ function escapeHtml(t) {
 
 renderSetup();
 caches?.keys?.().then(keys => {
-  const v = keys.find(k => k.startsWith('pendule-'));
-  if (v) $('version').textContent = '· ' + v.replace('pendule-', '');
+  const v = keys.find(k => k.startsWith('chessboxing-pendule-'));
+  if (v) $('version').textContent = '· ' + v.replace('chessboxing-pendule-', '');
 }).catch(() => {});

@@ -1,5 +1,8 @@
 // Offline cache for the clock. Bump VERSION when the files change.
-const VERSION = 'pendule-v2.16';
+// Own prefix: the old copy under chessboxing_ranking/pendule shares this
+// origin and its 'pendule-vNN' caches.
+const PREFIX = 'chessboxing-pendule-';
+const VERSION = PREFIX + 'v2.17';
 const FILES = ['./', 'index.html', 'style.css', 'app.js', 'clock.js', 'sound.js', 'hands.js', 'digits.js', 'icons.js', 'knight.png', 'glove.png', 'hourglass.png', 'logo.png', 'logo-wide.png', 'logo-glove.png', 'sounds/coup1.mp3', 'sounds/coup2.mp3', 'sounds/coup3.mp3', 'sounds/coup4.mp3', 'sounds/coup5.mp3', 'sounds/coup6.mp3', 'sounds/claquoir1.mp3', 'sounds/claquoir2.mp3', 'sounds/claquoir3.mp3', 'sounds/claquoir4.mp3', 'sounds/claquoir5.mp3', 'sounds/claquoir6.mp3', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon.svg', 'icon-32.png'];
 
 self.addEventListener('install', e => {
@@ -8,7 +11,7 @@ self.addEventListener('install', e => {
 
 self.addEventListener('activate', e => {
   e.waitUntil(caches.keys()
-    .then(keys => Promise.all(keys.filter(k => k !== VERSION).map(k => caches.delete(k))))
+    .then(keys => Promise.all(keys.filter(k => k !== VERSION && (k.startsWith(PREFIX) || /^pendule-v\d/.test(k))).map(k => caches.delete(k))))
     .then(() => self.clients.claim()));
 });
 
