@@ -41,7 +41,5 @@ export function setDigits(el, text, style) {
   if (el.dataset.shown === key) return;
   el.dataset.shown = key;
   if (style === 'dgt' && /^[\d:'.]+$/.test(text)) el.innerHTML = segSVG(text);
-  // Fonts: each digit in a fixed-width slot, so the time never wiggles
-  // as it counts down, even in a font without tabular figures.
-  else el.innerHTML = text.replace(/[&<>]/g, '').replace(/\d/g, d => `<span class="dg">${d}</span>`);
+  else el.textContent = text;
 }
