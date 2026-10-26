@@ -100,7 +100,7 @@ function renderTiles() {
       <i>${t.icon()}</i><b>${tileValue(t)}</b><small>${t.label}</small>
       ${t.on() ? `<button type="button" class="edit" data-edit="${t.key}" aria-label="Modifier">✎</button>` : ''}</div>`;
   $('durations').innerHTML = TILES.filter(t => t.row === 1).map(html).join('');
-  $('chess-set').hidden = !cfg.intervals;
+  $('chess-set').classList.toggle('dim', !cfg.intervals);  // dimmed, not hidden: nothing moves
   $('chess-set').innerHTML = TILES.filter(t => t.row === 2).map(html).join('');
 }
 function onTiles(e) {
@@ -169,11 +169,11 @@ function renderSetup() {
   $('presets').innerHTML = Object.keys(PRESETS).map(r =>
     cfg.intervals
       ? `<button type="button" class="btn preset" data-r="${r}"><b>${r}</b><small>rounds</small><em>${formatClock(playerTime({ ...cfg, rounds: +r })).replace(':', "'")}</em></button>`
-      : `<button type="button" class="btn preset" data-r="${r}"><b>${formatClock(PRESETS[r]).replace(':', "'")}</b><small>classique</small></button>`).join('');
+      : `<button type="button" class="btn preset classic" data-r="${r}"><b>${formatClock(PRESETS[r]).replace(':', "'")}</b><small>classique</small></button>`).join('');
   // Unchecking the intervals leaves a plain clock: only Éco still applies.
-  const shown = OPTIONS.filter(([key]) => cfg.intervals || key === 'eco');
-  $('options').innerHTML = shown.map(([key, label]) => `
-    <div class="opt${cfg[key] ? ' on' : ''}">
+  // A plain clock has no illegal-move card: dimmed, so the layout stays put.
+  $('options').innerHTML = OPTIONS.map(([key, label]) => `
+    <div class="opt${cfg[key] ? ' on' : ''}${!cfg.intervals && key !== 'eco' ? ' dim' : ''}">
       <button type="button" class="opt-toggle" data-opt="${key}"><span class="box">${cfg[key] ? '✓' : ''}</span>${label}</button>
       <button type="button" class="opt-q${helpShown === key ? ' sel' : ''}" data-help="${key}" aria-label="Explication">?</button>
     </div>`).join('');
