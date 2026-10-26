@@ -15,7 +15,7 @@ Pendule d'échecs pour les combats de chessboxing, faite pour le club Paris Ches
   - **Timer boxe** : la pause et le round de boxe sont chronométrés, puis les échecs repartent seuls.
   - **Éco** : pas de son (vibrations seulement), écran plus sombre, pas d'animations.
 - Fin de partie : écran sombre, le côté et la couleur du vainqueur en doré, ⚑ chez le perdant.
-- Appui : clic mécanique de vieille pendule analogique.
+- Sons analogiques uniquement : clic de vieille pendule mécanique à chaque appui, vraie cloche de boxe (1 coup au début, 3 à la fin), claquoir en bois à 10 s de la fin et pour le compte à rebours, toc sur le bois pour l'alerte, porte qui se ferme en fin de partie. « Test son » dans ⚙ les fait tous entendre.
 - Le temps de réflexion repart à zéro après la boxe. Chaque alerte a toujours un son et un changement de couleur.
 - Écran toujours allumé, hors ligne, clavier ou bouton Bluetooth (Espace = pause, Entrée = coup joué).
 - Noms et durées modifiables dans « ⚙ Réglages ».

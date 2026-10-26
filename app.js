@@ -111,7 +111,7 @@ $('btn-resume-saved').addEventListener('click', () => {
 // Sound and colour test, one after the other.
 $('btn-test-sound').addEventListener('click', () => {
   unlockAudio();
-  const steps = [['roundStart', '#f5c842'], ['moveWarn', '#ff9a1f'], ['moveCountdown', '#ff3b3b'], ['count', '#ff3b3b']];
+  const steps = [['press', '#2fbf71'], ['roundStart', '#f5c842'], ['phaseTen', '#4a9eff'], ['moveWarn', '#ff9a1f'], ['moveCountdown', '#ff3b3b'], ['count', '#ff3b3b'], ['roundEnd', '#f5c842'], ['over', '#ffffff']];
   steps.forEach(([ev, color], i) => setTimeout(() => { play(ev); flash(color); }, i * 1400));
 });
 

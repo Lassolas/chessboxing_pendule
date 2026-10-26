@@ -14,83 +14,106 @@ export function unlockAudio() {
   if (ctx.state === 'suspended') ctx.resume();
 }
 
-function tone(freq, start, dur, { type = 'sine', vol = 0.3, decay = true } = {}) {
+// Every sound imitates a real object: clock lever, boxing bell, wooden
+// clapper, a door closing. No beeps.
+
+function tone(freq, start, dur, { type = 'sine', vol = 0.3, attack = 0.003, glide = null } = {}) {
   if (!ctx) return;
   const t = ctx.currentTime + start;
   const osc = ctx.createOscillator();
   const gain = ctx.createGain();
   osc.type = type;
   osc.frequency.setValueAtTime(freq, t);
+  if (glide) osc.frequency.exponentialRampToValueAtTime(glide, t + dur);
   gain.gain.setValueAtTime(0.0001, t);
-  gain.gain.exponentialRampToValueAtTime(vol, t + 0.01);
-  if (decay) gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  else {
-    gain.gain.setValueAtTime(vol, t + dur - 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  }
+  gain.gain.exponentialRampToValueAtTime(vol, t + attack);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
   osc.connect(gain).connect(ctx.destination);
   osc.start(t);
   osc.stop(t + dur + 0.05);
 }
 
-// Mechanical clock lever: a sharp filtered noise snap, a wooden thunk, and
-// the latch falling a few ms later, like an old analogue chess clock.
 let noise = null;
 function noiseBuffer() {
   if (!noise) {
-    noise = ctx.createBuffer(1, ctx.sampleRate * 0.1, ctx.sampleRate);
+    noise = ctx.createBuffer(1, ctx.sampleRate * 0.6, ctx.sampleRate);
     const d = noise.getChannelData(0);
-    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 4);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
   }
   return noise;
 }
-function snap(start, freq, q, vol, dur) {
+// A burst of filtered noise: the attack of anything hit.
+function hit(start, freq, q, vol, dur, type = 'bandpass') {
+  if (!ctx) return;
   const t = ctx.currentTime + start;
   const src = ctx.createBufferSource();
   src.buffer = noiseBuffer();
-  const bp = ctx.createBiquadFilter();
-  bp.type = 'bandpass'; bp.frequency.value = freq; bp.Q.value = q;
+  const f = ctx.createBiquadFilter();
+  f.type = type; f.frequency.value = freq; f.Q.value = q;
   const g = ctx.createGain();
   g.gain.setValueAtTime(vol, t);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  src.connect(bp).connect(g).connect(ctx.destination);
+  src.connect(f).connect(g).connect(ctx.destination);
   src.start(t); src.stop(t + dur + 0.02);
 }
+
+// Old analogue chess clock lever: snap, wooden thunk, latch.
 function clack() {
-  if (!ctx) return;
-  snap(0, 3200, 1.2, 1.4, 0.035);       // lever snap
-  tone(180, 0, 0.07, { type: 'triangle', vol: 0.45 }); // body thunk
-  snap(0.028, 1800, 3, 0.6, 0.03);      // latch
+  hit(0, 3200, 1.2, 1.4, 0.035);
+  tone(180, 0, 0.07, { type: 'triangle', vol: 0.45 });
+  hit(0.028, 1800, 3, 0.6, 0.03);
 }
 
-// Boxing bell: a few inharmonic partials with a long decay, struck `hits` times.
-function bell(hits = 1) {
-  for (let h = 0; h < hits; h++) {
-    const s = h * 0.45;
-    [[523, 0.35], [1046, 0.18], [1410, 0.12], [2090, 0.06]].forEach(([f, v]) =>
-      tone(f, s, 2.2, { vol: v }));
-  }
+// Ring bell struck by its hammer: inharmonic bell partials, long ring.
+function ding(start) {
+  hit(start, 4000, 0.8, 0.5, 0.02);
+  [[740, 0.32, 2.8], [1680, 0.16, 1.9], [2470, 0.1, 1.3], [3620, 0.06, 0.8], [5150, 0.03, 0.5]]
+    .forEach(([f, v, d]) => tone(f, start, d, { vol: v }));
+}
+function bell(hits) {
+  for (let i = 0; i < hits; i++) ding(i * 0.32);
+}
+
+// Two wooden boards clapped together (the referee's 10-second clapper).
+function wood(start, vol = 1) {
+  hit(start, 1500, 1.5, 1.6 * vol, 0.05);
+  hit(start, 700, 6, 0.9 * vol, 0.09);
+  tone(420, start, 0.06, { type: 'triangle', vol: 0.35 * vol });
+}
+// Knuckle on a wooden table: duller and lower.
+function knock(start, vol = 1) {
+  hit(start, 450, 3, 1.2 * vol, 0.08);
+  tone(140, start, 0.1, { type: 'triangle', vol: 0.5 * vol, glide: 110 });
+}
+// Pendulum / metronome tick.
+function tick(start, high) {
+  hit(start, high ? 3800 : 2900, 8, 0.7, 0.025);
+  tone(high ? 1900 : 1500, start, 0.03, { vol: 0.08 });
+}
+// A heavy door or drawer pushed shut: slide, body thud, latch.
+function doorShut() {
+  hit(0, 900, 0.7, 0.25, 0.35, 'lowpass');                 // slide
+  tone(85, 0.3, 0.45, { type: 'sine', vol: 0.9, glide: 45 }); // thud
+  hit(0.3, 220, 1.5, 1.2, 0.25);                           // wood body
+  hit(0.3, 2500, 2, 0.35, 0.05);                           // contact
+  hit(0.42, 3000, 4, 0.5, 0.03);                           // latch
 }
 
 const SOUNDS = {
   press: clack,
-  moveWarn: () => { tone(880, 0, 0.15, { vol: 0.35 }); tone(880, 0.2, 0.15, { vol: 0.35 }); },
-  moveCountdown: () => tone(1200, 0, 0.3, { type: 'square', vol: 0.25 }),
-  moveTick: () => tone(1200, 0, 0.1, { type: 'square', vol: 0.2 }),
-  clockLow: () => tone(1600, 0, 0.05, { type: 'square', vol: 0.1 }),
-  phaseTen: () => { tone(660, 0, 0.12, { vol: 0.35 }); tone(660, 0.18, 0.12, { vol: 0.35 }); },
+  moveWarn: () => knock(0),
+  moveCountdown: () => { wood(0); wood(0.16); },
+  moveTick: () => tick(0, Math.round(performance.now() / 1000) % 2 === 0),
+  clockLow: () => tick(0, true),
+  phaseTen: () => { wood(0); wood(0.2); wood(0.4); },
   roundStart: () => bell(1),
   roundEnd: () => bell(3),
   roundTimeUp: () => bell(3),
-  count: () => { tone(160, 0, 0.35, { type: 'triangle', vol: 0.6 }); tone(120, 0.1, 0.4, { type: 'triangle', vol: 0.5 }); },
-  over: () => {
-    tone(440, 0, 0.35, { type: 'sawtooth', vol: 0.18, decay: false });
-    tone(349, 0.4, 0.35, { type: 'sawtooth', vol: 0.18, decay: false });
-    tone(262, 0.8, 0.8, { type: 'sawtooth', vol: 0.18, decay: false });
-  },
-  pause: () => tone(500, 0, 0.12, { vol: 0.3 }),
-  resume: () => tone(750, 0, 0.12, { vol: 0.3 }),
-  undo: () => tone(600, 0, 0.08, { vol: 0.25 }),
+  count: () => { knock(0, 1.2); knock(0.14, 1.2); },
+  over: doorShut,
+  pause: () => hit(0, 2200, 3, 0.5, 0.03),
+  resume: clack,
+  undo: () => hit(0, 2600, 3, 0.4, 0.03),
 };
 
 const VIBRATE = {
