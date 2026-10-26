@@ -19,13 +19,14 @@ function loadSamples() {
     .then(buf => samples[bank].push(buf))
     .catch(() => {})));
 }
-// Plays a random sample of the bank; false if none is loaded yet.
-function sample(bank, start = 0, vol = 1) {
+// Plays a sample of the bank (a random one, slightly detuned, unless
+// `pick` is given); false if none is loaded yet.
+function sample(bank, start = 0, vol = 1, pick = null) {
   const list = samples[bank];
   if (!ctx || !list.length) return false;
   const src = ctx.createBufferSource();
-  src.buffer = list[Math.floor(Math.random() * list.length)];
-  src.playbackRate.value = 0.95 + Math.random() * 0.1;
+  src.buffer = pick ?? list[Math.floor(Math.random() * list.length)];
+  src.playbackRate.value = pick ? 1 : 0.95 + Math.random() * 0.1;
   const g = ctx.createGain(); g.gain.value = vol;
   src.connect(g).connect(ctx.destination);
   src.start(ctx.currentTime + start);
@@ -185,7 +186,9 @@ function claves(start) {
     .forEach(([r, v, d]) => ring(start, f0 * r * j(), d, v));
 }
 function clapper(times) {
-  if (samples.clap.length) times.forEach(t => sample('clap', t));
+  // Same recording, same pitch for every strike of the series.
+  const one = samples.clap[Math.floor(Math.random() * samples.clap.length)];
+  if (one) times.forEach(t => sample('clap', t, 1, one));
   else loud(() => times.forEach(t => claves(t)), 'clap');
 }
 // For tests: render sounds into an OfflineAudioContext.
