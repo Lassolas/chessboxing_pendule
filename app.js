@@ -58,6 +58,9 @@ const fmtValue = (v, kind) => kind === 'n' ? String(v) : v === 0 ? '∞'
 // Row 1: the fight (chess rounds, pause, boxing). Row 2, under ♟ when it is
 // on: the anti-play settings. The icons are the signs seen during the fight.
 const watch = `<svg viewBox="0 0 32 32" class="ico"><circle cx="16" cy="18" r="11" fill="none" stroke="#ff9a1f" stroke-width="3"/><rect x="13" y="2" width="6" height="4" rx="1" fill="#ff9a1f"/><path d="M16 18 L16 11" stroke="#ff9a1f" stroke-width="3" stroke-linecap="round"/><path d="M25 8 l3-3" stroke="#ff9a1f" stroke-width="3" stroke-linecap="round"/></svg>`;
+// Own gradient id: the fight's hands use #skin, and an id inside the hidden
+// home screen would leave them without fill.
+const TILE_HAND = { ...REFEREE, fill: 'url(#skin-tile)', defs: REFEREE.defs.replace('id="skin"', 'id="skin-tile"') };
 const dots = n => `<span class="ico-dots">${'<span></span>'.repeat(Math.min(n, 5))}</span>`;
 // key: value in cfg, on/tap: state, icon, label, wheel step/min/max, kind
 const TILES = [
@@ -70,7 +73,7 @@ const TILES = [
     on: () => cfg.intervals && cfg.boxTimer,
     tap: () => { cfg.boxTimer = !(cfg.intervals && cfg.boxTimer); if (cfg.boxTimer) cfg.intervals = true; } },
   { key: 'moveWarnMs', flag: 'warnOn', row: 2, icon: () => watch, label: 'Alerte', step: 5000, min: 5000, max: 120000 },
-  { key: 'moveCountdownMs', flag: 'countdownOn', row: 2, icon: () => handSVG(5, REFEREE), label: 'Compte', step: 5000, min: 5000, max: 180000 },
+  { key: 'moveCountdownMs', flag: 'countdownOn', row: 2, icon: () => handSVG(5, TILE_HAND), label: 'Compte', step: 5000, min: 5000, max: 180000 },
   { key: 'countsPerRound', flag: 'perRoundOn', row: 2, icon: () => dots(cfg.countsPerRound), label: '/ round', step: 1, min: 1, max: 10, kind: 'n' },
   { key: 'countsTotal', flag: 'totalOn', row: 2, icon: () => dots(cfg.countsTotal), label: 'Total', step: 1, min: 1, max: 20, kind: 'n' },
 ];
