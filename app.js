@@ -320,7 +320,7 @@ function colourOf(p) {
 }
 // Round, boxing and pause timers: whole seconds only (tenths are for the chess clocks).
 function roundClock(ms) {
-  const t = Math.ceil(ms / 1000);
+  const t = Math.floor(ms / 1000);
   return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
 }
 

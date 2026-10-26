@@ -345,9 +345,10 @@ export function adjustTime(s, player, deltaMs, now) {
   return [];
 }
 
+// Rounded down, like a real clock: 4:30 becomes 4:29 the moment it starts.
 export function formatClock(ms) {
-  const total = Math.ceil(ms / 1000);
+  const total = Math.floor(ms / 1000);
   const m = Math.floor(total / 60), sec = total % 60;
-  if (ms < 10000 && ms > 0) return (ms / 1000).toFixed(1);
+  if (ms < 10000 && ms > 0) return (Math.floor(ms / 100) / 10).toFixed(1);
   return `${m}:${String(sec).padStart(2, '0')}`;
 }

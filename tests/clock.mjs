@@ -3,7 +3,7 @@
 
 import {
   defaultConfig, newFight, tick, start, press, togglePause, skipPhase,
-  illegalMove, removeIllegal, undoCount, averageMove, nextChessRound, goToNextChess, reopen, adjustTime, moveStage, moveCountdownLeft, countsOf, playerTime,
+  illegalMove, removeIllegal, undoCount, averageMove, nextChessRound, goToNextChess, reopen, adjustTime, moveStage, moveCountdownLeft, countsOf, playerTime, formatClock,
 } from '../clock.js';
 
 const errors = [];
@@ -244,6 +244,10 @@ for (const [r, min] of [[5, 4.5], [7, 6], [9, 7.5], [11, 9]]) {
   check(countsOf(s, 0) === 1 && countsOf(s, 1) === 1, 'removeIllegal takes back one illegal move of that player');
   check(removeIllegal(s, 1, 2000).length === 1 && removeIllegal(s, 1, 2000).length === 0, 'nothing to remove: no event');
 }
+
+// The display drops a second as soon as the clock runs
+check(formatClock(270000) === '4:30' && formatClock(269900) === '4:29', 'clock shows 4:29 right after the start');
+check(formatClock(9960) === '9.9' && formatClock(10000) === '0:10', 'tenths under 10 s, rounded down');
 
 if (errors.length) {
   console.error(`pendule-clock: ${errors.length} failure(s)`);
