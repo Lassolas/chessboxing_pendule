@@ -133,6 +133,7 @@ body {
 .opt-help { background: var(--bg-panel); border-left: 3px solid var(--gold); border-radius: 8px; padding: 10px 12px; margin: 10px 0 0; line-height: 1.45; font-size: 15px; }
 .advanced { margin: 18px 0 12px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
 .advanced summary { cursor: pointer; font-weight: 600; color: var(--text-2); }
+.sum-ico { width: 1em; height: 1em; vertical-align: -.12em; }
 .advanced + .advanced { margin-top: 8px; }
 .advanced .options { margin-top: 12px; }
 .advanced .names { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; margin-top: 12px; }
