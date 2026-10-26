@@ -380,6 +380,8 @@ body {
 /* ── FLAG SCREEN: dark, winner's side in gold ── */
 .flag .half { background: #050507 !important; box-shadow: none !important; animation: none !important; filter: none !important; }
 .flag .half .h-counts, .flag .illegal-wrap { display: none; }
+.over-undo { z-index: 5; }
+.over-undo[hidden] { display: none; }
 .flag .half.winner { box-shadow: inset 0 0 0 4px var(--gold) !important; }
 .flag .half.winner .h-name { color: var(--gold) !important; font-size: clamp(40px, 12vw, 64px); }
 .flag .half.winner .h-move { color: var(--gold); font: 700 clamp(28px, 8vw, 40px) var(--font-display); letter-spacing: .2em; }

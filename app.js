@@ -341,11 +341,16 @@ function buildHalves() {
       <div class="h-counts"></div>
       <div class="h-avg"></div>
       <div class="h-notice" hidden></div>
+      <button type="button" class="notice-undo over-undo" hidden>Annuler</button>
       <div class="illegal-wrap"><button type="button" class="illegal-btn" aria-label="Coup illégal adverse">${redFlag}<span>Coup illégal</span></button><button type="button" class="illegal-minus" aria-label="Retirer le coup illégal">−</button></div></div>`;
     h.querySelector('.illegal-btn').addEventListener('pointerdown', e => {
       e.stopPropagation();
       act(illegalMove(s, 1 - p, performance.now()));
       showNotice(1 - p);
+    });
+    h.querySelector('.over-undo').addEventListener('pointerdown', e => {
+      e.stopPropagation();
+      act(undoCount(s, performance.now()));
     });
     // − next to the flag: takes back the last illegal move this side gave.
     h.querySelector('.illegal-minus').addEventListener('pointerdown', e => {
@@ -572,14 +577,17 @@ function render() {
     : flagScreen ? methodShort(r.method)
     : s.roundOver ? 'Temps !' : s.paused ? 'Pause' : '';
   setDigits($('bar-timer'), s.phase === 'ready' || s.phase === 'over' || untimed ? '' : roundClock(s.phaseRemaining), cfg.digits);
-  // Lost on time: ↺ Rejouer in the middle of the bar.
-  const replay = !!flagScreen && r.method === 'temps';
+  // Lost on time or on counts: ↺ Rejouer in the middle of the bar.
+  const byCounts = !!flagScreen && r.method.includes('comptes');
+  const replay = !!flagScreen && (r.method === 'temps' || byCounts);
   $('bar-timer').hidden = replay;
   document.querySelector('.bar-info').hidden = replay;
   $('bar-replay').hidden = !replay;
   document.querySelector('.bar').classList.toggle('alert', s.roundOver && !s.paused && s.phase !== 'over');
   // On the flag screen the bar button carries the one useful action.
-  const overAction = flagScreen ? (r.method === 'réflexion' ? 'Continuer' : r.method.includes('comptes') ? 'Annuler' : null) : null;
+  // Lost on counts: Annuler in the loser's corner, where the flag button sits.
+  halves.forEach(h => { h.querySelector('.over-undo').hidden = !(byCounts && r.loser === +h.dataset.p); });
+  const overAction = flagScreen && r.method === 'réflexion' ? 'Continuer' : null;
   $('bar-btn').hidden = s.phase === 'ready' || (s.phase === 'over' && !overAction);
   $('bar-btn').textContent = overAction ? overAction : s.paused ? '▶ GO'
     : untimed && s.phase === 'break' ? `▶ ${roundIcon} ${roundNo(s.cfg, shownRound)}` : s.roundOver ? 'STOP' : 'PAUSE';
