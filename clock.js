@@ -21,11 +21,11 @@ export function defaultConfig() {
     intervals: true,        // coached 3-min chess rounds; false = plain clock
     autoStop: false,        // end the chess round on its own after chessRoundMs
     boxTimer: false,        // time the breaks and the boxing round
-    illegalMoves: true,     // yellow card to claim an illegal move
+    illegalMoves: false,    // yellow card to claim an illegal move
     moveLimit: true,        // per-move thinking limit
     moveWarnMs: 20000,      // warning colour + sound
     moveCountdownMs: 30000, // countdown starts
-    moveGraceMs: 10000,     // length of the countdown, then the game is lost
+    moveGraceMs: 10000,     // the count: always 10 s, then the game is lost
     countsPerRound: 3,      // counts in one chess round that lose the fight
     countsTotal: 4,         // counts in the whole fight that lose it
   };

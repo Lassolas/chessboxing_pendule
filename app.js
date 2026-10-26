@@ -18,6 +18,11 @@ function save(key, value) {
 
 let cfg = { ...defaultConfig(), ...(load(CFG_KEY) || {}) };
 cfg.names = cfg.names.map(n => (n === 'Blancs' || n === 'Noirs' ? '' : n));
+cfg.moveGraceMs = 10000;  // the count always lasts 10 s
+if (!cfg.v || cfg.v < 2) {  // v2: illegal moves off by default
+  cfg.illegalMoves = false;
+  cfg.v = 2;
+}
 if ('autoPause' in cfg) {  // older versions had one option for both
   cfg.autoStop = cfg.boxTimer = cfg.autoPause;
   delete cfg.autoPause;
@@ -33,7 +38,6 @@ const STEPPERS = [
   ['breakMs', '⏸', 'Pause', 15000, 15000, 300000, 'time'],
   ['moveWarnMs', '⏱', 'Alerte', 5000, 5000, 120000, 'time'],
   ['moveCountdownMs', '⏱', 'Compte dès', 5000, 5000, 180000, 'time'],
-  ['moveGraceMs', '⏱', 'Compte', 1000, 3000, 30000, 'time'],
   ['countsPerRound', '⚑', '/ round', 1, 1, 10, 'n'],
   ['countsTotal', '⚑', 'Total', 1, 1, 20, 'n'],
 ];
@@ -63,8 +67,8 @@ $('steppers').addEventListener('click', e => {
 const OPTIONS = [
   ['intervals', 'Intervalles 3 min', () => `Combat coaché : rounds d'échecs de ${cfg.chessRoundMs / 60000} min, comptes et options ci-dessous. Décoché : pendule classique, rien d'autre.`],
   ['illegalMoves', 'Coups illégaux', () => `Carton jaune dans ton coin : coup illégal adverse = 1 compte, il rejoue.`],
-  ['autoStop', 'Stop 3 min', () => `Round d'échecs stoppé à ${cfg.chessRoundMs / 60000} min. Sinon : alerte, tu stoppes.`],
-  ['moveLimit', 'Anti-jeu', () => `${cfg.moveWarnMs / 1000} s : alerte. ${cfg.moveCountdownMs / 1000} s : compte de ${cfg.moveGraceMs / 1000} s, puis perdu. ${cfg.countsPerRound} comptes / round ou ${cfg.countsTotal} au total : perdu.`],
+  ['autoStop', 'Auto rounds', () => `Round d'échecs stoppé à ${cfg.chessRoundMs / 60000} min. Sinon : alerte, tu stoppes.`],
+  ['moveLimit', 'Anti-jeu', () => `${cfg.moveWarnMs / 1000} s : alerte. ${cfg.moveCountdownMs / 1000} s : compte de 10 s, puis perdu. ${cfg.countsPerRound} comptes / round ou ${cfg.countsTotal} au total : perdu.`],
   ['boxTimer', 'Timer boxe', () => `Pause ${cfg.breakMs / 1000} s + boxe ${cfg.boxRoundMs / 60000} min chronométrées. Sinon : tu relances.`],
   ['eco', 'Éco', () => `Économie d'énergie : pas de son (vibrations seulement), écran plus sombre, pas d'animations.`],
 ];
@@ -303,7 +307,7 @@ function render() {
     phaseEl.textContent = s.phase === 'boxing' ? (untimed ? 'BOXE' : `BOXE ${formatClock(s.phaseRemaining)}`)
       : s.phase === 'break' ? `PAUSE ${formatClock(s.phaseRemaining)}` : '';
     const move = h.querySelector('.h-move');
-    if (active && cd !== null) move.textContent = cd;
+    if (active && cd !== null) move.innerHTML = countHands(cd);
     else if (active && stage === 'warn') move.textContent = `${Math.floor(s.moveElapsed / 1000)} s`;
     else if (s.phase === 'ready') move.textContent = '▶ Touche';
     else if (flagScreen && r.loser === p) move.textContent = `⚑ ${methodShort(r.method)}`;
@@ -473,6 +477,24 @@ if (!standalone && /iphone|ipad|ipod/i.test(navigator.userAgent)) {
   $('install-ios').hidden = false;
 }
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => {});
+
+// The referee's count shown with hands: two hands of five fingers, 10 → 0.
+function hand(fingers, mirror) {
+  // Index, middle, ring, little finger, then the thumb.
+  const xs = [30, 44, 58, 72];
+  const f = xs.map((x, i) => {
+    const up = fingers > i;
+    return `<rect x="${x - 6}" y="${up ? 8 : 50}" width="12" height="${up ? 60 : 18}" rx="6"/>`;
+  }).join('');
+  const thumb = fingers >= 5
+    ? '<rect x="16" y="50" width="13" height="48" rx="6.5" transform="rotate(-32 22 98)"/>'
+    : '<rect x="12" y="66" width="12" height="22" rx="6" transform="rotate(-50 18 88)"/>';
+  return `<svg viewBox="-24 0 124 120" class="hand"${mirror ? ' style="transform:scaleX(-1)"' : ''}>
+    ${f}${thumb}<rect x="20" y="58" width="64" height="56" rx="18"/></svg>`;
+}
+function countHands(n) {
+  return `<span class="hands">${hand(Math.min(n, 5), false)}${hand(Math.max(n - 5, 0), true)}</span>`;
+}
 
 function escapeHtml(t) {
   return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
