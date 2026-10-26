@@ -334,11 +334,12 @@ function buildHalves() {
       <div class="h-move"></div>
       <div class="h-counts"></div>
       <div class="h-avg"></div>
+      <div class="h-notice" hidden></div>
       <button type="button" class="illegal-btn" aria-label="Coup illégal adverse">${redFlag}<span>Coup illégal</span></button>`;
     h.querySelector('.illegal-btn').addEventListener('pointerdown', e => {
       e.stopPropagation();
       act(illegalMove(s, 1 - p, performance.now()));
-      showToast(`🚩 ${nameOf(1 - p)} +1`);
+      showNotice(1 - p);
     });
   });
 }
@@ -422,18 +423,23 @@ function flash(color) {
   f.classList.add('on');
 }
 
-let toastTimer = null;
-function showToast(text) {
+// Big notice on the offender's half: they read it the right way up.
+let noticeTimer = null;
+function showNotice(p) {
+  halves.forEach(h => { h.querySelector('.h-notice').hidden = true; });
   if (s.phase === 'over') return;
-  $('toast-text').textContent = text;
-  $('toast').hidden = false;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { $('toast').hidden = true; }, 4000);
+  const n = halves[p].querySelector('.h-notice');
+  n.innerHTML = `${redFlag}<b>COUP ILLÉGAL</b><span>+1 compte · rejoue</span>
+    <button type="button" class="notice-undo">Annuler</button>`;
+  n.querySelector('.notice-undo').addEventListener('pointerdown', e => {
+    e.stopPropagation();
+    n.hidden = true;
+    act(undoCount(s, performance.now()));
+  });
+  n.hidden = false;
+  clearTimeout(noticeTimer);
+  noticeTimer = setTimeout(() => { n.hidden = true; }, 3000);
 }
-$('toast-undo').addEventListener('click', () => {
-  $('toast').hidden = true;
-  act(undoCount(s, performance.now()));
-});
 
 const METHOD_SHORT = { temps: 'Temps écoulé !', 'réflexion': 'Anti-jeu', decision: 'Fin' };
 const methodShort = m => METHOD_SHORT[m] || m.replace(/ dans le round| au total/, '');
