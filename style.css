@@ -373,7 +373,7 @@ body {
 .eco #setup .opt.on, .eco .btn-gold { filter: brightness(.8); }
 .eco .half, .eco .bar, .eco .bar-btn { transition: none !important; animation: none !important; }
 .eco .half.countdown { animation: none !important; }
-.options .opt:first-child { grid-column: 1 / -1; }
+
 
 .resume-live { display: grid !important; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 8px; padding: 14px 12px !important; }
 .resume-live span { font: 700 26px/1 var(--font-display); font-variant-numeric: tabular-nums; }

@@ -21,8 +21,8 @@ Pendule d'échecs pour les combats de chessboxing, faite pour le club Paris Ches
 - Le temps de réflexion repart à zéro après la boxe. Chaque alerte a toujours un son et un changement de couleur.
 - Écran toujours allumé, hors ligne, clavier ou bouton Bluetooth (Espace = pause, Entrée = coup joué).
 - Sous les 4 boutons : ♟ Échecs, ⏸ Pause, 🥊 Boxe. Appui sur une case : active ou désactive. Bande de droite : la valeur, à régler en glissant le doigt vers le haut ou le bas. Le temps par joueur suit la durée du round d'échecs (5 rounds de 2' = 3'00 chacun). « ↺ Réinitialiser » remet les valeurs par défaut.
-- « 🎨 Style » (menu déroulant en bas) : Éco, et trois cases « 4:30 » pour choisir les chiffres de la pendule : Oxanium (par défaut), DGT (segments LCD comme une pendule DGT, dessinés en SVG) ou Teko.
-- Noms des joueurs et test des sons dans « ⚙ Réglages ».
+- « 🎨 Style » (menu déroulant en bas) : Son (activé par défaut), Éco, et trois cases « 4:30 » pour choisir les chiffres de la pendule : Oxanium (par défaut), DGT (segments LCD comme une pendule DGT, dessinés en SVG) ou Teko.
+- « ⚙ Réglages » : test des sons et valeurs par défaut. Pas de noms de joueurs : BLANCS / NOIRS seulement.
 
 ## Installer
 

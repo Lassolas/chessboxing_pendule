@@ -28,7 +28,8 @@ const homeDefaults = () => ({
   v: 6,
 });
 let cfg = { ...homeDefaults(), ...(load(CFG_KEY) || {}) };
-cfg.names = cfg.names.map(n => (n === 'Blancs' || n === 'Noirs' ? '' : n));
+cfg.names = ['', ''];  // no player names: BLANCS / NOIRS only
+cfg.sound ??= true;
 cfg.moveGraceMs = 10000;  // the count always lasts 10 s
 if (!cfg.v || cfg.v < 2) {  // v2: illegal moves off by default
   cfg.illegalMoves = false;
@@ -56,7 +57,7 @@ if (cfg.v < 6) {  // v6: counts off by default
 }
 cfg.moveCountdownMs = Math.max(10000, cfg.moveCountdownMs);
 let s = null;
-setMuted(!!cfg.eco);
+setMuted(!!cfg.eco || !cfg.sound);
 
 // Round number as shown: without boxing, only chess rounds are counted.
 const roundNo = (c, n) => c.boxTimer ? n : Math.ceil(n / 2);
@@ -209,6 +210,7 @@ function onStripUp() {
 
 // One or two words per option; the "?" shows the explanation.
 const OPTIONS = [
+  ['sound', 'Son', () => `Sons de la pendule : coups, cloche, claquoir. Désactivé : silence (vibrations seulement).`],
   ['eco', 'Éco', () => `Économie d'énergie : pas de son (vibrations seulement), écran plus sombre, pas d'animations.`],
 ];
 let helpShown = null;
@@ -227,7 +229,7 @@ function renderSetup() {
   // Unchecking the intervals leaves a plain clock: only Éco still applies.
   // A plain clock has no illegal-move card: dimmed, so the layout stays put.
   $('options').innerHTML = OPTIONS.map(([key, label]) => `
-    <div class="opt${cfg[key] ? ' on' : ''}${!cfg.intervals && key !== 'eco' ? ' dim' : ''}">
+    <div class="opt${cfg[key] ? ' on' : ''}${!cfg.intervals && !['eco', 'sound'].includes(key) ? ' dim' : ''}">
       <button type="button" class="opt-toggle" data-opt="${key}"><span class="box">${cfg[key] ? '✓' : ''}</span>${label}</button>
       <button type="button" class="opt-q${helpShown === key ? ' sel' : ''}" data-help="${key}" aria-label="Explication">?</button>
     </div>`).join('');
@@ -238,8 +240,6 @@ function renderSetup() {
   const help = OPTIONS.find(o => o[0] === helpShown);
   $('opt-help').hidden = !help;
   if (help) $('opt-help').textContent = help[2]();
-  $('name-0').value = cfg.names[0];
-  $('name-1').value = cfg.names[1];
   renderTiles();
   const saved = load(FIGHT_KEY);
   const live = saved && saved.phase !== 'ready' && saved.phase !== 'over';
@@ -252,17 +252,12 @@ function renderSetup() {
   }
 }
 
-function readSetup() {
-  cfg.names = [$('name-0').value.trim(), $('name-1').value.trim()];
-  save(CFG_KEY, cfg);
-}
 
 // A preset button starts the fight straight away.
 $('presets').addEventListener('click', e => {
   const b = e.target.closest('[data-r]');
   if (!b) return;
   unlockAudio();
-  readSetup();
   cfg.rounds = +b.dataset.r;
   save(CFG_KEY, cfg);
   s = newFight(fightConfig());
@@ -289,15 +284,14 @@ $('options').addEventListener('click', e => {
   if (t) {
     cfg[t.dataset.opt] = !cfg[t.dataset.opt];
     save(CFG_KEY, cfg);
-    setMuted(!!cfg.eco);
+    setMuted(!!cfg.eco || !cfg.sound);
   }
   if (q) helpShown = helpShown === q.dataset.help ? null : q.dataset.help;
   renderSetup();
 });
-$('setup').addEventListener('change', () => { readSetup(); renderSetup(); });
 $('btn-reset').addEventListener('click', () => $('btn-defaults').click());
 $('btn-defaults').addEventListener('click', () => {
-  cfg = { ...homeDefaults(), rounds: cfg.rounds, names: cfg.names, eco: cfg.eco, digits: cfg.digits };
+  cfg = { ...homeDefaults(), rounds: cfg.rounds, names: cfg.names, eco: cfg.eco, sound: cfg.sound, digits: cfg.digits };
   save(CFG_KEY, cfg);
   renderSetup();
 });
