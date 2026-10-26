@@ -1,5 +1,5 @@
 // Offline cache for the clock. Bump VERSION when the files change.
-const VERSION = 'pendule-v27';
+const VERSION = 'pendule-v28';
 const FILES = ['./', 'index.html', 'style.css', 'app.js', 'clock.js', 'sound.js', 'hands.js', 'sounds/coup1.mp3', 'sounds/coup2.mp3', 'sounds/coup3.mp3', 'sounds/coup4.mp3', 'sounds/coup5.mp3', 'sounds/coup6.mp3', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', e => {

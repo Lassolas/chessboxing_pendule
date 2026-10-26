@@ -48,9 +48,31 @@ function tone(freq, start, dur, { type = 'sine', vol = 0.3, attack = 0.003, glid
   gain.gain.setValueAtTime(0.0001, t);
   gain.gain.exponentialRampToValueAtTime(vol, t + attack);
   gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  osc.connect(gain).connect(ctx.destination);
+  osc.connect(gain).connect(out || ctx.destination);
   osc.start(t);
   osc.stop(t + dur + 0.05);
+}
+
+// Loud bus for the clapper and the bell: drive into soft saturation then a
+// compressor, so they cut through a noisy gym without clipping.
+let out = null;
+let bus = null, busCtx = null;
+function loud(fn) {
+  if (!ctx) return;
+  if (busCtx !== ctx) {
+    const drive = ctx.createGain(); drive.gain.value = 2.2;
+    const shaper = ctx.createWaveShaper();
+    const curve = new Float32Array(1024);
+    for (let i = 0; i < curve.length; i++) curve[i] = Math.tanh((i / 511.5 - 1) * 1.6) / Math.tanh(1.6);
+    shaper.curve = curve; shaper.oversample = '4x';
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -10; comp.knee.value = 4; comp.ratio.value = 8;
+    comp.attack.value = 0.001; comp.release.value = 0.12;
+    const trim = ctx.createGain(); trim.gain.value = 0.92;
+    drive.connect(shaper).connect(comp).connect(trim).connect(ctx.destination);
+    bus = drive; busCtx = ctx;
+  }
+  out = bus; fn(); out = null;
 }
 
 let noise = null;
@@ -73,7 +95,7 @@ function hit(start, freq, q, vol, dur, type = 'bandpass') {
   const g = ctx.createGain();
   g.gain.setValueAtTime(vol, t);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  src.connect(f).connect(g).connect(ctx.destination);
+  src.connect(f).connect(g).connect(out || ctx.destination);
   src.start(t); src.stop(t + dur + 0.02);
 }
 
@@ -84,33 +106,34 @@ function clack() {
   hit(0.028, 1800, 3, 0.6, 0.03);
 }
 
-// Ring bell struck by its hammer: inharmonic bell partials, long ring.
+// Boxing bell: a steel hammer on a bronze dome. A hard metallic clang
+// (bright broadband strike) then high inharmonic partials ringing long.
 function ding(start) {
-  hit(start, 4000, 0.8, 0.5, 0.02);
-  [[740, 0.32, 2.8], [1680, 0.16, 1.9], [2470, 0.1, 1.3], [3620, 0.06, 0.8], [5150, 0.03, 0.5]]
-    .forEach(([f, v, d]) => tone(f, start, d, { vol: v }));
+  hit(start, 7000, 0.7, 1.0, 0.012, 'highpass');   // metal on metal
+  hit(start, 3200, 2, 0.5, 0.03);                   // clang
+  [[1180, 0.26, 2.6], [2650, 0.2, 2.0], [3910, 0.14, 1.5], [5420, 0.1, 1.0], [7130, 0.07, 0.7], [9050, 0.04, 0.4]]
+    .forEach(([f, v, d]) => { tone(f, start, d, { vol: v, attack: 0.001 }); tone(f * 1.004, start, d * 0.8, { vol: v * 0.5, attack: 0.001 }); });
 }
 function bell(hits) {
-  for (let i = 0; i < hits; i++) ding(i * 0.32);
+  loud(() => { for (let i = 0; i < hits; i++) ding(i * 0.32); });
 }
 
-// Two wooden boards clapped together (the referee's 10-second clapper).
+// Two wooden boards clapped together (anti-play countdown).
 function wood(start, vol = 1) {
   hit(start, 1500, 1.5, 1.6 * vol, 0.05);
   hit(start, 700, 6, 0.9 * vol, 0.09);
   tone(420, start, 0.06, { type: 'triangle', vol: 0.35 * vol });
 }
-// Hard wooden block struck by a stick (the referee's 10-second warning):
-// a sharp broadband impact, then the block's own resonant modes ringing
-// out (inharmonic, like a bar: ~1 : 2.4 : 4.1 : 6.2), higher modes dying first.
-function woodBlock(start, vol = 0.45) {
-  if (!ctx) return;
-  hit(start, 5000, 0.6, 2.2 * vol, 0.006, 'highpass');      // stick contact
-  hit(start, 1800, 1.2, 1.4 * vol, 0.018);                  // impact body
-  tone(190, start, 0.04, { type: 'sine', vol: 0.5 * vol, glide: 120 }); // thump
-  [[860, 0.55, 0.26], [2060, 0.32, 0.13], [3520, 0.2, 0.07], [5330, 0.1, 0.04]]
-    .forEach(([f, v, d]) => tone(f * (0.995 + Math.random() * 0.01), start, d, { vol: v * vol, attack: 0.001 }));
+// The referee's 10-second clapper, like high hardwood claves: a violent
+// full-spectrum crack, then the bright, dry ring of the sticks.
+function claves(start) {
+  hit(start, 9000, 0.5, 2.4, 0.005, 'highpass');    // crack (whole spectrum)
+  hit(start, 4500, 0.7, 1.6, 0.012);                // snap
+  hit(start, 1400, 1, 1.0, 0.02);                   // body of the slap
+  [[2480, 0.7, 0.14], [2510, 0.3, 0.11], [6350, 0.3, 0.05], [11200, 0.12, 0.02]]
+    .forEach(([f, v, d]) => tone(f * (0.995 + Math.random() * 0.01), start, d, { vol: v, attack: 0.0007 }));
 }
+function clapper(times) { loud(() => times.forEach(t => claves(t))); }
 // For tests: render sounds into an OfflineAudioContext.
 export function useContext(c) { ctx = c; }
 
@@ -139,8 +162,8 @@ const SOUNDS = {
   moveCountdown: () => { wood(0); wood(0.16); },
   moveTick: () => tick(0, Math.round(performance.now() / 1000) % 2 === 0),
   clockLow: () => tick(0, true),
-  phaseTen: () => [0, 0.5, 1, 1.5].forEach(t => woodBlock(t)),  // 10 s left in a round: 4 strikes in 1.5 s
-  breakTen: () => [0, 1, 2].forEach(t => woodBlock(t)),          // 10 s left in a break: 3 strikes, 1 s apart
+  phaseTen: () => clapper([0, 0.4, 0.8]),  // 10 s left in a round: 3 strikes in 0.8 s
+  breakTen: () => clapper([0, 1, 2]),      // 10 s left in a break: 3 strikes, 1 s apart
   roundStart: () => bell(1),
   roundEnd: () => bell(3),
   roundTimeUp: () => bell(3),
@@ -160,7 +183,7 @@ const VIBRATE = {
   roundTimeUp: [200, 100, 200, 100, 200],
   count: [300],
   over: [600, 150, 600],
-  phaseTen: [80, 420, 80, 420, 80, 420, 80],
+  phaseTen: [80, 320, 80, 320, 80],
   breakTen: [80, 920, 80, 920, 80],
 };
 
