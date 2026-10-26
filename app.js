@@ -22,8 +22,8 @@ function save(key, value) {
 const homeDefaults = () => ({
   ...defaultConfig(),
   breakMs: 60000, breakOn: false,   // pause off = open pause (∞)
-  warnOn: true, countdownOn: true,
-  v: 5,
+  warnOn: false, countdownOn: false,   // counts off by default
+  v: 6,
 });
 let cfg = { ...homeDefaults(), ...(load(CFG_KEY) || {}) };
 cfg.names = cfg.names.map(n => (n === 'Blancs' || n === 'Noirs' ? '' : n));
@@ -47,6 +47,10 @@ if (cfg.v < 4) {  // v4: pause on/off (off = ∞), anti-play settings as tiles
 if (cfg.v < 5) {  // v5: count limits always on (− / + lines)
   delete cfg.perRoundOn; delete cfg.totalOn;
   cfg.v = 5;
+}
+if (cfg.v < 6) {  // v6: counts off by default
+  cfg.warnOn = cfg.countdownOn = false;
+  cfg.v = 6;
 }
 let s = null;
 setMuted(!!cfg.eco);
@@ -327,7 +331,7 @@ function buildHalves() {
     h.querySelector('.illegal-btn').addEventListener('pointerdown', e => {
       e.stopPropagation();
       act(illegalMove(s, 1 - p, performance.now()));
-      showToast(`🟨 ${nameOf(1 - p)} +1`);
+      showToast(`🚩 ${nameOf(1 - p)} +1`);
     });
   });
 }
