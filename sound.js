@@ -57,28 +57,33 @@ function tone(freq, start, dur, { type = 'sine', vol = 0.3, attack = 0.003, glid
 // compressor, so they cut through a noisy gym without clipping.
 let out = null;
 const buses = new Map();
-// drive: how hard the signal hits the saturation; bias adds even harmonics.
-function makeBus(drive, bias, shelfDb, level) {
-  const g = ctx.createGain(); g.gain.value = drive;
+// Bell bus: drive into soft saturation then a compressor (the ring).
+// Clapper bus: clean gain only, so its attack is never squashed.
+// The compressor delays its input by ~6 ms (look-ahead), so attacks sent
+// straight to the speakers are played 6 ms later to stay in sync.
+const LOOKAHEAD = 0.006;
+function makeBus(kind) {
+  const g = ctx.createGain();
+  if (kind === 'clap') { g.gain.value = 0.66; g.connect(ctx.destination); return g; }
+  g.gain.value = 2.2;
   const shaper = ctx.createWaveShaper();
-  const curve = new Float32Array(2048), off = Math.tanh(bias);
-  for (let i = 0; i < curve.length; i++) curve[i] = (Math.tanh((i / 1023.5 - 1) * 1.6 + bias) - off) / (1 + Math.abs(off));
+  const curve = new Float32Array(2048);
+  for (let i = 0; i < curve.length; i++) curve[i] = Math.tanh((i / 1023.5 - 1) * 1.6) / Math.tanh(1.6);
   shaper.curve = curve; shaper.oversample = '4x';
-  const shelf = ctx.createBiquadFilter();
-  shelf.type = 'highshelf'; shelf.frequency.value = 3500; shelf.gain.value = shelfDb;
   const comp = ctx.createDynamicsCompressor();
   comp.threshold.value = -14; comp.knee.value = 3; comp.ratio.value = 12;
-  comp.attack.value = 0.0005; comp.release.value = 0.08;
-  const trim = ctx.createGain(); trim.gain.value = level;
-  g.connect(shaper).connect(shelf).connect(comp).connect(trim).connect(ctx.destination);
+  comp.attack.value = 0.015; comp.release.value = 0.15; // slow attack lets the strike punch through
+  const trim = ctx.createGain(); trim.gain.value = 0.85;
+  g.connect(shaper).connect(comp).connect(trim).connect(ctx.destination);
   return g;
 }
 function loud(fn, kind = 'bell') {
   if (!ctx) return;
   if (buses.get('ctx') !== ctx) { buses.clear(); buses.set('ctx', ctx); }
-  if (!buses.has(kind)) buses.set(kind, kind === 'clap' ? makeBus(7, 0.35, 6, 1.35) : makeBus(2.2, 0, 0, 1.25));
+  if (!buses.has(kind)) buses.set(kind, makeBus(kind));
   out = buses.get(kind); fn(); out = null;
 }
+function direct(fn) { const o = out; out = ctx.destination; fn(); out = o; }
 
 let noise = null;
 function noiseBuffer() {
@@ -114,8 +119,16 @@ function clack() {
 // Boxing bell: a steel hammer on a bronze dome. A hard metallic clang
 // (bright broadband strike) then high inharmonic partials ringing long.
 function ding(start) {
-  hit(start, 7000, 0.7, 1.0, 0.012, 'highpass');   // metal on metal
-  hit(start, 3200, 2, 0.5, 0.03);                   // clang
+  // Hammer strike, straight to the speakers so it stays sharp.
+  direct(() => {
+    const t = start + LOOKAHEAD;
+    hit(t, 2500, 0.6, 0.55, 0.008, 'highpass');       // steel on bronze
+    hit(t, 5200, 2.5, 0.5, 0.02);                    // clank
+    [[4310, 0.16, 0.05], [6870, 0.1, 0.03]]
+      .forEach(([f, v, d]) => tone(f, t, d, { vol: v, attack: 0.0005 }));
+  });
+  hit(start, 7000, 0.7, 1.0, 0.012, 'highpass');
+  hit(start, 3200, 2, 0.5, 0.03);
   [[1180, 0.26, 2.6], [2650, 0.2, 2.0], [3910, 0.14, 1.5], [5420, 0.1, 1.0], [7130, 0.07, 0.7], [9050, 0.04, 0.4]]
     .forEach(([f, v, d]) => { tone(f, start, d, { vol: v, attack: 0.001 }); tone(f * 1.004, start, d * 0.8, { vol: v * 0.5, attack: 0.001 }); });
 }
@@ -129,18 +142,34 @@ function wood(start, vol = 1) {
   hit(start, 700, 6, 0.9 * vol, 0.09);
   tone(420, start, 0.06, { type: 'triangle', vol: 0.35 * vol });
 }
-// The referee's 10-second clapper, like high hardwood claves slammed
-// together: a violent crack over the whole spectrum, a split-wood buzz, then
-// the bright ring of the sticks, all driven hard into saturation.
+// Wood resonator: a tiny noise impulse rung through a very narrow filter,
+// so the mode rings with the grain of real wood instead of a pure sine.
+function ring(start, freq, decay, vol) {
+  if (!ctx) return;
+  const t = ctx.currentTime + start;
+  const src = ctx.createBufferSource();
+  src.buffer = noiseBuffer();
+  const f = ctx.createBiquadFilter();
+  f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = Math.PI * freq * decay / 2.3;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.004);
+  src.connect(f).connect(g).connect(out || ctx.destination);
+  src.start(t); src.stop(t + decay + 0.05);
+}
+// The referee's 10-second clapper: two hardwood sticks slammed together.
+// A hard, short attack (click + slap), then the sticks' bar modes
+// (1 : 2.76 : 5.4) ringing with a woody grain; low modes last longest.
 function claves(start) {
-  hit(start, 200, 0.5, 2.5, 0.022, 'highpass');     // crack, full spectrum
-  hit(start, 10000, 0.5, 2.5, 0.008, 'highpass');   // splinter
-  hit(start, 4500, 0.8, 1.8, 0.03);                 // snap
-  hit(start, 1100, 1, 1.4, 0.04);                   // slap body
-  hit(start, 450, 2, 0.9, 0.05);                    // low thwack
-  [[2480, 0.8, 0.18, 'triangle'], [2530, 0.35, 0.13, 'sine'], [3700, 0.3, 0.08, 'sine'],
-   [6350, 0.35, 0.06, 'sine'], [8900, 0.2, 0.03, 'sine'], [12400, 0.12, 0.02, 'sine']]
-    .forEach(([f, v, d, type]) => tone(f * (0.995 + Math.random() * 0.01), start, d, { type, vol: v, attack: 0.0005 }));
+  const j = () => 0.99 + Math.random() * 0.02;
+  hit(start, 2500, 0.8, 0.9, 0.003);                 // contact click
+  hit(start, 900, 1.1, 0.8, 0.02);                   // slap of the boards
+  tone(260, start, 0.05, { type: 'sine', vol: 0.45, glide: 180, attack: 0.001 }); // hand-held thump
+  const f0 = 1050 * j();
+  [[1, 0.42, 0.45], [1.012, 0.2, 0.35], [2.76, 0.2, 0.16], [5.4, 0.07, 0.06]]
+    .forEach(([r, v, d]) => tone(f0 * r, start, d, { vol: v, attack: 0.0008 }));
+  [[1, 40, 0.4], [1.5, 22, 0.2], [2.76, 18, 0.12]]
+    .forEach(([r, v, d]) => ring(start, f0 * r * j(), d, v));
 }
 function clapper(times) { loud(() => times.forEach(t => claves(t)), 'clap'); }
 // For tests: render sounds into an OfflineAudioContext.
