@@ -225,6 +225,15 @@ for (const [r, min] of [[5, 4.5], [7, 6], [9, 7.5], [11, 9]]) {
   check(s.remaining[0] === 180000 && s.remaining[1] === 180000, 'a new fight uses it');
 }
 
+// Chess without boxing: chess round, timed pause, next chess round
+{
+  const s = fight({ noBoxing: true, autoStop: true, moveLimit: false, rounds: 5 });
+  for (let t = 0; t <= 180000; t += 1000) tick(s, t);
+  check(s.phase === 'break' && s.nextRound === 3 && s.phaseRemaining > 0, 'no boxing: a pause follows the chess round');
+  for (let t = 181000; t <= 241000; t += 1000) tick(s, t);
+  check(s.phase === 'chess' && s.round === 3, 'no boxing: the pause leads to chess round 3');
+}
+
 if (errors.length) {
   console.error(`pendule-clock: ${errors.length} failure(s)`);
   errors.forEach(e => console.error('  ✗ ' + e));

@@ -72,10 +72,34 @@ const DURATIONS = [
 const LONG_PRESS = 450;
 const ROW = 52;  // wheel row height, as in style.css
 
+// A tap picks the mode: ♟ chessboxing rounds on/off, 🥊 timed boxing,
+// ⏸ chess rounds with pauses and no boxing.
+const MODE_ON = {
+  chessRoundMs: () => cfg.intervals,
+  boxRoundMs: () => cfg.intervals && cfg.boxTimer && !cfg.noBoxing,
+  breakMs: () => cfg.intervals && cfg.noBoxing,
+};
+const MODE_TAP = {
+  chessRoundMs: () => { cfg.intervals = !cfg.intervals; },
+  boxRoundMs: () => {
+    if (MODE_ON.boxRoundMs()) cfg.boxTimer = false;
+    else Object.assign(cfg, { intervals: true, boxTimer: true, autoStop: true, noBoxing: false });
+  },
+  breakMs: () => {
+    if (MODE_ON.breakMs()) cfg.noBoxing = false;
+    else Object.assign(cfg, { intervals: true, noBoxing: true });
+  },
+};
+function modeText() {
+  if (!cfg.intervals) return 'Pendule classique, sans rounds.';
+  const r = fmtValue(cfg.chessRoundMs, 'time');
+  if (cfg.noBoxing) return `Rounds d'échecs de ${r} et pauses, sans boxe.`;
+  if (cfg.boxTimer) return `Chessboxing : rounds d'échecs de ${r}, boxe et pauses chronométrées.`;
+  return `Chessboxing : rounds d'échecs de ${r}.`;
+}
 function renderDurations() {
-  $('durations').hidden = !cfg.intervals;
   $('durations').innerHTML = DURATIONS.map(([key, icon, label]) => `
-    <button type="button" class="dur" data-dur="${key}"><i>${icon}</i><b>${fmtValue(cfg[key], 'time')}</b><small>${label}</small></button>`).join('');
+    <button type="button" class="dur${MODE_ON[key]() ? ' on' : ''}" data-dur="${key}"><i>${icon}</i><b>${fmtValue(cfg[key], 'time')}</b><small>${label}</small></button>`).join('');
 }
 let pressTimer = null, longPressed = false;
 $('durations').addEventListener('pointerdown', e => {
@@ -93,10 +117,14 @@ $('durations').addEventListener('pointerdown', e => {
   $('durations').addEventListener(ev, () => clearTimeout(pressTimer)));
 $('durations').addEventListener('contextmenu', e => e.preventDefault());
 $('durations').addEventListener('click', e => {
-  if (!e.target.closest('[data-dur]') || longPressed) return;
-  $('opt-help').hidden = false;
-  $('opt-help').textContent = 'Appui long pour changer la durée.';
+  const b = e.target.closest('[data-dur]');
+  if (!b || longPressed) return;
+  MODE_TAP[b.dataset.dur]();
+  save(CFG_KEY, cfg);
   helpShown = null;
+  renderSetup();
+  $('opt-help').hidden = false;
+  $('opt-help').textContent = `${modeText()} Appui long : changer la durée.`;
 });
 
 let wheelKey = null, wheelValues = [];
@@ -134,11 +162,9 @@ $('wheel').addEventListener('click', e => { if (!e.target.closest('.wheel-panel'
 
 // One or two words per option; the "?" shows the explanation.
 const OPTIONS = [
-  ['intervals', 'Mode Chessboxing avec rounds', () => 'La partie est découpée en rounds de 3 min (par défaut).'],
   ['illegalMoves', 'Coups illégaux', () => `Carton jaune dans ton coin : coup illégal adverse = 1 compte, il rejoue.`],
   ['autoStop', 'Auto rounds', () => `Round d'échecs stoppé à ${cfg.chessRoundMs / 60000} min. Sinon : alerte, tu stoppes.`],
   ['moveLimit', 'Anti-jeu', () => `${cfg.moveWarnMs / 1000} s : alerte. ${cfg.moveCountdownMs / 1000} s : compte de 10 s, puis perdu. ${cfg.countsPerRound} comptes / round ou ${cfg.countsTotal} au total : perdu.`],
-  ['boxTimer', 'Timer boxe', () => `Pause ${cfg.breakMs / 1000} s + boxe ${cfg.boxRoundMs / 60000} min chronométrées. Sinon : tu relances.`],
   ['eco', 'Éco', () => `Économie d'énergie : pas de son (vibrations seulement), écran plus sombre, pas d'animations.`],
 ];
 let helpShown = null;
@@ -150,7 +176,7 @@ function renderSetup() {
       ? `<button type="button" class="btn preset" data-r="${r}"><b>${r}</b><small>rounds</small><em>${formatClock(playerTime({ ...cfg, rounds: +r })).replace(':', "'")}</em></button>`
       : `<button type="button" class="btn preset" data-r="${r}"><b>${formatClock(PRESETS[r]).replace(':', "'")}</b><small>classique</small></button>`).join('');
   // Unchecking the intervals leaves a plain clock: only Éco still applies.
-  const shown = OPTIONS.filter(([key]) => cfg.intervals || key === 'intervals' || key === 'eco');
+  const shown = OPTIONS.filter(([key]) => cfg.intervals || key === 'eco');
   $('options').innerHTML = shown.map(([key, label]) => `
     <div class="opt${cfg[key] ? ' on' : ''}">
       <button type="button" class="opt-toggle" data-opt="${key}"><span class="box">${cfg[key] ? '✓' : ''}</span>${label}</button>
@@ -193,7 +219,8 @@ $('presets').addEventListener('click', e => {
 // A plain clock (no intervals) has no counts and no chessboxing options.
 function fightConfig() {
   const c = structuredClone(cfg);
-  if (!c.intervals) Object.assign(c, { moveLimit: false, illegalMoves: false, autoStop: false, boxTimer: false });
+  if (!c.intervals) Object.assign(c, { moveLimit: false, illegalMoves: false, autoStop: false, boxTimer: false, noBoxing: false });
+  if (c.noBoxing) c.boxTimer = false;
   return c;
 }
 $('options').addEventListener('click', e => {
@@ -202,7 +229,6 @@ $('options').addEventListener('click', e => {
   if (t) {
     cfg[t.dataset.opt] = !cfg[t.dataset.opt];
     // The boxing timer only makes sense with automatic rounds.
-    if (t.dataset.opt === 'boxTimer' && cfg.boxTimer) cfg.autoStop = true;
     if (t.dataset.opt === 'autoStop' && !cfg.autoStop) cfg.boxTimer = false;
     save(CFG_KEY, cfg);
     setMuted(!!cfg.eco);
@@ -211,6 +237,7 @@ $('options').addEventListener('click', e => {
   renderSetup();
 });
 $('setup').addEventListener('change', () => { readSetup(); renderSetup(); });
+$('btn-reset').addEventListener('click', () => $('btn-defaults').click());
 $('btn-defaults').addEventListener('click', () => {
   cfg = { ...defaultConfig(), rounds: cfg.rounds, names: cfg.names };
   save(CFG_KEY, cfg);
@@ -406,7 +433,9 @@ function render() {
   });
 
   const roundIcon = roundType(shownRound) === 'chess' ? '♟' : '🥊';
-  $('bar-round').textContent = !s.cfg.intervals ? '♟' : `${s.phase === 'break' ? '⏸' : roundIcon} ${shownRound}/${s.cfg.rounds}`;
+  $('bar-round').textContent = !s.cfg.intervals ? '♟'
+    : s.cfg.noBoxing ? `${s.phase === 'break' ? '⏸' : '♟'} ${Math.ceil(shownRound / 2)}/${Math.ceil(s.cfg.rounds / 2)}`
+    : `${s.phase === 'break' ? '⏸' : roundIcon} ${shownRound}/${s.cfg.rounds}`;
   $('bar-phase').textContent = s.phase === 'ready' ? '1er = NOIRS' : s.phase === 'break' ? `→ ${roundIcon}`
     : flagScreen ? methodShort(r.method)
     : s.roundOver ? 'Temps !' : s.paused ? 'Pause' : '';

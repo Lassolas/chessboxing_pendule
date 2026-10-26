@@ -29,6 +29,7 @@ export function defaultConfig() {
     intervals: true,        // coached 3-min chess rounds; false = plain clock
     autoStop: false,        // end the chess round on its own after chessRoundMs
     boxTimer: false,        // time the breaks and the boxing round
+    noBoxing: false,        // chess rounds separated by timed pauses only
     illegalMoves: false,    // yellow card to claim an illegal move
     moveLimit: true,        // per-move thinking limit
     moveWarnMs: 20000,      // warning colour + sound
@@ -116,6 +117,14 @@ function endRound(s, events) {
   events.push('roundEnd');
   if (s.round >= s.cfg.rounds) {
     finish(s, null, 'decision', events);
+    return;
+  }
+  if (s.cfg.noBoxing) {
+    // Chess without boxing: a timed pause, then the next chess round.
+    s.phase = 'break';
+    s.nextRound = s.round + 2;
+    s.phaseRemaining = s.cfg.breakMs;
+    s.roundOver = false;
     return;
   }
   if (!s.cfg.boxTimer) {
