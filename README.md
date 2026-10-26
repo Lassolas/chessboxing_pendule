@@ -15,6 +15,7 @@ Pendule d'échecs pour les combats de chessboxing, faite pour le club Paris Ches
   - **Anti-jeu** : alerte à 20 s, compte à rebours de 10 s dès 30 s, puis partie perdue (« Continuer quand même » possible). Chaque compte à rebours = 1 compte ; 3 dans un round ou 4 au total, match perdu.
   - **Timer boxe** : la pause et le round de boxe sont chronométrés, puis les échecs repartent seuls.
   - **Éco** : pas de son (vibrations seulement), écran plus sombre, pas d'animations.
+- En pause et en fin de partie, chaque côté affiche son temps moyen par coup (⌀ 12 s / coup).
 - Fin de partie : écran sombre, le côté et la couleur du vainqueur en doré, ⚑ chez le perdant.
 - Sons analogiques uniquement : clic de vieille pendule mécanique à chaque appui, vraie cloche de boxe (1 coup au début, 3 à la fin), claquoir en bois à 10 s de la fin et pour le compte à rebours, toc sur le bois pour l'alerte, porte qui se ferme en fin de partie. « Test son » dans ⚙ les fait tous entendre.
 - Le temps de réflexion repart à zéro après la boxe. Chaque alerte a toujours un son et un changement de couleur.

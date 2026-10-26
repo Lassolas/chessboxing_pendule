@@ -49,6 +49,9 @@ export function newFight(cfg) {
     phaseRemaining: cfg.intervals ? cfg.chessRoundMs : null,
     roundOver: false,      // chess round time is up but autoStop is off
     counts: [],            // {player, round, illegal}: move countdowns and illegal moves
+    moves: [0, 0],         // moves played, for the average time per move
+    spent: [0, 0],         // thinking time of those moves
+    curMove: 0,            // thinking time of the move in progress
     result: null,          // {winner, loser, method, prev}
     lastTick: null,
   };
@@ -146,6 +149,7 @@ export function tick(s, now) {
 
     const m0 = s.moveElapsed;
     s.moveElapsed += dt;
+    s.curMove = (s.curMove || 0) + dt;
     const c = s.cfg;
     if (c.moveLimit) {
       if (m0 < c.moveWarnMs && s.moveElapsed >= c.moveWarnMs) events.push('moveWarn');
@@ -199,6 +203,10 @@ export function press(s, player, now) {
   if (s.phase === 'ready') return start(s, now, player);
   tick(s, now);
   if (s.phase !== 'chess' || s.paused || player !== s.turn) return [];
+  s.moves ??= [0, 0]; s.spent ??= [0, 0];
+  s.moves[player] += 1;
+  s.spent[player] += s.curMove || 0;
+  s.curMove = 0;
   s.turn = 1 - player;
   s.moveElapsed = 0;
   return ['press'];
@@ -227,6 +235,16 @@ export function skipPhase(s, now) {
   else if (s.phase === 'break') startPhase(s, s.nextRound, events);
   s.lastTick = now;
   return events;
+}
+
+// Average thinking time per move of `player` (ms), or null before their first
+// move. The move in progress counts once it takes longer than the average.
+export function averageMove(s, player) {
+  const moves = s.moves?.[player] || 0;
+  let spent = s.spent?.[player] || 0, n = moves;
+  const cur = s.turn === player ? s.curMove || 0 : 0;
+  if (cur > 0 && (n === 0 || cur > spent / n)) { spent += cur; n += 1; }
+  return n ? spent / n : null;
 }
 
 // The chess round the coach can jump to from here, or null after the last one.

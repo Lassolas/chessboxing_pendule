@@ -3,7 +3,7 @@
 
 import {
   defaultConfig, newFight, tick, start, press, togglePause, skipPhase,
-  illegalMove, undoCount, nextChessRound, goToNextChess, reopen, moveStage, moveCountdownLeft, countsOf,
+  illegalMove, undoCount, averageMove, nextChessRound, goToNextChess, reopen, moveStage, moveCountdownLeft, countsOf,
 } from '../clock.js';
 
 const errors = [];
@@ -202,6 +202,17 @@ for (const [r, min] of [[5, 4.5], [7, 6], [9, 7.5], [11, 9]]) {
   const s = fight({ intervals: false, moveLimit: false });
   run(s, 0, 300000);
   check(s.phase === 'chess' && s.round === 1 && !s.roundOver && nextChessRound(s) === null, 'plain clock: no round stop');
+}
+
+// Average time per move
+{
+  const s = fight({ moveLimit: false });
+  run(s, 0, 4000); press(s, 0, 4000);      // white 4 s
+  run(s, 4000, 6000); press(s, 1, 6000);   // black 2 s
+  run(s, 6000, 8000); press(s, 0, 8000);   // white 2 s
+  check(averageMove(s, 0) === 3000 && averageMove(s, 1) === 2000, 'average per move: white 3 s, black 2 s');
+  run(s, 8000, 18000);                     // black thinking 10 s, longer than the average
+  check(averageMove(s, 1) === 6000, 'a long move in progress counts');
 }
 
 if (errors.length) {

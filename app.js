@@ -1,6 +1,6 @@
 import {
   PRESETS, defaultConfig, newFight, tick, start, press, togglePause, skipPhase,
-  illegalMove, undoCount, nextChessRound, goToNextChess, reopen, endFight, moveStage, moveCountdownLeft,
+  illegalMove, undoCount, averageMove, nextChessRound, goToNextChess, reopen, endFight, moveStage, moveCountdownLeft,
   countsOf, roundType, formatClock,
 } from './clock.js';
 import { unlockAudio, play, setMuted } from './sound.js';
@@ -171,6 +171,7 @@ function buildHalves() {
       <div class="h-clock"></div>
       <div class="h-move"></div>
       <div class="h-counts"></div>
+      <div class="h-avg"></div>
       <button type="button" class="yellow-card" aria-label="Coup illégal adverse" title="Coup illégal adverse"></button>`;
     h.querySelector('.yellow-card').addEventListener('pointerdown', e => {
       e.stopPropagation();
@@ -311,6 +312,10 @@ function render() {
     // Colour in big letters; a name only if one was typed in ⚙.
     const icon = s.white === null ? '' : p === s.white ? 'BLANCS' : 'NOIRS';
     h.querySelector('.h-name').textContent = [icon, s.cfg.names[p]].filter(Boolean).join(' · ');
+    // Average per move, shown when paused or at the end.
+    const avg = averageMove(s, p);
+    h.querySelector('.h-avg').textContent = (s.paused || s.phase === 'over') && avg !== null
+      ? `⌀ ${Math.round(avg / 1000)} s / coup` : '';
     // Counts: nothing until the first one, then one red dot each
     // (bright for this round, dim for earlier rounds).
     const mine = s.counts.filter(c => c.player === p);

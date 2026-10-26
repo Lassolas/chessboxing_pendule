@@ -161,7 +161,9 @@ body {
 .phase-boxing .h-phase, .phase-break .h-phase { display: block; }
 .phase-boxing .h-clock, .phase-break .h-clock { font-size: clamp(36px, 10vw, 56px); color: var(--text-2); }
 .phase-boxing .h-move, .phase-break .h-move { display: none; }
-.paused .half { filter: saturate(.3) brightness(.6); }
+.paused .half > :not(.h-avg) { opacity: .35; }
+.h-avg { position: absolute; bottom: 14px; left: 0; right: 0; text-align: center; font: 700 30px var(--font-display); color: var(--gold); letter-spacing: .04em; font-variant-numeric: tabular-nums; }
+.half.top .h-avg { bottom: max(14px, env(safe-area-inset-bottom)); }
 
 /* ── CENTRE BAR ── */
 .bar {
@@ -275,3 +277,4 @@ body {
 .resume-live span small { display: block; font-size: 12px; letter-spacing: .12em; opacity: .7; margin-bottom: 4px; }
 .resume-live b { font-size: 22px; }
 .resume-live[hidden] { display: none !important; }
+#pause-menu { background: transparent; }  /* halves are dimmed already; keeps ⌀ readable */
