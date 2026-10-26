@@ -29,6 +29,7 @@ if ('autoPause' in cfg) {  // older versions had one option for both
   delete cfg.autoPause;
 }
 let s = null;
+if (cfg.boxTimer) cfg.autoStop = true;
 setMuted(!!cfg.eco);
 
 // ── SETUP SCREEN ──
@@ -130,7 +131,14 @@ function fightConfig() {
 $('options').addEventListener('click', e => {
   const t = e.target.closest('[data-opt]');
   const q = e.target.closest('[data-help]');
-  if (t) { cfg[t.dataset.opt] = !cfg[t.dataset.opt]; save(CFG_KEY, cfg); setMuted(!!cfg.eco); }
+  if (t) {
+    cfg[t.dataset.opt] = !cfg[t.dataset.opt];
+    // The boxing timer only makes sense with automatic rounds.
+    if (t.dataset.opt === 'boxTimer' && cfg.boxTimer) cfg.autoStop = true;
+    if (t.dataset.opt === 'autoStop' && !cfg.autoStop) cfg.boxTimer = false;
+    save(CFG_KEY, cfg);
+    setMuted(!!cfg.eco);
+  }
   if (q) helpShown = helpShown === q.dataset.help ? null : q.dataset.help;
   renderSetup();
 });
