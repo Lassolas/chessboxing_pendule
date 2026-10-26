@@ -11,6 +11,14 @@ export const PRESETS = {
   11: 9 * 60000,
 };
 
+// Thinking time per player: half of all the chess rounds (rounds 1, 3, 5…),
+// so a shorter chess round gives a shorter clock. A plain clock keeps the
+// preset times.
+export function playerTime(cfg) {
+  if (!cfg.intervals) return PRESETS[cfg.rounds];
+  return Math.ceil(cfg.rounds / 2) * cfg.chessRoundMs / 2;
+}
+
 export function defaultConfig() {
   return {
     rounds: 7,
@@ -44,7 +52,7 @@ export function newFight(cfg) {
     paused: false,
     white: null,           // player with White, set by the first press
     turn: null,
-    remaining: [PRESETS[cfg.rounds], PRESETS[cfg.rounds]],
+    remaining: [playerTime(cfg), playerTime(cfg)],
     moveElapsed: 0,
     phaseRemaining: cfg.intervals ? cfg.chessRoundMs : null,
     roundOver: false,      // chess round time is up but autoStop is off
@@ -331,7 +339,7 @@ export function endFight(s, winner, method, now) {
 
 export function adjustTime(s, player, deltaMs, now) {
   tick(s, now);
-  const max = PRESETS[s.cfg.rounds] * 2;
+  const max = playerTime(s.cfg) * 2;
   s.remaining[player] = Math.min(max, Math.max(1000, s.remaining[player] + deltaMs));
   return [];
 }

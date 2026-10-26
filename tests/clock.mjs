@@ -3,7 +3,7 @@
 
 import {
   defaultConfig, newFight, tick, start, press, togglePause, skipPhase,
-  illegalMove, undoCount, averageMove, nextChessRound, goToNextChess, reopen, moveStage, moveCountdownLeft, countsOf,
+  illegalMove, undoCount, averageMove, nextChessRound, goToNextChess, reopen, moveStage, moveCountdownLeft, countsOf, playerTime,
 } from '../clock.js';
 
 const errors = [];
@@ -213,6 +213,16 @@ for (const [r, min] of [[5, 4.5], [7, 6], [9, 7.5], [11, 9]]) {
   check(averageMove(s, 0) === 3000 && averageMove(s, 1) === 2000, 'average per move: white 3 s, black 2 s');
   run(s, 8000, 18000);                     // black thinking 10 s, longer than the average
   check(averageMove(s, 1) === 6000, 'a long move in progress counts');
+}
+
+// Thinking time follows the chess round length
+{
+  check(playerTime({ ...defaultConfig(), rounds: 5 }) === 270000, '5 rounds of 3 min: 4\'30 each');
+  check(playerTime({ ...defaultConfig(), rounds: 11 }) === 540000, '11 rounds of 3 min: 9\'00 each');
+  check(playerTime({ ...defaultConfig(), rounds: 5, chessRoundMs: 120000 }) === 180000, '5 rounds of 2 min: 3\'00 each');
+  check(playerTime({ ...defaultConfig(), rounds: 7, intervals: false }) === 360000, 'plain clock keeps the preset');
+  const s = newFight({ ...defaultConfig(), rounds: 5, chessRoundMs: 120000 });
+  check(s.remaining[0] === 180000 && s.remaining[1] === 180000, 'a new fight uses it');
 }
 
 if (errors.length) {

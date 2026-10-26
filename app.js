@@ -1,5 +1,5 @@
 import {
-  PRESETS, defaultConfig, newFight, tick, start, press, togglePause, skipPhase,
+  PRESETS, playerTime, defaultConfig, newFight, tick, start, press, togglePause, skipPhase,
   illegalMove, undoCount, averageMove, nextChessRound, goToNextChess, reopen, endFight, moveStage, moveCountdownLeft,
   countsOf, roundType, formatClock,
 } from './clock.js';
@@ -35,9 +35,6 @@ setMuted(!!cfg.eco);
 // ── SETUP SCREEN ──
 // ⚙ settings: one stepper per value. [key, icon, label, step, min, max, kind]
 const STEPPERS = [
-  ['chessRoundMs', '♟', 'Round', 30000, 30000, 600000, 'time'],
-  ['boxRoundMs', '🥊', 'Round', 30000, 30000, 300000, 'time'],
-  ['breakMs', '⏸', 'Pause', 15000, 15000, 300000, 'time'],
   ['moveWarnMs', '⏱', 'Alerte', 5000, 5000, 120000, 'time'],
   ['moveCountdownMs', '⏱', 'Compte dès', 5000, 5000, 180000, 'time'],
   ['countsPerRound', '⚑', '/ round', 1, 1, 10, 'n'],
@@ -65,6 +62,76 @@ $('steppers').addEventListener('click', e => {
   renderSetup();
 });
 
+// Round lengths, on the home screen: a long press opens a wheel.
+// [key, icon, label, step, min, max]
+const DURATIONS = [
+  ['chessRoundMs', '♟', 'Échecs', 30000, 30000, 600000],
+  ['boxRoundMs', '🥊', 'Boxe', 30000, 30000, 300000],
+  ['breakMs', '⏸', 'Pause', 15000, 15000, 300000],
+];
+const LONG_PRESS = 450;
+const ROW = 52;  // wheel row height, as in style.css
+
+function renderDurations() {
+  $('durations').hidden = !cfg.intervals;
+  $('durations').innerHTML = DURATIONS.map(([key, icon, label]) => `
+    <button type="button" class="dur" data-dur="${key}"><i>${icon}</i><b>${fmtValue(cfg[key], 'time')}</b><small>${label}</small></button>`).join('');
+}
+let pressTimer = null, longPressed = false;
+$('durations').addEventListener('pointerdown', e => {
+  const b = e.target.closest('[data-dur]');
+  if (!b) return;
+  longPressed = false;
+  clearTimeout(pressTimer);
+  pressTimer = setTimeout(() => {
+    longPressed = true;
+    if (navigator.vibrate) navigator.vibrate(30);
+    openWheel(b.dataset.dur);
+  }, LONG_PRESS);
+});
+['pointerup', 'pointerleave', 'pointercancel'].forEach(ev =>
+  $('durations').addEventListener(ev, () => clearTimeout(pressTimer)));
+$('durations').addEventListener('contextmenu', e => e.preventDefault());
+$('durations').addEventListener('click', e => {
+  if (!e.target.closest('[data-dur]') || longPressed) return;
+  $('opt-help').hidden = false;
+  $('opt-help').textContent = 'Appui long pour changer la durée.';
+  helpShown = null;
+});
+
+let wheelKey = null, wheelValues = [];
+function openWheel(key) {
+  const [, icon, label, step, min, max] = DURATIONS.find(d => d[0] === key);
+  wheelKey = key;
+  wheelValues = [];
+  for (let v = min; v <= max; v += step) wheelValues.push(v);
+  $('wheel-title').textContent = `${icon} ${label}`;
+  $('wheel-list').innerHTML = wheelValues.map((v, i) => `<div class="wheel-item" data-i="${i}">${fmtValue(v, 'time')}</div>`).join('');
+  $('wheel').hidden = false;
+  const list = $('wheel-list');
+  list.scrollTop = Math.max(0, wheelValues.indexOf(cfg[key])) * ROW;
+  markWheel();
+}
+const wheelIndex = () => Math.min(wheelValues.length - 1, Math.max(0, Math.round($('wheel-list').scrollTop / ROW)));
+function markWheel() {
+  const i = wheelIndex();
+  $('wheel-list').querySelectorAll('.wheel-item').forEach(el => el.classList.toggle('sel', +el.dataset.i === i));
+}
+$('wheel-list').addEventListener('scroll', markWheel, { passive: true });
+$('wheel-list').addEventListener('click', e => {
+  const it = e.target.closest('.wheel-item');
+  if (it) $('wheel-list').scrollTo({ top: +it.dataset.i * ROW, behavior: 'smooth' });
+});
+function closeWheel() {
+  cfg[wheelKey] = wheelValues[wheelIndex()];
+  save(CFG_KEY, cfg);
+  $('wheel').hidden = true;
+  renderSetup();
+}
+$('wheel-ok').addEventListener('click', closeWheel);
+// A tap outside the wheel validates too.
+$('wheel').addEventListener('click', e => { if (!e.target.closest('.wheel-panel')) closeWheel(); });
+
 // One or two words per option; the "?" shows the explanation.
 const OPTIONS = [
   ['intervals', 'Mode Chessboxing avec rounds', () => 'La partie est découpée en rounds de 3 min (par défaut).'],
@@ -80,7 +147,7 @@ function renderSetup() {
   document.body.className = cfg.eco ? 'eco' : '';
   $('presets').innerHTML = Object.keys(PRESETS).map(r =>
     cfg.intervals
-      ? `<button type="button" class="btn preset" data-r="${r}"><b>${r}</b><small>rounds</small><em>${formatClock(PRESETS[r]).replace(':', "'")}</em></button>`
+      ? `<button type="button" class="btn preset" data-r="${r}"><b>${r}</b><small>rounds</small><em>${formatClock(playerTime({ ...cfg, rounds: +r })).replace(':', "'")}</em></button>`
       : `<button type="button" class="btn preset" data-r="${r}"><b>${formatClock(PRESETS[r]).replace(':', "'")}</b><small>classique</small></button>`).join('');
   // Unchecking the intervals leaves a plain clock: only Éco still applies.
   const shown = OPTIONS.filter(([key]) => cfg.intervals || key === 'intervals' || key === 'eco');
@@ -95,6 +162,7 @@ function renderSetup() {
   $('name-0').value = cfg.names[0];
   $('name-1').value = cfg.names[1];
   renderSteppers();
+  renderDurations();
   const saved = load(FIGHT_KEY);
   const live = saved && saved.phase !== 'ready' && saved.phase !== 'over';
   $('btn-resume-saved').hidden = !live;

@@ -65,6 +65,21 @@ body {
 .preset b { display: block; font-size: 64px; line-height: .9; color: var(--gold); }
 .preset small { display: block; font-size: 18px; margin-top: 2px; }
 .preset em { display: block; font-style: normal; font-size: 30px; margin-top: 8px; }
+.durations { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+.dur { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; color: var(--text); padding: 10px 4px 8px; text-align: center;
+  font-family: var(--font-display); touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.dur i { display: block; font-style: normal; font-size: 22px; line-height: 1; }
+.dur b { display: block; font-size: 28px; line-height: 1.1; margin-top: 4px; }
+.dur small { display: block; font-size: 15px; color: var(--text-2); letter-spacing: .04em; }
+.wheel-panel { width: min(320px, 100%); }
+.wheel-title { font: 700 26px var(--font-display); text-align: center; margin-bottom: 8px; }
+.wheel-wrap { position: relative; margin-bottom: 12px; }
+.wheel-wrap::before { content: ''; position: absolute; left: 0; right: 0; top: 104px; height: 52px; border-block: 2px solid var(--gold-mid); border-radius: 8px; pointer-events: none; }
+.wheel { height: 260px; overflow-y: scroll; scroll-snap-type: y mandatory; padding: 104px 0; box-sizing: border-box; scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(transparent, #000 35%, #000 65%, transparent); mask-image: linear-gradient(transparent, #000 35%, #000 65%, transparent); }
+.wheel::-webkit-scrollbar { display: none; }
+.wheel-item { height: 52px; line-height: 52px; text-align: center; scroll-snap-align: center; font: 600 30px var(--font-display); color: var(--text-2); }
+.wheel-item.sel { color: var(--gold); font-size: 36px; }
 .options { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; margin-top: 18px; }
 .opt { display: flex; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
 .opt.on { border-color: var(--gold-mid); background: var(--gold-soft); }

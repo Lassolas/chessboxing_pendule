@@ -26,6 +26,7 @@
   <button type="button" id="btn-resume-saved" class="btn btn-gold wide resume-live" hidden></button>
 
   <div class="presets" id="presets"></div>
+  <div class="durations" id="durations"></div>
 
   <div class="options" id="options"></div>
   <p class="opt-help" id="opt-help" hidden></p>
@@ -65,6 +66,15 @@
   <div class="half bottom" data-p="0"></div>
   <div id="toast" class="toast" hidden><span id="toast-text"></span><button type="button" id="toast-undo">Annuler</button></div>
 </section>
+
+<!-- ── ROUE DE SÉLECTION (appui long sur une durée) ── -->
+<div id="wheel" class="overlay" hidden>
+  <div class="panel wheel-panel">
+    <div class="wheel-title" id="wheel-title"></div>
+    <div class="wheel-wrap"><div class="wheel" id="wheel-list"></div></div>
+    <button type="button" class="btn btn-gold wide" id="wheel-ok">✓ OK</button>
+  </div>
+</div>
 
 <!-- ── MENU PAUSE ── -->
 <div id="pause-menu" class="overlay" hidden>
