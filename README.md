@@ -17,7 +17,7 @@ Pendule d'échecs pour les combats de chessboxing, faite pour le club Paris Ches
   - **Éco** : pas de son (vibrations seulement), écran plus sombre, pas d'animations.
 - En pause et en fin de partie, chaque côté affiche son temps moyen par coup (⌀ 12,4 s / coup).
 - Fin de partie : écran sombre, le côté et la couleur du vainqueur en doré, ⚑ chez le perdant.
-- Sons analogiques uniquement : coup de poing enregistré à chaque appui (6 variantes tirées au hasard, son libre de droits Pixabay), cloche de boxe métallique et brillante (1 coup au début, 3 à la fin), marteau sur bois dur enregistré mêlé à un claquement de baguettes à 10 s de la fin (3 coups en 0,5 s pendant un round, 3 coups à 1 s d'intervalle pendant la pause), toc sur le bois pour l'alerte, porte qui se ferme en fin de partie. « Test son » dans ⚙ les fait tous entendre.
+- Sons analogiques uniquement : coup de poing enregistré mêlé au déclic d'une vieille pendule mécanique à chaque appui (6 variantes tirées au hasard, sons libres de droits Pixabay), cloche de boxe métallique et brillante (1 coup au début, 3 à la fin), marteau sur bois dur enregistré à 10 s de la fin (3 coups en 0,5 s pendant un round, 3 coups à 1 s d'intervalle pendant la pause), toc sur le bois pour l'alerte, porte qui se ferme en fin de partie. « Test son » dans ⚙ les fait tous entendre.
 - Le temps de réflexion repart à zéro après la boxe. Chaque alerte a toujours un son et un changement de couleur.
 - Écran toujours allumé, hors ligne, clavier ou bouton Bluetooth (Espace = pause, Entrée = coup joué).
 - Noms et durées modifiables dans « ⚙ Réglages ».

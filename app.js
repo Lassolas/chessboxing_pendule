@@ -366,6 +366,8 @@ function renderPauseMenu() {
 $('pm-next').addEventListener('click', () => act(goToNextChess(s, performance.now())));
 
 $('pm-resume').addEventListener('click', () => act(togglePause(s, performance.now())));
+// A tap anywhere outside the buttons resumes too.
+$('pause-menu').addEventListener('click', e => { if (!e.target.closest('button')) $('pm-resume').click(); });
 let restartTimer = null;
 $('pm-restart').addEventListener('click', () => {
   const b = $('pm-restart');

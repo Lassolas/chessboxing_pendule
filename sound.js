@@ -31,7 +31,11 @@ function sample(bank, start = 0, vol = 1) {
   src.start(ctx.currentTime + start);
   return true;
 }
-function punch() { if (!sample('punch')) clack(); }
+// Each press: the recorded punch with the old clock lever on top, landing
+// on the punch's impact (~28 ms into the recordings).
+function punch() {
+  if (sample('punch', 0, 0.8)) clack(0.028); else clack();
+}
 
 export function unlockAudio() {
   if (!ctx) {
@@ -73,7 +77,7 @@ const buses = new Map();
 const LOOKAHEAD = 0.006;
 function makeBus(kind) {
   const g = ctx.createGain();
-  if (kind === 'clap' || kind === 'clapMix') { g.gain.value = kind === 'clap' ? 0.66 : 0.45; g.connect(ctx.destination); return g; }
+  if (kind === 'clap') { g.gain.value = 0.66; g.connect(ctx.destination); return g; }
   g.gain.value = 2.2;
   const shaper = ctx.createWaveShaper();
   const curve = new Float32Array(2048);
@@ -119,10 +123,10 @@ function hit(start, freq, q, vol, dur, type = 'bandpass') {
 }
 
 // Old analogue chess clock lever: snap, wooden thunk, latch.
-function clack() {
-  hit(0, 3200, 1.2, 1.4, 0.035);
-  tone(180, 0, 0.07, { type: 'triangle', vol: 0.45 });
-  hit(0.028, 1800, 3, 0.6, 0.03);
+function clack(t = 0) {
+  hit(t, 3200, 1.2, 1.4, 0.035);
+  tone(180, t, 0.07, { type: 'triangle', vol: 0.45 });
+  hit(t + 0.028, 1800, 3, 0.6, 0.03);
 }
 
 // Boxing bell: a steel hammer on a bronze dome. A hard metallic clang
@@ -180,14 +184,10 @@ function claves(start) {
   [[1, 40, 0.4], [1.5, 22, 0.2], [2.76, 18, 0.12]]
     .forEach(([r, v, d]) => ring(start, f0 * r * j(), d, v));
 }
-// Recorded hammer on wood layered with the synthesised sticks (which add
-// the crack); the recording starts 3 ms before its impact.
 function clapper(times) {
-  const rec = samples.clap.length > 0;
-  times.forEach(t => rec && sample('clap', t, CLAP_REC));
-  loud(() => times.forEach(t => claves(t + (rec ? 0.003 : 0))), rec ? 'clapMix' : 'clap');
+  if (samples.clap.length) times.forEach(t => sample('clap', t));
+  else loud(() => times.forEach(t => claves(t)), 'clap');
 }
-const CLAP_REC = 0.6;
 // For tests: render sounds into an OfflineAudioContext.
 export function useContext(c) { ctx = c; }
 export function loadForTest() { loadSamples(); }
