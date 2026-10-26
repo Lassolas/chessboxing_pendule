@@ -24,7 +24,7 @@
   --clock-scale: .82;   /* wider faces get a smaller size so 10:00 fits */
 }
 :root[data-digits="teko"] { --font-clock: 'Teko', 'Barlow Condensed', 'Arial Narrow', sans-serif; --clock-weight: 500; --clock-scale: 1.12; }
-:root[data-digits="dgt"] { --clock-scale: 1; }
+:root[data-digits="dgt"] { --clock-scale: .92; }
 
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; height: 100%; -webkit-text-size-adjust: 100%; }
@@ -175,18 +175,22 @@ body {
 .half.bottom .h-in { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
 #fight:not([data-orient="normal"]) .half.top { transform: none; }
 #fight:not([data-orient="normal"]) .h-in { width: 100cqh; height: 100cqw; padding: 12px; }
-#fight[data-orient="right"] .h-in { transform: translate(-50%, -50%) rotate(90deg); }
-#fight[data-orient="left"] .h-in { transform: translate(-50%, -50%) rotate(-90deg); }
-#fight:not([data-orient="normal"]) .h-clock { font-size: calc(var(--clock-scale) * min(30cqh, 160px)); }
+#fight[data-orient="right"] .h-in { transform: translate(-50%, -50%) rotate(-90deg); }
+#fight[data-orient="left"] .h-in { transform: translate(-50%, -50%) rotate(90deg); }
+#fight:not([data-orient="normal"]) .h-clock { font-size: calc(var(--clock-scale) * min(40cqh, 46cqw, 240px)); }
 .bar-compass { width: 48px; height: 48px; padding: 6px; color: var(--text-2); background: var(--bg-alt);
   border: 1px solid var(--border); border-radius: 12px; touch-action: none; }
 .bar-compass svg { width: 100%; height: 100%; display: block; }
 .bar-compass .needle { transform-origin: 20px 20px; transition: transform .2s; }
 #fight[data-orient="right"] .bar-compass .needle { transform: rotate(90deg); }
 #fight[data-orient="left"] .bar-compass .needle { transform: rotate(-90deg); }
-.h-name { font: 600 40px/1 var(--font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--text-2); }
+/* Colour: small, at the player's own edge, away from the digits */
+.h-name { position: absolute; bottom: 12px; left: 0; right: 0; text-align: center;
+  font: 600 18px/1 var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--text-2); }
+.half.top .h-name { bottom: max(12px, env(safe-area-inset-bottom)); }
+.flag .h-name { position: static; }
 .h-clock {
-  font: var(--clock-weight) calc(var(--clock-scale) * clamp(72px, 24vw, 160px))/0.9 var(--font-clock);
+  font: var(--clock-weight) calc(var(--clock-scale) * min(34cqw, 62cqh, 240px))/0.9 var(--font-clock);
   font-variant-numeric: tabular-nums;
   letter-spacing: .01em;
 }
@@ -251,8 +255,8 @@ body {
 .phase-boxing .h-clock, .phase-break .h-clock { font-size: clamp(36px, 10vw, 56px); color: var(--text-2); }
 .phase-boxing .h-move, .phase-break .h-move { display: none; }
 .paused .h-in > :not(.h-avg) { opacity: .35; }
-.h-avg { position: absolute; bottom: 14px; left: 0; right: 0; text-align: center; font: 700 30px var(--font-display); color: var(--gold); letter-spacing: .04em; font-variant-numeric: tabular-nums; }
-.half.top .h-avg { bottom: max(14px, env(safe-area-inset-bottom)); }
+.h-avg { position: absolute; bottom: 40px; left: 0; right: 0; text-align: center; font: 700 30px var(--font-display); color: var(--gold); letter-spacing: .04em; font-variant-numeric: tabular-nums; }
+.half.top .h-avg { bottom: max(40px, calc(env(safe-area-inset-bottom) + 28px)); }
 
 /* ── CENTRE BAR ── */
 .bar {
@@ -396,7 +400,7 @@ body {
   .bar-timer { font-size: 46px; }
   .bar-btn { height: 88px; font-size: 36px; }
   .bar-home, .bar-compass { width: 60px; height: 60px; font-size: 32px; }
-  .h-name { font-size: 56px; }
+  .h-name { font-size: 24px; }
 }
 
 /* Clock digits: DGT seven-segment SVG sized like the text it replaces */
