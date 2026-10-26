@@ -148,11 +148,12 @@ body {
 /* ── CHESSBOXING PARIS: logo in clear, and as a faint watermark everywhere ── */
 .setup-head:has(.head-logo) { display: grid; justify-items: center; gap: 10px; }
 .head-logo { width: min(300px, 80%); height: auto; display: block; }
-.credits { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border); text-align: center; display: grid; justify-items: center; gap: 8px; }
+.credits { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); text-align: center; display: grid; justify-items: center; gap: 4px; }
 .credits p { margin: 0; }
 .credits a:not(.btn) { color: var(--text-2); }
-.credits-logo { width: 96px; height: auto; }
-.credits-by { font: 600 20px var(--font-display); letter-spacing: .06em; }
+.credits-logo { width: min(200px, 60%); height: auto; opacity: .8; margin-bottom: 6px; }
+.credits-line { font-size: 13px; line-height: 1.35; color: var(--text-2); max-width: 100%; }
+.credits-line.dim { opacity: .7; margin-top: 4px; }
 #btn-donate { text-decoration: none; display: block; text-align: center; max-width: 320px; }
 #setup::before { content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
   background: url(logo.png) center 45% / auto min(80vh, 640px) no-repeat; opacity: .05; }

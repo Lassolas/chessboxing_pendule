@@ -700,5 +700,5 @@ function escapeHtml(t) {
 renderSetup();
 caches?.keys?.().then(keys => {
   const v = keys.find(k => k.startsWith('pendule-'));
-  if (v) $('version').textContent = 'Version ' + v.replace('pendule-', '');
+  if (v) $('version').textContent = '· ' + v.replace('pendule-', '');
 }).catch(() => {});
