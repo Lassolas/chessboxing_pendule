@@ -661,3 +661,8 @@ body::after { content: ''; position: fixed; inset: 0; z-index: 40; pointer-event
 .ic-mask { display: inline-block; background: currentColor; -webkit-mask: var(--m) center / contain no-repeat; mask: var(--m) center / contain no-repeat; }
 .ic-knight { --m: url(knight.png); }
 .ic-glove { --m: url(glove.png); }
+.ic-hourglass { --m: url(hourglass.png); }
+.hc-num .ic-mask { height: min(30cqw, 36cqh, 160px); }
+/* The hourglass lies on its side: wider than tall */
+.ic.ic-hourglass { width: auto !important; aspect-ratio: 1.7; }
+@media (max-width: 380px) { .fight-sum { gap: 8px; font-size: 17px; } .si-n small { margin-left: 3px; } }

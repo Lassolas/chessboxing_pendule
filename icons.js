@@ -3,14 +3,14 @@
 const svg = (body, extra = '') =>
   `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"${extra}>${body}</svg>`;
 
-// Val's own one-line drawings (knight, glove), shown through a mask so they
+// Val's own one-line drawings (knight, glove, hourglass), shown through a mask so they
 // take the text colour like the line icons.
 const drawing = name => `<i class="ic ic-mask ic-${name}" aria-hidden="true"></i>`;
 
 export const ICONS = {
   pawn: drawing('knight'),
   glove: drawing('glove'),
-  hourglass: svg('<path d="M6.5 3.5h11M6.5 20.5h11"/><path d="M8 3.5c0 4.2 4 5.3 4 8.5s-4 4.3-4 8.5M16 3.5c0 4.2-4 5.3-4 8.5s4 4.3 4 8.5"/><path d="M10 18.6h4"/>'),
+  hourglass: drawing('hourglass'),
   pause: svg('<path d="M9 6v12M15 6v12"/>', ' stroke-width="2"'),
   play: svg('<path d="M8.5 5.8v12.4L18 12z"/>'),
   home: svg('<path d="M4 11.2 12 4.5l8 6.7"/><path d="M6.2 9.6V20h11.6V9.6"/><path d="M10.2 20v-5.2h3.6V20"/>'),
