@@ -1,7 +1,7 @@
-// Clock digits: a font (Oxanium, Chakra Petch, Saira), or DGT-style seven-segment LCD digits
+// Clock digits: a font (Oxanium, Saira), or DGT-style seven-segment LCD digits
 // drawn in SVG, with the unlit segments faintly visible like a real LCD.
 
-export const DIGIT_STYLES = ['oxanium', 'dgt', 'chakra', 'saira'];
+export const DIGIT_STYLES = ['oxanium', 'dgt', 'saira'];
 
 const SEGS = { 0: 'abcdef', 1: 'bc', 2: 'abged', 3: 'abgcd', 4: 'fgbc', 5: 'afgcd', 6: 'afgedc', 7: 'abc', 8: 'abcdefg', 9: 'abcdfg' };
 const W = 56, H = 100, T = 11, G = 2;
