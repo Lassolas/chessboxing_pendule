@@ -233,9 +233,9 @@ function renderSetup() {
   $('options').innerHTML = OPTIONS.map(([key, icon, label]) => `
     <button type="button" class="opt-icon${cfg[key] ? ' on' : ''}" data-opt="${key}" aria-pressed="${!!cfg[key]}" aria-label="${label}">${icon(cfg[key])}</button>`).join('');
   // Clock digits: the same time shown in each style, one tap to choose.
-  $('options').insertAdjacentHTML('beforeend', `<div class="digit-pick">${DIGIT_STYLES.map(d =>
-    `<button type="button" class="digit-opt${cfg.digits === d ? ' on' : ''}" data-digits="${d}" aria-label="Chiffres ${d}"><span></span></button>`).join('')}</div>`);
-  $('options').querySelectorAll('.digit-opt span').forEach(sp => setDigits(sp, '4:30', sp.parentNode.dataset.digits));
+  $('digit-pick').innerHTML = `<div class="digit-pick">${DIGIT_STYLES.map(d =>
+    `<button type="button" class="digit-opt${cfg.digits === d ? ' on' : ''}" data-digits="${d}" aria-label="Chiffres ${d}"><span></span></button>`).join('')}</div>`;
+  $('digit-pick').querySelectorAll('.digit-opt span').forEach(sp => setDigits(sp, '4:30', sp.parentNode.dataset.digits));
   renderTiles();
   const saved = load(FIGHT_KEY);
   const live = saved && saved.phase !== 'ready' && saved.phase !== 'over';
@@ -272,7 +272,7 @@ function fightConfig() {
   c.moveLimit = c.warnOn || c.countdownOn;
   return c;
 }
-$('options').addEventListener('click', e => {
+function onOptions(e) {
   const t = e.target.closest('[data-opt]');
   const d = e.target.closest('[data-digits]');
   if (d) { cfg.digits = d.dataset.digits; save(CFG_KEY, cfg); }
@@ -283,7 +283,9 @@ $('options').addEventListener('click', e => {
     setMuted(!!cfg.eco || !cfg.sound);
   }
   renderSetup();
-});
+}
+$('options').addEventListener('click', onOptions);
+$('digit-pick').addEventListener('click', onOptions);
 $('btn-reset').addEventListener('click', () => $('btn-defaults').click());
 $('btn-defaults').addEventListener('click', () => {
   cfg = { ...homeDefaults(), rounds: cfg.rounds, names: cfg.names, eco: cfg.eco, digits: cfg.digits };
