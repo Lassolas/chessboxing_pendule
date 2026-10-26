@@ -178,7 +178,6 @@ $('bar-home').addEventListener('click', () => {
   s = null;
   ['fight', 'pause-menu', 'end-menu', 'result'].forEach(id => { $(id).hidden = true; });
   $('setup').hidden = false;
-  if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
   renderSetup();
 });
 
@@ -187,7 +186,8 @@ function openFight() {
   $('fight').hidden = false;
   buildHalves();
   requestWakeLock();
-  document.documentElement.requestFullscreen?.().catch(() => {});
+  // No requestFullscreen: browsers then show an "exit full screen" toast over
+  // the clock. The installed app is full screen on its own (manifest).
   render();
 }
 
@@ -196,7 +196,6 @@ function closeFight() {
   s = null;
   ['fight', 'pause-menu', 'end-menu', 'result'].forEach(id => { $(id).hidden = true; });
   $('setup').hidden = false;
-  if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
   renderSetup();
 }
 
