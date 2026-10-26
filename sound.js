@@ -21,21 +21,21 @@ function loadSamples() {
 }
 // Plays a sample of the bank (a random one, slightly detuned, unless
 // `pick` is given); false if none is loaded yet.
-function sample(bank, start = 0, vol = 1, pick = null) {
+function sample(bank, start = 0, vol = 1, pick = null, dest = null) {
   const list = samples[bank];
   if (!ctx || !list.length) return false;
   const src = ctx.createBufferSource();
   src.buffer = pick ?? list[Math.floor(Math.random() * list.length)];
   src.playbackRate.value = pick ? 1 : 0.95 + Math.random() * 0.1;
   const g = ctx.createGain(); g.gain.value = vol;
-  src.connect(g).connect(ctx.destination);
+  src.connect(g).connect(dest || ctx.destination);
   src.start(ctx.currentTime + start);
   return true;
 }
 // Each press: the recorded punch with the old clock lever on top, landing
 // on the punch's impact (~28 ms into the recordings).
 function punch() {
-  if (sample('punch', 0, 0.8)) clack(0.028); else clack();
+  if (sample('punch', 0, 0.9)) clack(0.028, 1.1); else clack(0, 1.1);
 }
 
 export function unlockAudio() {
@@ -79,6 +79,24 @@ const LOOKAHEAD = 0.006;
 function makeBus(kind) {
   const g = ctx.createGain();
   if (kind === 'clap') { g.gain.value = 0.66; g.connect(ctx.destination); return g; }
+  if (kind === 'hammer') {
+    // Recorded clapper made much louder on phone speakers: lows they can't
+    // play are cut, the woody crack (~2.5 kHz) is lifted, then a gentle
+    // compressor and a fast peak limiter (no waveshaper) so nothing clips.
+    const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 160;
+    const eq = ctx.createBiquadFilter(); eq.type = 'peaking'; eq.frequency.value = 2500; eq.Q.value = 0.9; eq.gain.value = 6;
+    const comp = ctx.createDynamicsCompressor();
+    comp.threshold.value = -38; comp.knee.value = 6; comp.ratio.value = 8;
+    comp.attack.value = 0.004; comp.release.value = 0.1;
+    const makeup = ctx.createGain(); makeup.gain.value = 7;
+    const lim = ctx.createDynamicsCompressor();
+    lim.threshold.value = -6; lim.knee.value = 0; lim.ratio.value = 20;
+    lim.attack.value = 0.001; lim.release.value = 0.08;
+    g.gain.value = 1;
+    const trim = ctx.createGain(); trim.gain.value = 0.9;
+    g.connect(hp).connect(eq).connect(comp).connect(makeup).connect(lim).connect(trim).connect(ctx.destination);
+    return g;
+  }
   g.gain.value = 2.2;
   const shaper = ctx.createWaveShaper();
   const curve = new Float32Array(2048);
@@ -124,10 +142,10 @@ function hit(start, freq, q, vol, dur, type = 'bandpass') {
 }
 
 // Old analogue chess clock lever: snap, wooden thunk, latch.
-function clack(t = 0) {
-  hit(t, 3200, 1.2, 1.4, 0.035);
-  tone(180, t, 0.07, { type: 'triangle', vol: 0.45 });
-  hit(t + 0.028, 1800, 3, 0.6, 0.03);
+function clack(t = 0, v = 1) {
+  hit(t, 3200, 1.2, 1.4 * v, 0.035);
+  tone(180, t, 0.07, { type: 'triangle', vol: 0.45 * v });
+  hit(t + 0.028, 1800, 3, 0.6 * v, 0.03);
 }
 
 // Boxing bell: a steel hammer on a bronze dome. A hard metallic clang
@@ -188,7 +206,7 @@ function claves(start) {
 function clapper(times) {
   // Same recording, same pitch for every strike of the series.
   const one = samples.clap[Math.floor(Math.random() * samples.clap.length)];
-  if (one) times.forEach(t => sample('clap', t, 1, one));
+  if (one) loud(() => times.forEach(t => sample('clap', t, 1, one, out)), 'hammer');
   else loud(() => times.forEach(t => claves(t)), 'clap');
 }
 // For tests: render sounds into an OfflineAudioContext.
