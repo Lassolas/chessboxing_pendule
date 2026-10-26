@@ -318,6 +318,12 @@ $('btn-test-sound').addEventListener('click', () => {
 function colourOf(p) {
   return s.white === null ? '' : p === s.white ? 'Blancs' : 'Noirs';
 }
+// Round, boxing and pause timers: whole seconds only (tenths are for the chess clocks).
+function roundClock(ms) {
+  const t = Math.ceil(ms / 1000);
+  return `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
+}
+
 function nameOf(p) {
   return s.cfg.names[p] || colourOf(p) || `Joueur ${p + 1}`;
 }
@@ -535,7 +541,7 @@ function render() {
     const phaseEl = h.querySelector('.h-phase');
     // Boxing / pause: small label, the round timer in big digits.
     phaseEl.firstChild.textContent = s.phase === 'boxing' ? 'BOXE' : s.phase === 'break' ? 'PAUSE' : '';
-    setDigits(phaseEl.lastChild, (s.phase === 'boxing' || s.phase === 'break') && !untimed ? formatClock(s.phaseRemaining) : (s.phase === 'break' ? '∞' : ''), cfg.digits);
+    setDigits(phaseEl.lastChild, (s.phase === 'boxing' || s.phase === 'break') && !untimed ? roundClock(s.phaseRemaining) : (s.phase === 'break' ? '∞' : ''), cfg.digits);
     const move = h.querySelector('.h-move');
     if (active && cd !== null) move.innerHTML = countHands(cd);
     else if (active && stage === 'warn') move.textContent = `${Math.floor(s.moveElapsed / 1000)} s`;
@@ -565,7 +571,7 @@ function render() {
   $('bar-phase').textContent = s.phase === 'ready' ? '1er = NOIRS' : s.phase === 'break' ? `→ ${roundIcon}`
     : flagScreen ? methodShort(r.method)
     : s.roundOver ? 'Temps !' : s.paused ? 'Pause' : '';
-  setDigits($('bar-timer'), s.phase === 'ready' || s.phase === 'over' || untimed ? '' : formatClock(s.phaseRemaining), cfg.digits);
+  setDigits($('bar-timer'), s.phase === 'ready' || s.phase === 'over' || untimed ? '' : roundClock(s.phaseRemaining), cfg.digits);
   // Lost on time: ↺ Rejouer in the middle of the bar.
   const replay = !!flagScreen && r.method === 'temps';
   $('bar-timer').hidden = replay;
