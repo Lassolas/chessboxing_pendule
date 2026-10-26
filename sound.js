@@ -5,31 +5,39 @@ let ctx = null;
 let muted = false;
 export function setMuted(m) { muted = m; }
 
-// Recorded punches for each press (a few variants, picked at random).
-const PUNCH_FILES = [1, 2, 3, 4, 5, 6].map(i => `sounds/coup${i}.mp3`);
-let punches = [];
-function loadPunches() {
-  PUNCH_FILES.forEach(url => fetch(url)
+// Recorded sounds, a few variants each, picked at random: a punch for each
+// press, a hammer on hard wood for the 10-second clapper.
+const BANKS = {
+  punch: [1, 2, 3, 4, 5, 6].map(i => `sounds/coup${i}.mp3`),
+  clap: [1, 2, 3, 4, 5, 6].map(i => `sounds/claquoir${i}.mp3`),
+};
+const samples = { punch: [], clap: [] };
+function loadSamples() {
+  Object.entries(BANKS).forEach(([bank, files]) => files.forEach(url => fetch(url)
     .then(r => r.arrayBuffer())
     .then(b => new Promise((ok, ko) => ctx.decodeAudioData(b, ok, ko)))
-    .then(buf => punches.push(buf))
-    .catch(() => {}));
+    .then(buf => samples[bank].push(buf))
+    .catch(() => {})));
 }
-function punch() {
-  if (!ctx || !punches.length) { clack(); return; }
+// Plays a random sample of the bank; false if none is loaded yet.
+function sample(bank, start = 0) {
+  const list = samples[bank];
+  if (!ctx || !list.length) return false;
   const src = ctx.createBufferSource();
-  src.buffer = punches[Math.floor(Math.random() * punches.length)];
+  src.buffer = list[Math.floor(Math.random() * list.length)];
   src.playbackRate.value = 0.95 + Math.random() * 0.1;
   src.connect(ctx.destination);
-  src.start();
+  src.start(ctx.currentTime + start);
+  return true;
 }
+function punch() { if (!sample('punch')) clack(); }
 
 export function unlockAudio() {
   if (!ctx) {
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
     ctx = new AC();
-    loadPunches();
+    loadSamples();
   }
   if (ctx.state === 'suspended') ctx.resume();
 }
@@ -171,9 +179,13 @@ function claves(start) {
   [[1, 40, 0.4], [1.5, 22, 0.2], [2.76, 18, 0.12]]
     .forEach(([r, v, d]) => ring(start, f0 * r * j(), d, v));
 }
-function clapper(times) { loud(() => times.forEach(t => claves(t)), 'clap'); }
+function clapper(times) {
+  if (samples.clap.length) times.forEach(t => sample('clap', t));
+  else loud(() => times.forEach(t => claves(t)), 'clap');
+}
 // For tests: render sounds into an OfflineAudioContext.
 export function useContext(c) { ctx = c; }
+export function loadForTest() { loadSamples(); }
 
 // Knuckle on a wooden table: duller and lower.
 function knock(start, vol = 1) {
