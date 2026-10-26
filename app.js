@@ -156,14 +156,13 @@ function onTiles(e) {
   const t = tileOf(el.dataset.tile);
   t.tap();
   save(CFG_KEY, cfg);
-  helpShown = null;
   renderSetup();
   showTileText(t);
 }
 $('durations').addEventListener('click', onTiles);
 $('chess-set').addEventListener('click', onTiles);
 
-// Slide on a strip: one step every STEP_PX, up = more.
+// Slide on a strip: one step every STEP_PX, down = more (like turning a wheel).
 const STEP_PX = 24;
 let drag = null;
 function onStripDown(e) {
@@ -180,7 +179,7 @@ function onStripDown(e) {
 function onStripMove(e) {
   if (!drag) return;
   const { t, strip, vals } = drag;
-  const i = Math.min(vals.length - 1, Math.max(0, drag.i0 + Math.round((drag.y - e.clientY) / STEP_PX)));
+  const i = Math.min(vals.length - 1, Math.max(0, drag.i0 + Math.round((e.clientY - drag.y) / STEP_PX)));
   if (vals[i] === cfg[t.key]) return;
   cfg[t.key] = vals[i];
   if (t.key === 'moveCountdownMs') {
@@ -208,12 +207,11 @@ function onStripUp() {
   $(id).addEventListener('pointercancel', onStripUp);
 });
 
-// One or two words per option; the "?" shows the explanation.
+// Icon toggles: sound (🔊 / 🔇) and Éco (battery: no sound, darker, no animations).
 const OPTIONS = [
-  ['sound', 'Son', () => `Sons de la pendule : coups, cloche, claquoir. Désactivé : silence (vibrations seulement).`],
-  ['eco', 'Éco', () => `Économie d'énergie : pas de son (vibrations seulement), écran plus sombre, pas d'animations.`],
+  ['sound', on => (on ? '🔊' : '🔇'), 'Son'],
+  ['eco', () => '🔋', 'Éco'],
 ];
-let helpShown = null;
 
 function renderPresets() {
   $('presets').innerHTML = Object.keys(PRESETS).map(r =>
@@ -228,18 +226,12 @@ function renderSetup() {
   renderPresets();
   // Unchecking the intervals leaves a plain clock: only Éco still applies.
   // A plain clock has no illegal-move card: dimmed, so the layout stays put.
-  $('options').innerHTML = OPTIONS.map(([key, label]) => `
-    <div class="opt${cfg[key] ? ' on' : ''}${!cfg.intervals && !['eco', 'sound'].includes(key) ? ' dim' : ''}">
-      <button type="button" class="opt-toggle" data-opt="${key}"><span class="box">${cfg[key] ? '✓' : ''}</span>${label}</button>
-      <button type="button" class="opt-q${helpShown === key ? ' sel' : ''}" data-help="${key}" aria-label="Explication">?</button>
-    </div>`).join('');
+  $('options').innerHTML = OPTIONS.map(([key, icon, label]) => `
+    <button type="button" class="opt-icon${cfg[key] ? ' on' : ''}" data-opt="${key}" aria-pressed="${!!cfg[key]}" aria-label="${label}">${icon(cfg[key])}</button>`).join('');
   // Clock digits: the same time shown in each style, one tap to choose.
   $('options').insertAdjacentHTML('beforeend', `<div class="digit-pick">${DIGIT_STYLES.map(d =>
     `<button type="button" class="digit-opt${cfg.digits === d ? ' on' : ''}" data-digits="${d}" aria-label="Chiffres ${d}"><span></span></button>`).join('')}</div>`);
   $('options').querySelectorAll('.digit-opt span').forEach(sp => setDigits(sp, '4:30', sp.parentNode.dataset.digits));
-  const help = OPTIONS.find(o => o[0] === helpShown);
-  $('opt-help').hidden = !help;
-  if (help) $('opt-help').textContent = help[2]();
   renderTiles();
   const saved = load(FIGHT_KEY);
   const live = saved && saved.phase !== 'ready' && saved.phase !== 'over';
@@ -278,7 +270,6 @@ function fightConfig() {
 }
 $('options').addEventListener('click', e => {
   const t = e.target.closest('[data-opt]');
-  const q = e.target.closest('[data-help]');
   const d = e.target.closest('[data-digits]');
   if (d) { cfg.digits = d.dataset.digits; save(CFG_KEY, cfg); }
   if (t) {
@@ -286,7 +277,6 @@ $('options').addEventListener('click', e => {
     save(CFG_KEY, cfg);
     setMuted(!!cfg.eco || !cfg.sound);
   }
-  if (q) helpShown = helpShown === q.dataset.help ? null : q.dataset.help;
   renderSetup();
 });
 $('btn-reset').addEventListener('click', () => $('btn-defaults').click());

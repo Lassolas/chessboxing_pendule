@@ -20,8 +20,8 @@ Pendule d'échecs pour les combats de chessboxing, faite pour le club Paris Ches
 - Sons analogiques uniquement : coup de poing enregistré mêlé au déclic d'une vieille pendule mécanique à chaque appui (6 variantes tirées au hasard, sons libres de droits Pixabay), cloche de boxe métallique et brillante (1 coup au début, 3 à la fin), marteau sur bois dur enregistré à 10 s de la fin (3 coups en 0,5 s pendant un round, 3 coups à 1 s d'intervalle pendant la pause), toc sur le bois pour l'alerte, porte qui se ferme en fin de partie. « Test son » dans ⚙ les fait tous entendre.
 - Le temps de réflexion repart à zéro après la boxe. Chaque alerte a toujours un son et un changement de couleur.
 - Écran toujours allumé, hors ligne, clavier ou bouton Bluetooth (Espace = pause, Entrée = coup joué).
-- Sous les 4 boutons : ♟ Échecs, ⏸ Pause, 🥊 Boxe. Appui sur une case : active ou désactive. Bande de droite : la valeur, à régler en glissant le doigt vers le haut ou le bas. Le temps par joueur suit la durée du round d'échecs (5 rounds de 2' = 3'00 chacun). « ↺ Réinitialiser » remet les valeurs par défaut.
-- « 🎨 Style » (menu déroulant en bas) : Son (activé par défaut), Éco, et trois cases « 4:30 » pour choisir les chiffres de la pendule : Oxanium (par défaut), DGT (segments LCD comme une pendule DGT, dessinés en SVG) ou Teko.
+- Sous les 4 boutons : ♟ Échecs, ⏸ Pause, 🥊 Boxe. Appui sur une case : active ou désactive. Bande de droite : la valeur, à régler en glissant le doigt (vers le bas = plus, comme une roue). Le temps par joueur suit la durée du round d'échecs (5 rounds de 2' = 3'00 chacun). « ↺ Réinitialiser » remet les valeurs par défaut.
+- « 🎨 Style » (menu déroulant en bas) : 🔊 Son (activé par défaut) et 🔋 Éco en boutons icônes, et trois cases « 4:30 » pour choisir les chiffres de la pendule : Oxanium (par défaut), DGT (segments LCD comme une pendule DGT, dessinés en SVG) ou Teko.
 - « ⚙ Réglages » : test des sons et valeurs par défaut. Pas de noms de joueurs : BLANCS / NOIRS seulement.
 
 ## Installer
