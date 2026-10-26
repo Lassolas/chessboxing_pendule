@@ -28,6 +28,7 @@
   --clock-scale: .82;   /* wider faces get a smaller size so 10:00 fits */
 }
 :root[data-digits="dgt"] { --clock-scale: .92; }
+:root[data-digits="chakra"] { --font-clock: 'Chakra Petch', 'Oxanium', 'Barlow Condensed', sans-serif; --clock-weight: 600; --clock-scale: .86; }
 
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; height: 100%; -webkit-text-size-adjust: 100%; }
@@ -478,9 +479,10 @@ svg.seg { height: .8em; width: auto; vertical-align: -.02em; overflow: visible; 
 svg.seg .lit { fill: currentColor; }
 svg.seg .ghost { fill: currentColor; opacity: .07; }
 .bar-timer svg.seg { height: .7em; }
-.digit-pick { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.digit-pick { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .digit-opt { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; color: var(--text-2); padding: 10px 4px;
   font: 30px/1 var(--font-clock); touch-action: manipulation; display: grid; place-items: center; min-height: 54px; }
+.digit-opt[data-digits="chakra"] { font-family: 'Chakra Petch', var(--font-display); font-weight: 600; font-size: 26px; }
 .digit-opt[data-digits="oxanium"] { font-family: 'Oxanium', var(--font-display); font-weight: 600; font-size: 26px; }
 .digit-opt.on { border-color: var(--gold-mid); background: var(--gold-soft); color: var(--gold); }
 

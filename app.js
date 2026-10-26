@@ -27,7 +27,7 @@ const homeDefaults = () => ({
   ...defaultConfig(),
   breakMs: 60000, breakOn: true,    // pause off = open pause (∞)
   warnOn: false, countdownOn: false,   // counts off by default
-  digits: 'oxanium',                  // clock digits: oxanium | dgt
+  digits: 'oxanium',                  // clock digits: oxanium | dgt | chakra
   sound: true,
   v: 8,
 });
