@@ -3,7 +3,7 @@
 
 import {
   defaultConfig, newFight, tick, start, press, togglePause, skipPhase,
-  illegalMove, undoCount, averageMove, nextChessRound, goToNextChess, reopen, moveStage, moveCountdownLeft, countsOf, playerTime,
+  illegalMove, undoCount, averageMove, nextChessRound, goToNextChess, reopen, adjustTime, moveStage, moveCountdownLeft, countsOf, playerTime,
 } from '../clock.js';
 
 const errors = [];
@@ -222,6 +222,18 @@ for (const [r, min] of [[5, 4.5], [7, 6], [9, 7.5], [11, 9]]) {
   const b = fight({ moveLimit: false, rounds: 5, breakMs: 0, boxTimer: true });
   run(b, 0, 180000);
   check(b.phase === 'boxing' && b.round === 2, 'no pause: boxing follows straight away');
+}
+
+// The last chess round lasts as long as the clocks, even after a skip or added time
+{
+  const s = fight({ moveLimit: false, rounds: 5, breakMs: 0 });
+  goToNextChess(s, 0); goToNextChess(s, 0);
+  check(s.round === 5 && s.phaseRemaining === null, 'last chess round has no round timer');
+  adjustTime(s, s.turn, 120000, 0);
+  run(s, 0, 300000);
+  check(s.phase === 'chess', 'last round still running after 5 min');
+  run(s, 300000, 400000);
+  check(s.phase === 'over' && s.result.method !== 'decision', 'last round ends on the flag');
 }
 
 if (errors.length) {

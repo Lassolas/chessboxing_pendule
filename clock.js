@@ -101,7 +101,8 @@ function startPhase(s, round, events) {
   s.roundOver = false;
   if (roundType(round) === 'chess') {
     s.phase = 'chess';
-    s.phaseRemaining = s.cfg.intervals ? s.cfg.chessRoundMs : null;
+    // The last chess round lasts as long as the players' clocks.
+    s.phaseRemaining = s.cfg.intervals && round + 2 <= s.cfg.rounds ? s.cfg.chessRoundMs : null;
     s.moveElapsed = 0;
   } else {
     s.phase = 'boxing';
