@@ -67,7 +67,7 @@ $('steppers').addEventListener('click', e => {
 
 // One or two words per option; the "?" shows the explanation.
 const OPTIONS = [
-  ['intervals', 'Intervalles 3 min', () => `Combat coaché : rounds d'échecs de ${cfg.chessRoundMs / 60000} min, comptes et options ci-dessous. Décoché : pendule classique, rien d'autre.`],
+  ['intervals', 'Mode Chessboxing avec rounds', () => 'La partie est découpée en rounds de 3 min (par défaut).'],
   ['illegalMoves', 'Coups illégaux', () => `Carton jaune dans ton coin : coup illégal adverse = 1 compte, il rejoue.`],
   ['autoStop', 'Auto rounds', () => `Round d'échecs stoppé à ${cfg.chessRoundMs / 60000} min. Sinon : alerte, tu stoppes.`],
   ['moveLimit', 'Anti-jeu', () => `${cfg.moveWarnMs / 1000} s : alerte. ${cfg.moveCountdownMs / 1000} s : compte de 10 s, puis perdu. ${cfg.countsPerRound} comptes / round ou ${cfg.countsTotal} au total : perdu.`],

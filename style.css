@@ -65,11 +65,11 @@ body {
 .preset b { display: block; font-size: 64px; line-height: .9; color: var(--gold); }
 .preset small { display: block; font-size: 18px; margin-top: 2px; }
 .preset em { display: block; font-style: normal; font-size: 30px; margin-top: 8px; }
-.options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 18px; }
+.options { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; margin-top: 18px; }
 .opt { display: flex; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
 .opt.on { border-color: var(--gold-mid); background: var(--gold-soft); }
 .opt button { background: none; border: 0; color: var(--text); font: 600 18px var(--font-display); letter-spacing: .03em; touch-action: manipulation; }
-.opt-toggle { flex: 1; display: flex; align-items: center; gap: 10px; padding: 14px 10px; text-align: left; }
+.opt-toggle { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 14px 10px; text-align: left; }
 .opt .box { width: 24px; height: 24px; flex: none; border: 2px solid var(--text-2); border-radius: 6px; display: grid; place-items: center; font-size: 16px; color: #1a1405; }
 .opt.on .box { background: var(--gold); border-color: var(--gold); }
 .opt-q { width: 40px; flex: none; border-left: 1px solid var(--border) !important; color: var(--text-2) !important; font-size: 20px !important; }
@@ -285,6 +285,9 @@ body {
 
 /* Small phones (iPhone SE…): keep the whole centre bar on screen */
 @media (max-width: 380px) {
+  .opt button { font-size: 16px; }
+  .opt-toggle { gap: 8px; padding: 12px 8px; }
+  .opt-q { width: 34px; }
   .bar { gap: 6px; padding: 6px 8px; grid-template-columns: auto auto 1fr minmax(96px, 1fr); }
   .bar-home { width: 40px; height: 40px; font-size: 22px; }
   .bar-round { font-size: 17px; }
