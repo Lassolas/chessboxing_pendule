@@ -4,7 +4,7 @@ import {
   countsOf, roundType, formatClock,
 } from './clock.js';
 import { unlockAudio, play, setMuted } from './sound.js';
-import { countHands, handSVG, REFEREE } from './hands.js';
+import { countHands, REFEREE } from './hands.js';
 
 const $ = id => document.getElementById(id);
 const CFG_KEY = 'pendule-cb-config';
@@ -73,7 +73,7 @@ const TILES = [
     on: () => cfg.intervals && cfg.boxTimer,
     tap: () => { cfg.boxTimer = !(cfg.intervals && cfg.boxTimer); if (cfg.boxTimer) cfg.intervals = true; } },
   { key: 'moveWarnMs', flag: 'warnOn', row: 2, icon: () => watch, label: 'Alerte', step: 5000, min: 5000, max: 120000 },
-  { key: 'moveCountdownMs', flag: 'countdownOn', row: 2, icon: () => handSVG(5, TILE_HAND), label: 'Compte', step: 5000, min: 5000, max: 180000 },
+  { key: 'moveCountdownMs', flag: 'countdownOn', row: 2, icon: () => countHands(8, TILE_HAND), label: 'Compte', step: 5000, min: 5000, max: 180000 },
   { key: 'countsPerRound', flag: 'perRoundOn', row: 2, icon: () => dots(cfg.countsPerRound), label: '/ round', step: 1, min: 1, max: 10, kind: 'n' },
   { key: 'countsTotal', flag: 'totalOn', row: 2, icon: () => dots(cfg.countsTotal), label: 'Total', step: 1, min: 1, max: 20, kind: 'n' },
 ];

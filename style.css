@@ -81,6 +81,8 @@ body {
 .dur.small small { font-size: 13px; }
 .dur.small .edit { width: 28px; height: 28px; line-height: 28px; font-size: 15px; }
 .ico { width: 28px; height: 28px; }
+.dur .hands { display: inline-flex; gap: 0; margin: 0 8px 0 0; }
+.dur .hands svg.hand { height: 28px; }
 .dur svg.hand { height: 32px; width: auto; }
 .ico-dots { display: inline-flex; gap: 3px; }
 .ico-dots span { width: 10px; height: 10px; border-radius: 50%; background: var(--red); }
