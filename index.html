@@ -74,13 +74,11 @@
 <!-- ── MENU PAUSE ── -->
 <div id="pause-menu" class="overlay" hidden>
   <div class="panel">
-    <h2>PAUSE</h2>
-    <button type="button" class="btn btn-gold wide big" id="pm-resume">▶ GO</button>
-    <button type="button" class="btn wide" id="pm-skip">Round suivant</button>
-    <button type="button" class="btn wide" id="pm-undo">Annuler compte</button>
-    <div class="adjust" id="pm-adjust"></div>
-    <button type="button" class="btn wide" id="pm-end">Fin du combat</button>
-    <button type="button" class="btn btn-ghost wide" id="pm-new">⌂ Accueil</button>
+    <button type="button" class="btn btn-gold wide pm-go" id="pm-resume">▶ CONTINUER</button>
+    <div class="pm-row">
+      <button type="button" class="btn" id="pm-restart" aria-label="Recommencer à zéro">♻️</button>
+      <button type="button" class="btn" id="pm-home" aria-label="Accueil">⌂</button>
+    </div>
   </div>
 </div>
 

@@ -1,6 +1,6 @@
 import {
   PRESETS, defaultConfig, newFight, tick, start, press, togglePause, skipPhase,
-  illegalMove, undoCount, reopen, endFight, adjustTime, moveStage, moveCountdownLeft,
+  illegalMove, undoCount, reopen, endFight, moveStage, moveCountdownLeft,
   countsOf, roundType, formatClock,
 } from './clock.js';
 import { unlockAudio, play, setMuted } from './sound.js';
@@ -299,7 +299,7 @@ function render() {
   const overAction = flagScreen ? (r.method === 'réflexion' ? 'Continuer' : r.method.includes('comptes') ? 'Annuler' : null) : null;
   $('bar-btn').hidden = s.phase === 'ready' || (s.phase === 'over' && !overAction);
   $('bar-btn').textContent = overAction ? overAction : s.paused ? '▶ GO'
-    : untimed && s.phase === 'boxing' ? `▶ ROUND ${s.round + 1}` : 'PAUSE';
+    : untimed && s.phase === 'boxing' ? `▶ ROUND ${s.round + 1}` : s.roundOver ? 'STOP' : 'PAUSE';
   $('bar-btn').classList.toggle('long', $('bar-btn').textContent.length > 6);
   $('bar-btn').classList.toggle('go', untimed && s.phase === 'boxing' && !s.paused);
 
@@ -308,33 +308,28 @@ function render() {
   renderResult();
 }
 
-function renderPauseMenu() {
-  const next = s.phase === 'break' ? s.nextRound : s.round + 1;
-  const skip = $('pm-skip');
-  if (s.phase === 'break' || (s.phase === 'boxing' && !s.cfg.boxTimer)) skip.textContent = `Round ${next} ▶`;
-  else if (s.round >= s.cfg.rounds) skip.textContent = 'Fin';
-  else skip.textContent = `Fin round ${s.round}`;
-  $('pm-undo').hidden = !s.counts.length;
-  $('pm-adjust').innerHTML = [0, 1].map(p => `
-    <span>${escapeHtml(nameOf(p))} <b>${formatClock(s.remaining[p])}</b></span>
-    <button type="button" class="btn" data-adj="${p}" data-d="-10000">−10 s</button>
-    <button type="button" class="btn" data-adj="${p}" data-d="10000">+10 s</button>`).join('');
-}
+// Pause menu: big Continue, ♻️ restart from zero (tap twice), ⌂ home.
+function renderPauseMenu() {}
 
 $('pm-resume').addEventListener('click', () => act(togglePause(s, performance.now())));
-$('pm-skip').addEventListener('click', () => {
-  const ev = skipPhase(s, performance.now());
-  if (s.phase !== 'over') { s.paused = false; s.lastTick = performance.now(); }
-  act(ev);
+let restartTimer = null;
+$('pm-restart').addEventListener('click', () => {
+  const b = $('pm-restart');
+  if (!b.classList.contains('confirm')) {
+    b.classList.add('confirm');
+    b.textContent = '♻️ ?';
+    clearTimeout(restartTimer);
+    restartTimer = setTimeout(() => { b.classList.remove('confirm'); b.textContent = '♻️'; }, 3000);
+    return;
+  }
+  clearTimeout(restartTimer);
+  b.classList.remove('confirm');
+  b.textContent = '♻️';
+  s = newFight(structuredClone(s.cfg));
+  buildHalves();
+  act(['undo']);
 });
-$('pm-undo').addEventListener('click', () => act(undoCount(s, performance.now())));
-$('pm-adjust').addEventListener('click', e => {
-  const b = e.target.closest('[data-adj]');
-  if (b) act(adjustTime(s, +b.dataset.adj, +b.dataset.d, performance.now()));
-});
-$('pm-new').addEventListener('click', () => {
-  $('bar-home').click();
-});
+$('pm-home').addEventListener('click', () => $('bar-home').click());
 
 // ── MANUAL END ──
 const METHODS = ['Mat', 'Abandon', 'KO', 'Arbitre', 'Juges', 'Disqualif.', 'Nulle'];
@@ -354,7 +349,6 @@ function renderEndMenu() {
     `<button type="button" class="btn${endChoice.method === m ? ' sel' : ''}" data-m="${m}">${m}</button>`).join('');
   $('end-ok').disabled = endChoice.winner === undefined || !endChoice.method;
 }
-$('pm-end').addEventListener('click', openEndMenu);
 $('end-winner').addEventListener('click', e => {
   const b = e.target.closest('[data-w]');
   if (!b) return;

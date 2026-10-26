@@ -205,6 +205,13 @@ export function press(s, player, now) {
 export function togglePause(s, now) {
   tick(s, now);
   if (s.phase === 'ready' || s.phase === 'over') return [];
+  // Chess round time is up (no auto stop): the pause button ends the round.
+  if (s.phase === 'chess' && s.roundOver && !s.paused) {
+    const events = [];
+    endRound(s, events);
+    s.lastTick = now;
+    return events;
+  }
   s.paused = !s.paused;
   s.lastTick = now;
   return [s.paused ? 'pause' : 'resume'];

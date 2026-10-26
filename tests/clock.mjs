@@ -171,6 +171,18 @@ for (const [r, min] of [[5, 4.5], [7, 6], [9, 7.5], [11, 9]]) {
   check(s.remaining[1] === 6 * 60000 - 2000 && s.remaining[0] === 6 * 60000, "White's clock runs");
 }
 
+// Without auto stop, pressing pause after the round time ends the round
+{
+  const s = fight({ moveLimit: false });
+  run(s, 0, 60000);
+  togglePause(s, 60000);
+  check(s.paused && s.phase === 'chess', 'before 3 min, pause is a pause');
+  togglePause(s, 60000);
+  run(s, 60000, 185000);
+  togglePause(s, 185000);
+  check(s.phase === 'boxing' && !s.paused, 'after 3 min, pause ends the chess round');
+}
+
 if (errors.length) {
   console.error(`pendule-clock: ${errors.length} failure(s)`);
   errors.forEach(e => console.error('  ✗ ' + e));
