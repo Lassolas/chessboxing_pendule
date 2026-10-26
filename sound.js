@@ -20,13 +20,14 @@ function loadSamples() {
     .catch(() => {})));
 }
 // Plays a random sample of the bank; false if none is loaded yet.
-function sample(bank, start = 0) {
+function sample(bank, start = 0, vol = 1) {
   const list = samples[bank];
   if (!ctx || !list.length) return false;
   const src = ctx.createBufferSource();
   src.buffer = list[Math.floor(Math.random() * list.length)];
   src.playbackRate.value = 0.95 + Math.random() * 0.1;
-  src.connect(ctx.destination);
+  const g = ctx.createGain(); g.gain.value = vol;
+  src.connect(g).connect(ctx.destination);
   src.start(ctx.currentTime + start);
   return true;
 }
@@ -72,7 +73,7 @@ const buses = new Map();
 const LOOKAHEAD = 0.006;
 function makeBus(kind) {
   const g = ctx.createGain();
-  if (kind === 'clap') { g.gain.value = 0.66; g.connect(ctx.destination); return g; }
+  if (kind === 'clap' || kind === 'clapMix') { g.gain.value = kind === 'clap' ? 0.66 : 0.45; g.connect(ctx.destination); return g; }
   g.gain.value = 2.2;
   const shaper = ctx.createWaveShaper();
   const curve = new Float32Array(2048);
@@ -179,10 +180,14 @@ function claves(start) {
   [[1, 40, 0.4], [1.5, 22, 0.2], [2.76, 18, 0.12]]
     .forEach(([r, v, d]) => ring(start, f0 * r * j(), d, v));
 }
+// Recorded hammer on wood layered with the synthesised sticks (which add
+// the crack); the recording starts 3 ms before its impact.
 function clapper(times) {
-  if (samples.clap.length) times.forEach(t => sample('clap', t));
-  else loud(() => times.forEach(t => claves(t)), 'clap');
+  const rec = samples.clap.length > 0;
+  times.forEach(t => rec && sample('clap', t, CLAP_REC));
+  loud(() => times.forEach(t => claves(t + (rec ? 0.003 : 0))), rec ? 'clapMix' : 'clap');
 }
+const CLAP_REC = 0.6;
 // For tests: render sounds into an OfflineAudioContext.
 export function useContext(c) { ctx = c; }
 export function loadForTest() { loadSamples(); }
