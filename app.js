@@ -278,7 +278,7 @@ function onOptions(e) {
   if (d) { cfg.digits = d.dataset.digits; save(CFG_KEY, cfg); }
   if (t) {
     cfg[t.dataset.opt] = !cfg[t.dataset.opt];
-    if (t.dataset.opt === 'eco') cfg.sound = !cfg.eco;  // Éco mutes; leaving it brings the sound back
+    if (t.dataset.opt === 'eco') { cfg.sound = !cfg.eco; updateMotion(); }  // Éco mutes; leaving it brings the sound back
     save(CFG_KEY, cfg);
     setMuted(!!cfg.eco || !cfg.sound);
   }
@@ -441,8 +441,17 @@ function askMotion() {
   if (motionAsked) return;
   motionAsked = true;
   if (typeof DeviceMotionEvent === 'undefined') return;
-  window.addEventListener('devicemotion', onMotion);
   DeviceMotionEvent.requestPermission?.().catch(() => {});  // iOS: asks once, on this tap
+  updateMotion();
+}
+// Éco switches the tilt sensor off (the compass still turns the digits).
+let motionOn = false;
+function updateMotion() {
+  const want = motionAsked && !cfg.eco && typeof DeviceMotionEvent !== 'undefined';
+  if (want === motionOn) return;
+  if (want) window.addEventListener('devicemotion', onMotion);
+  else window.removeEventListener('devicemotion', onMotion);
+  motionOn = want;
 }
 document.addEventListener('click', askMotion);
 document.addEventListener('touchend', askMotion);
@@ -521,6 +530,7 @@ const METHOD_SHORT = { temps: 'Temps écoulé !', 'réflexion': 'Anti-jeu', deci
 const methodShort = m => METHOD_SHORT[m] || m.replace(/ dans le round| au total/, '');
 
 function render() {
+  if (s) lastEcoKey = ecoKey();
   if (!s) return;
   const body = document.body;
   const r = s.result;
@@ -542,7 +552,7 @@ function render() {
     h.classList.toggle('low', s.remaining[p] < 10000);
     h.classList.toggle('winner', !!flagScreen && (r.winner === p || r.winner === null));
     h.classList.toggle('loser', !!flagScreen && r.loser === p);
-    setDigits(h.querySelector('.h-clock'), formatClock(s.remaining[p]), cfg.digits);
+    setDigits(h.querySelector('.h-clock'), cfg.eco ? roundClock(s.remaining[p]) : formatClock(s.remaining[p]), cfg.digits);  // Éco: no tenths
     const phaseEl = h.querySelector('.h-phase');
     // Boxing / pause: small label, the round timer in big digits.
     phaseEl.firstChild.textContent = s.phase === 'boxing' ? 'BOXE' : s.phase === 'break' ? 'PAUSE' : '';
@@ -682,11 +692,19 @@ function persist(force = true) {
   save(FIGHT_KEY, s);
 }
 // Eco mode refreshes less often.
+// What the screen shows, to the second: Éco skips the redraw when it hasn't changed.
+let lastEcoKey = '';
+function ecoKey() {
+  const sec = ms => (ms === null ? '-' : Math.floor(ms / 1000));
+  return [s.phase, s.paused, s.turn, s.round, s.roundOver, s.counts.length, sec(s.remaining[0]), sec(s.remaining[1]),
+    sec(s.phaseRemaining), sec(s.moveElapsed), s.result?.method, document.querySelectorAll('.h-notice:not([hidden])').length].join('|');
+}
+
 (function loop() {
   if (s && !$('fight').hidden) {
     const ev = tick(s, performance.now());
     if (ev.length) act(ev);
-    else render();
+    else if (!cfg.eco || ecoKey() !== lastEcoKey) render();  // Éco: redraw only when something shown changes
     persist(false);
   }
   setTimeout(loop, cfg.eco ? 250 : 100);

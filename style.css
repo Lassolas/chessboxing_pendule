@@ -392,11 +392,21 @@ body {
 .flag .bar { background: #000; }
 
 /* ── ECO: no sound (set in JS), darker, no animations ── */
-.eco #fight { filter: brightness(.55); }
-.eco #setup { filter: brightness(.6); }
-.eco #setup .opt.on, .eco .btn-gold { filter: brightness(.8); }
-.eco .half, .eco .bar, .eco .bar-btn { transition: none !important; animation: none !important; }
-.eco .half.countdown { animation: none !important; }
+/* Éco: pure black (OLED pixels off), dim colours instead of a filter,
+   no watermark, nothing that moves. */
+body.eco {
+  --bg-deep: #000; --bg-panel: #000; --bg-alt: #080808; --border: #1c1c24;
+  --text: #8f8b80; --text-2: #55555f; --gold: #a8892d; --gold-mid: #6e5a1e; --gold-soft: #0d0b05;
+  --green: #1e7a48; --green-bg: #000; --orange: #a5640f; --orange-bg: #000;
+  --red: #a82626; --red-bg: #000; --box-bg: #000; --break-bg: #000;
+  background: #000;
+}
+.eco .half, .eco .bar, .eco .pm-strip { background: #000 !important; }
+.eco .half::before, .eco #setup::before { display: none; }
+.eco *, .eco *::before, .eco *::after { animation: none !important; transition: none !important; }
+.eco .btn-gold, .eco .bar-btn, .eco .bar-replay { filter: none; background: var(--gold-mid); color: #000; border-color: var(--gold-mid); }
+.eco .illegal-btn { background: #000; }
+.eco #setup img { opacity: .6; }
 
 
 .resume-live { display: grid !important; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 8px; padding: 14px 12px !important; }
