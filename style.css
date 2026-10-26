@@ -180,8 +180,13 @@ body {
 .dot.on { background: var(--red); border-color: var(--red); }
 /* Illegal move: red flag button in the corner nearest the centre bar
    (the top half is rotated, so its top corner also faces the centre) */
+.illegal-wrap { position: absolute; top: 12px; left: 12px; display: flex; align-items: center; gap: 10px; }
+.illegal-wrap[hidden], .illegal-minus[hidden] { display: none; }
+.illegal-minus { width: 38px; height: 38px; border-radius: 50%; border: 2px solid var(--red); background: rgba(0,0,0,.5);
+  color: #fff; font: 700 26px/1 var(--font-display); display: grid; place-items: center; padding: 0 0 3px; touch-action: manipulation; }
+.illegal-minus:active { transform: scale(.9); }
 .illegal-btn {
-  position: absolute; top: 12px; left: 12px;
+  position: relative;
   display: flex; align-items: center; gap: 6px;
   background: rgba(90,12,12,.9); border: 2px solid var(--red); border-radius: 10px;
   color: #fff; font: 700 17px var(--font-display); letter-spacing: .03em; text-transform: uppercase;
@@ -313,7 +318,7 @@ body {
 
 /* ── FLAG SCREEN: dark, winner's side in gold ── */
 .flag .half { background: #050507 !important; box-shadow: none !important; animation: none !important; filter: none !important; }
-.flag .half .h-counts, .flag .illegal-btn { display: none; }
+.flag .half .h-counts, .flag .illegal-wrap { display: none; }
 .flag .half.winner { box-shadow: inset 0 0 0 4px var(--gold) !important; }
 .flag .half.winner .h-name { color: var(--gold) !important; font-size: clamp(40px, 12vw, 64px); }
 .flag .half.winner .h-move { color: var(--gold); font: 700 clamp(28px, 8vw, 40px) var(--font-display); letter-spacing: .2em; }
@@ -344,7 +349,9 @@ body {
 /* Small phones (iPhone SE…): keep the whole centre bar on screen */
 @media (max-width: 380px) {
   .lim-t { display: none; }
-  .illegal-btn { top: 6px; left: 6px; font-size: 13px; padding: 3px 8px 3px 3px; gap: 4px; }
+  .illegal-wrap { top: 6px; left: 6px; gap: 8px; }
+  .illegal-minus { width: 30px; height: 30px; font-size: 22px; }
+  .illegal-btn { font-size: 13px; padding: 3px 8px 3px 3px; gap: 4px; }
   .illegal-btn .ico { width: 20px; height: 20px; }
   .dur:not(.small) .strip { width: 44px; }
   .dur:not(.small) small { font-size: 13px; letter-spacing: 0; }

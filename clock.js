@@ -300,6 +300,16 @@ export function undoCount(s, now) {
   return ['undo'];
 }
 
+// Take back the last illegal move given against `player` (a mistaken tap).
+export function removeIllegal(s, player, now) {
+  tick(s, now);
+  const i = s.counts.findLastIndex(c => c.player === player && c.illegal);
+  if (i < 0) return [];
+  s.counts.splice(i, 1);
+  if (s.result && s.result.method.includes('comptes')) reopen(s, now);
+  return ['undo'];
+}
+
 // Leave the result screen and carry on, paused. After a per-move timeout
 // the move timer starts again from zero.
 export function reopen(s, now) {

@@ -1,6 +1,6 @@
 import {
   PRESETS, playerTime, defaultConfig, newFight, tick, start, press, togglePause, skipPhase,
-  illegalMove, undoCount, averageMove, nextChessRound, goToNextChess, reopen, endFight, moveStage, moveCountdownLeft,
+  illegalMove, removeIllegal, undoCount, averageMove, nextChessRound, goToNextChess, reopen, endFight, moveStage, moveCountdownLeft,
   countsOf, roundType, formatClock,
 } from './clock.js';
 import { unlockAudio, play, setMuted } from './sound.js';
@@ -344,11 +344,17 @@ function buildHalves() {
       <div class="h-counts"></div>
       <div class="h-avg"></div>
       <div class="h-notice" hidden></div>
-      <button type="button" class="illegal-btn" aria-label="Coup illégal adverse">${redFlag}<span>Coup illégal</span></button>`;
+      <div class="illegal-wrap"><button type="button" class="illegal-btn" aria-label="Coup illégal adverse">${redFlag}<span>Coup illégal</span></button><button type="button" class="illegal-minus" aria-label="Retirer le coup illégal">−</button></div>`;
     h.querySelector('.illegal-btn').addEventListener('pointerdown', e => {
       e.stopPropagation();
       act(illegalMove(s, 1 - p, performance.now()));
       showNotice(1 - p);
+    });
+    // − next to the flag: takes back the last illegal move this side gave.
+    h.querySelector('.illegal-minus').addEventListener('pointerdown', e => {
+      e.stopPropagation();
+      halves.forEach(x => { x.querySelector('.h-notice').hidden = true; });
+      act(removeIllegal(s, 1 - p, performance.now()));
     });
   });
 }
@@ -498,7 +504,8 @@ function render() {
     const mine = s.counts.filter(c => c.player === p);
     h.querySelector('.h-counts').innerHTML = mine.map(c =>
       `<i class="dot on${c.round === roundForCounts ? '' : ' old'}"></i>`).join('');
-    h.querySelector('.illegal-btn').hidden = !s.cfg.illegalMoves || s.phase !== 'chess' || s.paused;
+    h.querySelector('.illegal-wrap').hidden = !s.cfg.illegalMoves || s.phase !== 'chess' || s.paused;
+    h.querySelector('.illegal-minus').hidden = !s.counts.some(c => c.player === 1 - p && c.illegal);
   });
 
   const roundIcon = roundType(shownRound) === 'chess' ? '♟' : '🥊';

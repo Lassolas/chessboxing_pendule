@@ -3,7 +3,7 @@
 
 import {
   defaultConfig, newFight, tick, start, press, togglePause, skipPhase,
-  illegalMove, undoCount, averageMove, nextChessRound, goToNextChess, reopen, adjustTime, moveStage, moveCountdownLeft, countsOf, playerTime,
+  illegalMove, removeIllegal, undoCount, averageMove, nextChessRound, goToNextChess, reopen, adjustTime, moveStage, moveCountdownLeft, countsOf, playerTime,
 } from '../clock.js';
 
 const errors = [];
@@ -234,6 +234,15 @@ for (const [r, min] of [[5, 4.5], [7, 6], [9, 7.5], [11, 9]]) {
   check(s.phase === 'chess', 'last round still running after 5 min');
   run(s, 300000, 400000);
   check(s.phase === 'over' && s.result.method !== 'decision', 'last round ends on the flag');
+}
+
+// The − next to the flag takes back the last illegal move against that player
+{
+  const s = fight({ moveLimit: false, illegalMoves: true });
+  illegalMove(s, 0, 1000); illegalMove(s, 1, 1000); illegalMove(s, 0, 1000);
+  removeIllegal(s, 0, 2000);
+  check(countsOf(s, 0) === 1 && countsOf(s, 1) === 1, 'removeIllegal takes back one illegal move of that player');
+  check(removeIllegal(s, 1, 2000).length === 1 && removeIllegal(s, 1, 2000).length === 0, 'nothing to remove: no event');
 }
 
 if (errors.length) {
