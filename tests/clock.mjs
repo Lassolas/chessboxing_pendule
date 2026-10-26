@@ -72,7 +72,7 @@ for (const [r, min] of [[5, 4.5], [7, 6], [9, 7.5], [11, 9]]) {
   check(s.moveElapsed === 0 && moveStage(s) === 'ok', 'move timer resets after the move');
 }
 
-// Auto-pause off: round time up is signalled but clocks keep running;
+// Auto-stop and boxing timer off: round time up is signalled but clocks keep running;
 // boxing is untimed and the coach starts the next chess round
 {
   const s = fight({ moveLimit: false });
@@ -86,9 +86,9 @@ for (const [r, min] of [[5, 4.5], [7, 6], [9, 7.5], [11, 9]]) {
   check(s.phase === 'chess' && s.round === 3 && s.moveElapsed === 0, 'manual mode: next chess round, move timer at zero');
 }
 
-// Auto-pause on: chess -> break -> boxing -> break -> chess, clocks frozen outside chess
+// Auto-stop and boxing timer on: chess -> break -> boxing -> break -> chess, clocks frozen outside chess
 {
-  const s = fight({ moveLimit: false, autoPause: true });
+  const s = fight({ moveLimit: false, autoStop: true, boxTimer: true });
   for (let t = 0; t < 180000; t += 15000) { run(s, t, t + 15000); press(s, s.turn, t + 15000); }
   check(s.phase === 'break' && s.nextRound === 2, 'auto-pause after the 3 min chess round');
   const left = [...s.remaining];
@@ -104,7 +104,7 @@ for (const [r, min] of [[5, 4.5], [7, 6], [9, 7.5], [11, 9]]) {
 
 // Last round ends the fight on a decision
 {
-  const s = fight({ moveLimit: false, autoPause: true, rounds: 5 });
+  const s = fight({ moveLimit: false, autoStop: true, boxTimer: true, rounds: 5 });
   for (let i = 0; i < 4; i++) skipPhase(s, 0), skipPhase(s, 0);
   check(s.phase === 'chess' && s.round === 5, 'reach the last round');
   skipPhase(s, 0);
@@ -120,7 +120,7 @@ for (const [r, min] of [[5, 4.5], [7, 6], [9, 7.5], [11, 9]]) {
 
 // Counts: each move countdown and each illegal move; 3 in a round or 4 in total lose
 {
-  const s = fight({ autoPause: true });
+  const s = fight({ autoStop: true, boxTimer: true });
   run(s, 0, 31000); press(s, 0, 31000);          // white: count 1
   run(s, 31000, 62000); press(s, 1, 62000);      // black: count 1
   run(s, 62000, 93000); press(s, 0, 93000);      // white: count 2
@@ -133,7 +133,7 @@ for (const [r, min] of [[5, 4.5], [7, 6], [9, 7.5], [11, 9]]) {
   check(s.phase === 'chess' && s.paused && countsOf(s, 0) === 2, 'undo the count reopens the fight, paused');
 }
 {
-  const s = fight({ moveLimit: false, autoPause: true });
+  const s = fight({ moveLimit: false, autoStop: true, boxTimer: true });
   press(s, 0, 0);
   illegalMove(s, 0, 0);
   check(s.turn === 0 && countsOf(s, 0) === 1, 'illegal move: 1 count and the offender plays again');
@@ -144,6 +144,22 @@ for (const [r, min] of [[5, 4.5], [7, 6], [9, 7.5], [11, 9]]) {
   check(s.phase === 'chess' && countsOf(s, 0) === 3, 'three counts over two rounds are not a loss');
   illegalMove(s, 0, 0);
   check(s.phase === 'over' && s.result.method.includes('total'), '4 counts in total lose');
+}
+
+// Auto-stop without boxing timer: untimed boxing after the 3 min round
+{
+  const s = fight({ moveLimit: false, autoStop: true });
+  run(s, 0, 180000);
+  check(s.phase === 'boxing' && s.round === 2 && s.phaseRemaining === null, 'auto-stop only: untimed boxing');
+}
+// Boxing timer without auto-stop: the coach ends the chess round, then breaks and boxing are timed
+{
+  const s = fight({ moveLimit: false, boxTimer: true });
+  run(s, 0, 200000);
+  check(s.phase === 'chess' && s.roundOver, 'timer only: chess goes on after 3 min');
+  skipPhase(s, 200000);
+  run(s, 200000, 200000 + 60000 + 180000 + 60000);
+  check(s.phase === 'chess' && s.round === 3, 'timer only: break, boxing, break, then chess round 3');
 }
 
 if (errors.length) {

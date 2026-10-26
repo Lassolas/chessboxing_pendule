@@ -17,7 +17,9 @@ export function defaultConfig() {
     chessRoundMs: 3 * 60000,
     boxRoundMs: 3 * 60000,
     breakMs: 60000,
-    autoPause: false,       // end the chess round on its own, time breaks and boxing
+    autoStop: false,        // end the chess round on its own after chessRoundMs
+    boxTimer: false,        // time the breaks and the boxing round
+    illegalMoves: true,     // yellow card to claim an illegal move
     moveLimit: true,        // per-move thinking limit
     moveWarnMs: 20000,      // warning colour + sound
     moveCountdownMs: 30000, // countdown starts
@@ -42,7 +44,7 @@ export function newFight(cfg) {
     remaining: [PRESETS[cfg.rounds], PRESETS[cfg.rounds]],
     moveElapsed: 0,
     phaseRemaining: cfg.chessRoundMs,
-    roundOver: false,      // chess round time is up but autoPause is off
+    roundOver: false,      // chess round time is up but autoStop is off
     counts: [],            // {player, round, illegal}: move countdowns and illegal moves
     result: null,          // {winner, loser, method, prev}
     lastTick: null,
@@ -90,8 +92,8 @@ function startPhase(s, round, events) {
     s.moveElapsed = 0;
   } else {
     s.phase = 'boxing';
-    // Without autoPause the coach times boxing and breaks: no countdown here.
-    s.phaseRemaining = s.cfg.autoPause ? s.cfg.boxRoundMs : null;
+    // Without boxTimer the coach times boxing and breaks: no countdown here.
+    s.phaseRemaining = s.cfg.boxTimer ? s.cfg.boxRoundMs : null;
   }
   events.push('roundStart');
 }
@@ -102,7 +104,7 @@ function endRound(s, events) {
     finish(s, null, 'decision', events);
     return;
   }
-  if (!s.cfg.autoPause) {
+  if (!s.cfg.boxTimer) {
     // No timed breaks: boxing is followed straight by the next chess round,
     // and chess by an untimed boxing phase that covers boxing and breaks.
     if (s.phase === 'boxing') { events.pop(); startPhase(s, s.round + 1, events); return; }
@@ -160,7 +162,7 @@ export function tick(s, now) {
     s.phaseRemaining = Math.max(0, r0 - dt);
     if (crossedSecond(r0, s.phaseRemaining, 10) === 10) events.push('phaseTen');
     if (r0 > 0 && s.phaseRemaining === 0) {
-      if (s.cfg.autoPause) endRound(s, events);
+      if (s.cfg.autoStop) endRound(s, events);
       else { s.roundOver = true; events.push('roundTimeUp'); }
     }
     return events;

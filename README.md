@@ -6,14 +6,16 @@ Pendule d'échecs pour les combats de chessboxing, faite pour le club Paris Ches
 
 ## Fonctionnalités
 
-- Formats 5, 7, 9 ou 11 rounds : 4:30, 6:00, 7:30 ou 9:00 par joueur.
+- Accueil : 4 gros boutons, 5 rounds (4'30 par joueur), 7 (6'), 9 (7'30) et 11 (9'). Un clic lance l'écran de la pendule.
 - Chaque joueur touche sa moitié d'écran pour finir son coup ; gros bouton pause au milieu.
-- Option auto-pause : fin du round d'échecs à 3 min, puis pause et round de boxe chronométrés. Sans l'option, le coach met en pause et relance lui-même.
-- Limite par coup : alerte à 20 s, compte à rebours de 10 s à partir de 30 s, puis partie perdue (avec « Continuer quand même »). Le temps de réflexion repart à zéro après la boxe.
-- Comptes : chaque compte à rebours et chaque coup illégal (carton jaune dans le coin de chaque moitié, côté centre) est un compte. 3 comptes dans un round ou 4 au total : match perdu.
-- Chaque alerte a toujours un son et un changement de couleur.
-- Écran toujours allumé, plein écran, clavier ou bouton Bluetooth (Espace = pause, Entrée = coup joué).
-- Tous les réglages (durées, seuils, nombre de comptes) sont modifiables dans « Réglages avancés ».
+- Options à cocher (« ? » pour l'explication) :
+  - **Coups illégaux** : carton jaune dans le coin de chaque moitié, côté centre. Un coup illégal = 1 compte, le fautif rejoue.
+  - **Stop 3 min** : le round d'échecs s'arrête tout seul à 3 min (sinon alerte, et le coach arrête).
+  - **Anti-jeu** : alerte à 20 s, compte à rebours de 10 s dès 30 s, puis partie perdue (« Continuer quand même » possible). Chaque compte à rebours = 1 compte ; 3 dans un round ou 4 au total, match perdu.
+  - **Timer boxe** : la pause et le round de boxe sont chronométrés, puis les échecs repartent seuls.
+- Le temps de réflexion repart à zéro après la boxe. Chaque alerte a toujours un son et un changement de couleur.
+- Écran toujours allumé, hors ligne, clavier ou bouton Bluetooth (Espace = pause, Entrée = coup joué).
+- Noms et durées modifiables dans « ⚙ Réglages ».
 
 ## Installer
 

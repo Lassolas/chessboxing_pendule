@@ -17,6 +17,10 @@ function save(key, value) {
 }
 
 let cfg = { ...defaultConfig(), ...(load(CFG_KEY) || {}) };
+if ('autoPause' in cfg) {  // older versions had one option for both
+  cfg.autoStop = cfg.boxTimer = cfg.autoPause;
+  delete cfg.autoPause;
+}
 let s = null;
 
 // ── SETUP SCREEN ──
@@ -31,26 +35,35 @@ const NUM_FIELDS = {
   countsTotal: ['countsTotal', 1],
 };
 
+// One or two words per option; the "?" shows the explanation.
+const OPTIONS = [
+  ['illegalMoves', 'Coups illégaux', () => `Un carton jaune dans le coin de chaque joueur : un coup illégal de l'adversaire = 1 compte, et il rejoue.`],
+  ['autoStop', 'Stop 3 min', () => `Le round d'échecs s'arrête tout seul au bout de ${cfg.chessRoundMs / 60000} min. Sinon, alerte et c'est toi qui arrêtes.`],
+  ['moveLimit', 'Anti-jeu', () => `Alerte à ${cfg.moveWarnMs / 1000} s de réflexion, compte à rebours de ${cfg.moveGraceMs / 1000} s dès ${cfg.moveCountdownMs / 1000} s, puis partie perdue. Chaque compte à rebours = 1 compte : ${cfg.countsPerRound} dans un round ou ${cfg.countsTotal} au total, match perdu.`],
+  ['boxTimer', 'Timer boxe', () => `L'appli chronomètre la pause (${cfg.breakMs / 1000} s) et le round de boxe (${cfg.boxRoundMs / 60000} min), puis relance les échecs. Sinon, c'est toi qui lances le round suivant.`],
+];
+let helpShown = null;
+
 function renderSetup() {
   $('presets').innerHTML = Object.keys(PRESETS).map(r =>
-    `<button type="button" class="btn preset${+r === cfg.rounds ? ' sel' : ''}" data-r="${r}">
-      <b>${r}</b><small>rounds · ${formatClock(PRESETS[r])}</small></button>`).join('');
+    `<button type="button" class="btn preset" data-r="${r}"><b>${r}</b><small>rounds</small><em>${formatClock(PRESETS[r]).replace(':', "'")}</em></button>`).join('');
+  $('options').innerHTML = OPTIONS.map(([key, label]) => `
+    <div class="opt${cfg[key] ? ' on' : ''}">
+      <button type="button" class="opt-toggle" data-opt="${key}"><span class="box">${cfg[key] ? '✓' : ''}</span>${label}</button>
+      <button type="button" class="opt-q${helpShown === key ? ' sel' : ''}" data-help="${key}" aria-label="Explication">?</button>
+    </div>`).join('');
+  const help = OPTIONS.find(o => o[0] === helpShown);
+  $('opt-help').hidden = !help;
+  if (help) $('opt-help').textContent = help[2]();
   $('name-0').value = cfg.names[0] === 'Blancs' ? '' : cfg.names[0];
   $('name-1').value = cfg.names[1] === 'Noirs' ? '' : cfg.names[1];
-  $('opt-autopause').checked = cfg.autoPause;
-  $('opt-movelimit').checked = cfg.moveLimit;
-  for (const [id, [key, unit]] of Object.entries(NUM_FIELDS)) {
-    $('cfg-' + id).value = cfg[key] / unit;
-    document.querySelectorAll(`[data-v="${id}"]`).forEach(el => { el.textContent = cfg[key] / unit; });
-  }
+  for (const [id, [key, unit]] of Object.entries(NUM_FIELDS)) $('cfg-' + id).value = cfg[key] / unit;
   const saved = load(FIGHT_KEY);
   $('btn-resume-saved').hidden = !(saved && saved.phase !== 'ready' && saved.phase !== 'over');
 }
 
 function readSetup() {
   cfg.names = [$('name-0').value.trim() || 'Blancs', $('name-1').value.trim() || 'Noirs'];
-  cfg.autoPause = $('opt-autopause').checked;
-  cfg.moveLimit = $('opt-movelimit').checked;
   for (const [id, [key, unit]] of Object.entries(NUM_FIELDS)) {
     const v = parseFloat($('cfg-' + id).value);
     if (v > 0) cfg[key] = Math.round(v * unit);
@@ -59,12 +72,22 @@ function readSetup() {
   save(CFG_KEY, cfg);
 }
 
+// A preset button starts the fight straight away.
 $('presets').addEventListener('click', e => {
   const b = e.target.closest('[data-r]');
   if (!b) return;
+  unlockAudio();
   readSetup();
   cfg.rounds = +b.dataset.r;
   save(CFG_KEY, cfg);
+  s = newFight(structuredClone(cfg));
+  openFight();
+});
+$('options').addEventListener('click', e => {
+  const t = e.target.closest('[data-opt]');
+  const q = e.target.closest('[data-help]');
+  if (t) { cfg[t.dataset.opt] = !cfg[t.dataset.opt]; save(CFG_KEY, cfg); }
+  if (q) helpShown = helpShown === q.dataset.help ? null : q.dataset.help;
   renderSetup();
 });
 $('setup').addEventListener('change', () => { readSetup(); renderSetup(); });
@@ -72,12 +95,6 @@ $('btn-defaults').addEventListener('click', () => {
   cfg = { ...defaultConfig(), rounds: cfg.rounds, names: cfg.names };
   save(CFG_KEY, cfg);
   renderSetup();
-});
-$('btn-start').addEventListener('click', () => {
-  unlockAudio();
-  readSetup();
-  s = newFight(structuredClone(cfg));
-  openFight();
 });
 $('btn-resume-saved').addEventListener('click', () => {
   unlockAudio();
@@ -229,7 +246,7 @@ function render() {
     else move.textContent = '';
     h.querySelector('[data-k=round]').innerHTML = dots(countsOf(s, p, roundForCounts), s.cfg.countsPerRound);
     h.querySelector('[data-k=total]').innerHTML = dots(countsOf(s, p), s.cfg.countsTotal);
-    h.querySelector('.yellow-card').hidden = s.phase !== 'chess' || s.paused;
+    h.querySelector('.yellow-card').hidden = !s.cfg.illegalMoves || s.phase !== 'chess' || s.paused;
   });
 
   $('bar-round').textContent = `Round ${shownRound}/${s.cfg.rounds}`;
@@ -252,8 +269,8 @@ function renderPauseMenu() {
   const skip = $('pm-skip');
   if (s.phase === 'break') skip.textContent = `Lancer le round ${next} (${roundType(next) === 'chess' ? 'échecs' : 'boxe'})`;
   else if (s.round >= s.cfg.rounds) skip.textContent = 'Fin du dernier round';
-  else if (s.phase === 'boxing' && !s.cfg.autoPause) skip.textContent = `Lancer le round ${s.round + 1} (échecs)`;
-  else skip.textContent = `Terminer le round ${s.round} → ${s.cfg.autoPause ? 'pause' : 'boxe'}`;
+  else if (s.phase === 'boxing' && !s.cfg.boxTimer) skip.textContent = `Lancer le round ${s.round + 1} (échecs)`;
+  else skip.textContent = `Terminer le round ${s.round} → ${s.cfg.boxTimer ? 'pause' : 'boxe'}`;
   $('pm-undo').hidden = !s.counts.length;
   $('pm-adjust').innerHTML = [0, 1].map(p => `
     <span>${escapeHtml(s.cfg.names[p])} <b>${formatClock(s.remaining[p])}</b></span>
