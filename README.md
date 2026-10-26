@@ -39,4 +39,4 @@ Son du claquoir : « Hammering » de Dragon Studio sur Pixabay (licence Pixabay,
 
 ## Licence
 
-Application créée par **Chessboxing Paris**. © 2026 Chessboxing Paris, sous licence MIT (voir LICENSE). Le logo du club apparaît en tête de l'accueil, en bas avec les crédits, et en filigrane derrière l'accueil et la pendule (`logo.svg`).
+Application créée par **Chessboxing Paris**. © 2026 Chessboxing Paris, sous licence MIT (voir LICENSE). Le logo du club apparaît en tête de l'accueil, en bas avec les crédits, et en filigrane derrière l'accueil et la pendule (`logo.png`, `logo-wide.png`, `logo-glove.png`).
