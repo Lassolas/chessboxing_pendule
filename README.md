@@ -11,8 +11,8 @@ Pendule d'échecs pour les combats de chessboxing, faite pour le club Paris Ches
 - **♟ Échecs** (actif par défaut) : mode chessboxing, la partie est découpée en rounds de 3 min, avec comptes et options. Désactivé : pendule classique (4'30, 6', 7'30 ou 9'), sans rounds ni comptes.
 - Options à cocher (« ? » pour l'explication) :
   - **Coups illégaux** (décoché par défaut) : carton jaune dans le coin de chaque moitié, côté centre. Un coup illégal = 1 compte, le fautif rejoue.
-  - **Anti-jeu** : alerte à 20 s, compte de 10 s dès 30 s, montré par deux mains d'arbitre (manchettes) qui replient un doigt par seconde, de 10 à 0, sans chiffres, puis partie perdue (« Continuer quand même » possible). Chaque compte à rebours = 1 compte ; 3 dans un round ou 4 au total, match perdu.
-  - **⏸ Pause** (active avec ♟) : pause entre les rounds, libre (∞, par défaut : le coach relance) ou de 15 s à 5'.
+  - **Anti-jeu** (cases sous ♟ : ⏱ Alerte 20″, ✋ Compte 30″, ●●● / round 3, ●●●● Total 4, chacune activable) : alerte à 20 s, compte de 10 s dès 30 s, montré par deux mains d'arbitre (manchettes) qui replient un doigt par seconde, de 10 à 0, sans chiffres, puis partie perdue (« Continuer quand même » possible). Chaque compte à rebours = 1 compte ; 3 dans un round ou 4 au total, match perdu.
+  - **⏸ Pause** : désactivée par défaut, la pause est libre (∞ : le coach relance). Activée : 1 min, réglable de 15 s à 5'.
   - **🥊 Boxe** : un round de boxe chronométré entre deux pauses. Sans boxe, la pause mène directement au round d'échecs suivant.
   - **Éco** : pas de son (vibrations seulement), écran plus sombre, pas d'animations.
 - En pause et en fin de partie, chaque côté affiche son temps moyen par coup (⌀ 12,4 s / coup).
@@ -20,8 +20,8 @@ Pendule d'échecs pour les combats de chessboxing, faite pour le club Paris Ches
 - Sons analogiques uniquement : coup de poing enregistré mêlé au déclic d'une vieille pendule mécanique à chaque appui (6 variantes tirées au hasard, sons libres de droits Pixabay), cloche de boxe métallique et brillante (1 coup au début, 3 à la fin), marteau sur bois dur enregistré à 10 s de la fin (3 coups en 0,5 s pendant un round, 3 coups à 1 s d'intervalle pendant la pause), toc sur le bois pour l'alerte, porte qui se ferme en fin de partie. « Test son » dans ⚙ les fait tous entendre.
 - Le temps de réflexion repart à zéro après la boxe. Chaque alerte a toujours un son et un changement de couleur.
 - Écran toujours allumé, hors ligne, clavier ou bouton Bluetooth (Espace = pause, Entrée = coup joué).
-- Sous les 4 boutons : ♟ Échecs, ⏸ Pause, 🥊 Boxe. Appui court : choisit le mode. Appui long : roue de sélection de la durée. Le temps par joueur suit la durée du round d'échecs (5 rounds de 2' = 3'00 chacun). « ↺ Réinitialiser » remet les valeurs par défaut.
-- Noms, alertes et comptes modifiables dans « ⚙ Réglages ».
+- Sous les 4 boutons : ♟ Échecs, ⏸ Pause, 🥊 Boxe. Appui sur une case : active ou désactive. ✎ en haut à droite d'une case active : roue de sélection. Le temps par joueur suit la durée du round d'échecs (5 rounds de 2' = 3'00 chacun). « ↺ Réinitialiser » remet les valeurs par défaut.
+- Noms des joueurs et test des sons dans « ⚙ Réglages ».
 
 ## Installer
 

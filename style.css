@@ -68,6 +68,21 @@ body {
 .durations { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
 .dur { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; color: var(--text); padding: 10px 4px 8px; text-align: center;
   font-family: var(--font-display); touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.dur { position: relative; cursor: pointer; }
+.dur .edit { position: absolute; top: 0; right: 0; width: 34px; height: 34px; background: none; border: 0; color: var(--gold); font-size: 18px; line-height: 34px; padding: 0; }
+.chess-set { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin-top: 6px; position: relative; }
+.chess-set::before { content: ''; position: absolute; left: 16%; top: -6px; width: 2px; height: 6px; background: var(--gold-mid); }
+.dur.small { padding: 8px 2px 6px; border-radius: 10px; }
+.dur.small i { height: 30px; display: flex; align-items: center; justify-content: center; }
+.dur.small b { font-size: 22px; }
+.dur.small small { font-size: 13px; }
+.dur.small .edit { width: 28px; height: 28px; line-height: 28px; font-size: 15px; }
+.ico { width: 28px; height: 28px; }
+.dur svg.hand { height: 32px; width: auto; }
+.ico-dots { display: inline-flex; gap: 3px; }
+.ico-dots span { width: 10px; height: 10px; border-radius: 50%; background: var(--red); }
+.wt-ico { display: inline-flex; vertical-align: middle; }
+.wt-ico svg.hand { height: 34px; width: auto; }
 .dur.on { border-color: var(--gold-mid); background: var(--gold-soft); }
 .dur:not(.on) { opacity: .55; }
 .reset-link { display: block; margin: 8px auto 0; background: none; border: 0; color: var(--text-2); font: 600 17px var(--font-display); letter-spacing: .04em; padding: 6px 12px; }

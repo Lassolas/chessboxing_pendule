@@ -4,7 +4,7 @@ import {
   countsOf, roundType, formatClock,
 } from './clock.js';
 import { unlockAudio, play, setMuted } from './sound.js';
-import { countHands } from './hands.js';
+import { countHands, handSVG, REFEREE } from './hands.js';
 
 const $ = id => document.getElementById(id);
 const CFG_KEY = 'pendule-cb-config';
@@ -17,7 +17,15 @@ function save(key, value) {
   try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* private mode */ }
 }
 
-let cfg = { ...defaultConfig(), ...(load(CFG_KEY) || {}) };
+// The home screen keeps on/off flags beside each value; fightConfig() turns
+// them into the clock's settings.
+const homeDefaults = () => ({
+  ...defaultConfig(),
+  breakMs: 60000, breakOn: false,   // pause off = open pause (∞)
+  warnOn: true, countdownOn: true, perRoundOn: true, totalOn: true,
+  v: 4,
+});
+let cfg = { ...homeDefaults(), ...(load(CFG_KEY) || {}) };
 cfg.names = cfg.names.map(n => (n === 'Blancs' || n === 'Noirs' ? '' : n));
 cfg.moveGraceMs = 10000;  // the count always lasts 10 s
 if (!cfg.v || cfg.v < 2) {  // v2: illegal moves off by default
@@ -30,6 +38,12 @@ if (cfg.v < 3) {  // v3: rounds always stop; open pause (∞) by default; ⏸ ti
   ['autoStop', 'autoPause', 'noBoxing'].forEach(k => delete cfg[k]);
   cfg.v = 3;
 }
+if (cfg.v < 4) {  // v4: pause on/off (off = ∞), anti-play settings as tiles
+  cfg.breakOn = false;
+  cfg.breakMs = 60000;
+  cfg.warnOn = cfg.countdownOn = cfg.moveLimit !== false;
+  cfg.v = 4;
+}
 let s = null;
 setMuted(!!cfg.eco);
 
@@ -37,108 +51,85 @@ setMuted(!!cfg.eco);
 const roundNo = (c, n) => c.boxTimer ? n : Math.ceil(n / 2);
 
 // ── SETUP SCREEN ──
-// ⚙ settings: one stepper per value. [key, icon, label, step, min, max, kind]
-const STEPPERS = [
-  ['moveWarnMs', '⏱', 'Alerte', 5000, 5000, 120000, 'time'],
-  ['moveCountdownMs', '⏱', 'Compte dès', 5000, 5000, 180000, 'time'],
-  ['countsPerRound', '⚑', '/ round', 1, 1, 10, 'n'],
-  ['countsTotal', '⚑', 'Total', 1, 1, 20, 'n'],
-];
 const fmtValue = (v, kind) => kind === 'n' ? String(v) : v === 0 ? '∞'
-  : v < 60000 ? `${v / 1000} s` : `${Math.floor(v / 60000)}'${String((v % 60000) / 1000).padStart(2, '0')}`;
+  : v < 60000 ? `${v / 1000}″` : `${Math.floor(v / 60000)}'${String((v % 60000) / 1000).padStart(2, '0')}`;
 
-function renderSteppers() {
-  $('steppers').innerHTML = STEPPERS.map(([key, icon, label, , min, max, kind]) => `
-    <div class="stepper">
-      <span class="st-label"><i>${icon}</i>${label}</span>
-      <button type="button" data-step="${key}" data-dir="-1"${cfg[key] <= min ? ' disabled' : ''}>−</button>
-      <b>${fmtValue(cfg[key], kind)}</b>
-      <button type="button" data-step="${key}" data-dir="1"${cfg[key] >= max ? ' disabled' : ''}>+</button>
-    </div>`).join('');
-}
-$('steppers').addEventListener('click', e => {
-  const b = e.target.closest('[data-step]');
-  if (!b) return;
-  const [key, , , step, min, max] = STEPPERS.find(x => x[0] === b.dataset.step);
-  cfg[key] = Math.min(max, Math.max(min, cfg[key] + step * +b.dataset.dir));
-  if (cfg.moveCountdownMs < cfg.moveWarnMs) cfg.moveCountdownMs = cfg.moveWarnMs;
-  save(CFG_KEY, cfg);
-  renderSetup();
-});
-
-// Round lengths, on the home screen: a long press opens a wheel.
-// [key, icon, label, step, min, max]
-const DURATIONS = [
-  ['chessRoundMs', '♟', 'Échecs', 30000, 30000, 600000],
-  ['breakMs', '⏸', 'Pause', 15000, 0, 300000],   // 0 = ∞, the coach restarts
-  ['boxRoundMs', '🥊', 'Boxe', 30000, 30000, 300000],
+// Home tiles. A tap switches the tile on or off; when on, ✎ opens a wheel.
+// Row 1: the fight (chess rounds, pause, boxing). Row 2, under ♟ when it is
+// on: the anti-play settings. The icons are the signs seen during the fight.
+const watch = `<svg viewBox="0 0 32 32" class="ico"><circle cx="16" cy="18" r="11" fill="none" stroke="#ff9a1f" stroke-width="3"/><rect x="13" y="2" width="6" height="4" rx="1" fill="#ff9a1f"/><path d="M16 18 L16 11" stroke="#ff9a1f" stroke-width="3" stroke-linecap="round"/><path d="M25 8 l3-3" stroke="#ff9a1f" stroke-width="3" stroke-linecap="round"/></svg>`;
+const dots = n => `<span class="ico-dots">${'<span></span>'.repeat(Math.min(n, 5))}</span>`;
+// key: value in cfg, on/tap: state, icon, label, wheel step/min/max, kind
+const TILES = [
+  { key: 'chessRoundMs', row: 1, icon: () => '♟', label: 'Échecs', step: 30000, min: 30000, max: 600000,
+    on: () => cfg.intervals, tap: () => { cfg.intervals = !cfg.intervals; } },
+  { key: 'breakMs', row: 1, icon: () => '⏸', label: 'Pause', step: 15000, min: 15000, max: 300000,
+    on: () => cfg.intervals && cfg.breakOn,
+    tap: () => { cfg.breakOn = !(cfg.intervals && cfg.breakOn); if (cfg.breakOn) cfg.intervals = true; } },
+  { key: 'boxRoundMs', row: 1, icon: () => '🥊', label: 'Boxe', step: 30000, min: 30000, max: 300000,
+    on: () => cfg.intervals && cfg.boxTimer,
+    tap: () => { cfg.boxTimer = !(cfg.intervals && cfg.boxTimer); if (cfg.boxTimer) cfg.intervals = true; } },
+  { key: 'moveWarnMs', flag: 'warnOn', row: 2, icon: () => watch, label: 'Alerte', step: 5000, min: 5000, max: 120000 },
+  { key: 'moveCountdownMs', flag: 'countdownOn', row: 2, icon: () => handSVG(5, REFEREE), label: 'Compte', step: 5000, min: 5000, max: 180000 },
+  { key: 'countsPerRound', flag: 'perRoundOn', row: 2, icon: () => dots(cfg.countsPerRound), label: '/ round', step: 1, min: 1, max: 10, kind: 'n' },
+  { key: 'countsTotal', flag: 'totalOn', row: 2, icon: () => dots(cfg.countsTotal), label: 'Total', step: 1, min: 1, max: 20, kind: 'n' },
 ];
-const LONG_PRESS = 450;
+TILES.filter(t => t.flag).forEach(t => {
+  t.on = () => !!cfg[t.flag];
+  t.tap = () => { cfg[t.flag] = !cfg[t.flag]; };
+});
+const tileOf = key => TILES.find(t => t.key === key);
+const tileValue = t => t.key === 'breakMs' && !t.on() ? '∞' : fmtValue(cfg[t.key], t.kind);
 const ROW = 52;  // wheel row height, as in style.css
 
-// A tap picks the mode: ♟ chessboxing rounds on/off (pauses come with
-// them), 🥊 a timed boxing round inside each pause.
-const MODE_ON = {
-  chessRoundMs: () => cfg.intervals,
-  breakMs: () => cfg.intervals,
-  boxRoundMs: () => cfg.intervals && cfg.boxTimer,
-};
-const MODE_TAP = {
-  chessRoundMs: () => { cfg.intervals = !cfg.intervals; },
-  breakMs: () => { cfg.intervals = true; },
-  boxRoundMs: () => {
-    if (MODE_ON.boxRoundMs()) cfg.boxTimer = false;
-    else Object.assign(cfg, { intervals: true, boxTimer: true });
-  },
-};
-function modeText() {
-  if (!cfg.intervals) return 'Pendule classique, sans rounds.';
-  const r = fmtValue(cfg.chessRoundMs, 'time');
-  const p = cfg.breakMs ? `pauses de ${fmtValue(cfg.breakMs, 'time')}` : 'pauses libres (tu relances)';
-  return cfg.boxTimer ? `Rounds d'échecs de ${r}, ${p}, boxe de ${fmtValue(cfg.boxRoundMs, 'time')}.`
-    : `Rounds d'échecs de ${r}, ${p}, sans boxe.`;
+// One line on what a tile does now.
+function tileText(t) {
+  const v = fmtValue(cfg[t.key], t.kind), on = t.on();
+  switch (t.key) {
+    case 'chessRoundMs': return on ? `Rounds d'échecs de ${v}.` : 'Pendule classique, sans rounds.';
+    case 'breakMs': return on ? `Pauses de ${v}.` : 'Pause libre : tu relances le round.';
+    case 'boxRoundMs': return on ? `Round de boxe chronométré de ${v} entre deux pauses.` : 'Pas de round de boxe.';
+    case 'moveWarnMs': return on ? `Alerte au bout de ${v} sur un coup.` : 'Pas d\'alerte.';
+    case 'moveCountdownMs': return on ? `Compte de 10 s dès ${v} sur un coup, puis perdu.` : 'Pas de compte.';
+    case 'countsPerRound': return on ? `${v} comptes dans un round : perdu.` : 'Pas de limite par round.';
+    default: return on ? `${v} comptes au total : perdu.` : 'Pas de limite au total.';
+  }
 }
-function renderDurations() {
-  $('durations').innerHTML = DURATIONS.map(([key, icon, label]) => `
-    <button type="button" class="dur${MODE_ON[key]() ? ' on' : ''}" data-dur="${key}"><i>${icon}</i><b>${fmtValue(cfg[key], 'time')}</b><small>${label}</small></button>`).join('');
+function renderTiles() {
+  const html = t => `<div class="dur${t.row === 2 ? ' small' : ''}${t.on() ? ' on' : ''}" role="button" tabindex="0" data-tile="${t.key}">
+      <i>${t.icon()}</i><b>${tileValue(t)}</b><small>${t.label}</small>
+      ${t.on() ? `<button type="button" class="edit" data-edit="${t.key}" aria-label="Modifier">✎</button>` : ''}</div>`;
+  $('durations').innerHTML = TILES.filter(t => t.row === 1).map(html).join('');
+  $('chess-set').hidden = !cfg.intervals;
+  $('chess-set').innerHTML = TILES.filter(t => t.row === 2).map(html).join('');
 }
-let pressTimer = null, longPressed = false;
-$('durations').addEventListener('pointerdown', e => {
-  const b = e.target.closest('[data-dur]');
-  if (!b) return;
-  longPressed = false;
-  clearTimeout(pressTimer);
-  pressTimer = setTimeout(() => {
-    longPressed = true;
-    if (navigator.vibrate) navigator.vibrate(30);
-    openWheel(b.dataset.dur);
-  }, LONG_PRESS);
-});
-['pointerup', 'pointerleave', 'pointercancel'].forEach(ev =>
-  $('durations').addEventListener(ev, () => clearTimeout(pressTimer)));
-$('durations').addEventListener('contextmenu', e => e.preventDefault());
-$('durations').addEventListener('click', e => {
-  const b = e.target.closest('[data-dur]');
-  if (!b || longPressed) return;
-  MODE_TAP[b.dataset.dur]();
+function onTiles(e) {
+  const edit = e.target.closest('[data-edit]');
+  if (edit) { openWheel(edit.dataset.edit); return; }
+  const el = e.target.closest('[data-tile]');
+  if (!el) return;
+  const t = tileOf(el.dataset.tile);
+  t.tap();
+  if (t.key === 'breakMs' && t.on() && !cfg.breakMs) cfg.breakMs = 60000;
   save(CFG_KEY, cfg);
   helpShown = null;
   renderSetup();
   $('opt-help').hidden = false;
-  $('opt-help').textContent = `${modeText()} Appui long : changer la durée.`;
-});
+  $('opt-help').textContent = tileText(t);
+}
+$('durations').addEventListener('click', onTiles);
+$('chess-set').addEventListener('click', onTiles);
 
 let wheelKey = null, wheelValues = [];
 function openWheel(key) {
-  const [, icon, label, step, min, max] = DURATIONS.find(d => d[0] === key);
+  const t = tileOf(key);
   wheelKey = key;
   wheelValues = [];
-  for (let v = min; v <= max; v += step) wheelValues.push(v);
-  $('wheel-title').textContent = `${icon} ${label}`;
-  $('wheel-list').innerHTML = wheelValues.map((v, i) => `<div class="wheel-item" data-i="${i}">${fmtValue(v, 'time')}</div>`).join('');
+  for (let v = t.min; v <= t.max; v += t.step) wheelValues.push(v);
+  $('wheel-title').innerHTML = `<span class="wt-ico">${t.icon()}</span> ${t.label}`;
+  $('wheel-list').innerHTML = wheelValues.map((v, i) => `<div class="wheel-item" data-i="${i}">${fmtValue(v, t.kind)}</div>`).join('');
   $('wheel').hidden = false;
-  const list = $('wheel-list');
-  list.scrollTop = Math.max(0, wheelValues.indexOf(cfg[key])) * ROW;
+  $('wheel-list').scrollTop = Math.max(0, wheelValues.indexOf(cfg[key])) * ROW;
   markWheel();
 }
 const wheelIndex = () => Math.min(wheelValues.length - 1, Math.max(0, Math.round($('wheel-list').scrollTop / ROW)));
@@ -153,9 +144,14 @@ $('wheel-list').addEventListener('click', e => {
 });
 function closeWheel() {
   cfg[wheelKey] = wheelValues[wheelIndex()];
+  // The count cannot start before the warning.
+  if (wheelKey === 'moveWarnMs' && cfg.moveCountdownMs < cfg.moveWarnMs) cfg.moveCountdownMs = cfg.moveWarnMs;
+  if (wheelKey === 'moveCountdownMs' && cfg.moveWarnMs > cfg.moveCountdownMs) cfg.moveWarnMs = cfg.moveCountdownMs;
   save(CFG_KEY, cfg);
   $('wheel').hidden = true;
   renderSetup();
+  $('opt-help').hidden = false;
+  $('opt-help').textContent = tileText(tileOf(wheelKey));
 }
 $('wheel-ok').addEventListener('click', closeWheel);
 // A tap outside the wheel validates too.
@@ -164,7 +160,6 @@ $('wheel').addEventListener('click', e => { if (!e.target.closest('.wheel-panel'
 // One or two words per option; the "?" shows the explanation.
 const OPTIONS = [
   ['illegalMoves', 'Coups illégaux', () => `Carton jaune dans ton coin : coup illégal adverse = 1 compte, il rejoue.`],
-  ['moveLimit', 'Anti-jeu', () => `${cfg.moveWarnMs / 1000} s : alerte. ${cfg.moveCountdownMs / 1000} s : compte de 10 s, puis perdu. ${cfg.countsPerRound} comptes / round ou ${cfg.countsTotal} au total : perdu.`],
   ['eco', 'Éco', () => `Économie d'énergie : pas de son (vibrations seulement), écran plus sombre, pas d'animations.`],
 ];
 let helpShown = null;
@@ -187,8 +182,7 @@ function renderSetup() {
   if (help) $('opt-help').textContent = help[2]();
   $('name-0').value = cfg.names[0];
   $('name-1').value = cfg.names[1];
-  renderSteppers();
-  renderDurations();
+  renderTiles();
   const saved = load(FIGHT_KEY);
   const live = saved && saved.phase !== 'ready' && saved.phase !== 'over';
   $('btn-resume-saved').hidden = !live;
@@ -217,9 +211,16 @@ $('presets').addEventListener('click', e => {
   openFight();
 });
 // A plain clock (no intervals) has no counts and no chessboxing options.
+const NEVER = 1e9;
 function fightConfig() {
   const c = structuredClone(cfg);
-  if (!c.intervals) Object.assign(c, { moveLimit: false, illegalMoves: false, boxTimer: false });
+  if (!c.intervals) Object.assign(c, { illegalMoves: false, boxTimer: false, warnOn: false, countdownOn: false });
+  if (!c.breakOn) c.breakMs = 0;
+  if (!c.warnOn) c.moveWarnMs = NEVER;
+  if (!c.countdownOn) c.moveCountdownMs = NEVER;
+  c.moveLimit = c.warnOn || c.countdownOn;
+  if (!c.perRoundOn) c.countsPerRound = 999;
+  if (!c.totalOn) c.countsTotal = 999;
   return c;
 }
 $('options').addEventListener('click', e => {
@@ -227,7 +228,6 @@ $('options').addEventListener('click', e => {
   const q = e.target.closest('[data-help]');
   if (t) {
     cfg[t.dataset.opt] = !cfg[t.dataset.opt];
-    // The boxing timer only makes sense with automatic rounds.
     save(CFG_KEY, cfg);
     setMuted(!!cfg.eco);
   }
@@ -237,7 +237,7 @@ $('options').addEventListener('click', e => {
 $('setup').addEventListener('change', () => { readSetup(); renderSetup(); });
 $('btn-reset').addEventListener('click', () => $('btn-defaults').click());
 $('btn-defaults').addEventListener('click', () => {
-  cfg = { ...defaultConfig(), rounds: cfg.rounds, names: cfg.names };
+  cfg = { ...homeDefaults(), rounds: cfg.rounds, names: cfg.names, eco: cfg.eco };
   save(CFG_KEY, cfg);
   renderSetup();
 });
