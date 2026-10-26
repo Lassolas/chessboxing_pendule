@@ -197,6 +197,13 @@ for (const [r, min] of [[5, 4.5], [7, 6], [9, 7.5], [11, 9]]) {
   check(s.round === 7 && nextChessRound(s) === null, 'no next chess round after the last one');
 }
 
+// Without intervals: a plain clock, no rounds
+{
+  const s = fight({ intervals: false, moveLimit: false });
+  run(s, 0, 300000);
+  check(s.phase === 'chess' && s.round === 1 && !s.roundOver && nextChessRound(s) === null, 'plain clock: no round stop');
+}
+
 if (errors.length) {
   console.error(`pendule-clock: ${errors.length} failure(s)`);
   errors.forEach(e => console.error('  ✗ ' + e));

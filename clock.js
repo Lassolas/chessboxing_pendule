@@ -18,6 +18,7 @@ export function defaultConfig() {
     chessRoundMs: 3 * 60000,
     boxRoundMs: 3 * 60000,
     breakMs: 60000,
+    intervals: true,        // coached 3-min chess rounds; false = plain clock
     autoStop: false,        // end the chess round on its own after chessRoundMs
     boxTimer: false,        // time the breaks and the boxing round
     illegalMoves: true,     // yellow card to claim an illegal move
@@ -45,7 +46,7 @@ export function newFight(cfg) {
     turn: null,
     remaining: [PRESETS[cfg.rounds], PRESETS[cfg.rounds]],
     moveElapsed: 0,
-    phaseRemaining: cfg.chessRoundMs,
+    phaseRemaining: cfg.intervals ? cfg.chessRoundMs : null,
     roundOver: false,      // chess round time is up but autoStop is off
     counts: [],            // {player, round, illegal}: move countdowns and illegal moves
     result: null,          // {winner, loser, method, prev}
@@ -90,7 +91,7 @@ function startPhase(s, round, events) {
   s.roundOver = false;
   if (roundType(round) === 'chess') {
     s.phase = 'chess';
-    s.phaseRemaining = s.cfg.chessRoundMs;
+    s.phaseRemaining = s.cfg.intervals ? s.cfg.chessRoundMs : null;
     s.moveElapsed = 0;
   } else {
     s.phase = 'boxing';
@@ -160,6 +161,7 @@ export function tick(s, now) {
       if (s.moveElapsed >= limit) { finish(s, p, 'réflexion', events); return events; }
     }
 
+    if (s.phaseRemaining === null) return events;  // plain clock: no rounds
     const r0 = s.phaseRemaining;
     s.phaseRemaining = Math.max(0, r0 - dt);
     if (crossedSecond(r0, s.phaseRemaining, 10) === 10) events.push('phaseTen');
@@ -231,7 +233,7 @@ export function skipPhase(s, now) {
 export function nextChessRound(s) {
   const r = s.phase === 'break' ? s.nextRound : s.phase === 'chess' ? s.round + 1 : s.round;
   const target = roundType(r) === 'chess' ? r : r + 1;
-  return s.phase === 'ready' || s.phase === 'over' || target > s.cfg.rounds ? null : target;
+  return !s.cfg.intervals || s.phase === 'ready' || s.phase === 'over' || target > s.cfg.rounds ? null : target;
 }
 
 // Skip straight to the next chess round, running.

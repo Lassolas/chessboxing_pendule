@@ -61,6 +61,7 @@ $('steppers').addEventListener('click', e => {
 
 // One or two words per option; the "?" shows the explanation.
 const OPTIONS = [
+  ['intervals', 'Intervalles 3 min', () => `Combat coaché : rounds d'échecs de ${cfg.chessRoundMs / 60000} min, comptes et options ci-dessous. Décoché : pendule classique, rien d'autre.`],
   ['illegalMoves', 'Coups illégaux', () => `Carton jaune dans ton coin : coup illégal adverse = 1 compte, il rejoue.`],
   ['autoStop', 'Stop 3 min', () => `Round d'échecs stoppé à ${cfg.chessRoundMs / 60000} min. Sinon : alerte, tu stoppes.`],
   ['moveLimit', 'Anti-jeu', () => `${cfg.moveWarnMs / 1000} s : alerte. ${cfg.moveCountdownMs / 1000} s : compte de ${cfg.moveGraceMs / 1000} s, puis perdu. ${cfg.countsPerRound} comptes / round ou ${cfg.countsTotal} au total : perdu.`],
@@ -72,8 +73,12 @@ let helpShown = null;
 function renderSetup() {
   document.body.className = cfg.eco ? 'eco' : '';
   $('presets').innerHTML = Object.keys(PRESETS).map(r =>
-    `<button type="button" class="btn preset" data-r="${r}"><b>${r}</b><small>rounds</small><em>${formatClock(PRESETS[r]).replace(':', "'")}</em></button>`).join('');
-  $('options').innerHTML = OPTIONS.map(([key, label]) => `
+    cfg.intervals
+      ? `<button type="button" class="btn preset" data-r="${r}"><b>${r}</b><small>rounds</small><em>${formatClock(PRESETS[r]).replace(':', "'")}</em></button>`
+      : `<button type="button" class="btn preset" data-r="${r}"><b>${formatClock(PRESETS[r]).replace(':', "'")}</b><small>classique</small></button>`).join('');
+  // Unchecking the intervals leaves a plain clock: only Éco still applies.
+  const shown = OPTIONS.filter(([key]) => cfg.intervals || key === 'intervals' || key === 'eco');
+  $('options').innerHTML = shown.map(([key, label]) => `
     <div class="opt${cfg[key] ? ' on' : ''}">
       <button type="button" class="opt-toggle" data-opt="${key}"><span class="box">${cfg[key] ? '✓' : ''}</span>${label}</button>
       <button type="button" class="opt-q${helpShown === key ? ' sel' : ''}" data-help="${key}" aria-label="Explication">?</button>
@@ -101,9 +106,15 @@ $('presets').addEventListener('click', e => {
   readSetup();
   cfg.rounds = +b.dataset.r;
   save(CFG_KEY, cfg);
-  s = newFight(structuredClone(cfg));
+  s = newFight(fightConfig());
   openFight();
 });
+// A plain clock (no intervals) has no counts and no chessboxing options.
+function fightConfig() {
+  const c = structuredClone(cfg);
+  if (!c.intervals) Object.assign(c, { moveLimit: false, illegalMoves: false, autoStop: false, boxTimer: false });
+  return c;
+}
 $('options').addEventListener('click', e => {
   const t = e.target.closest('[data-opt]');
   const q = e.target.closest('[data-help]');
@@ -301,7 +312,7 @@ function render() {
   });
 
   const roundIcon = roundType(shownRound) === 'chess' ? '♟' : '🥊';
-  $('bar-round').textContent = `${s.phase === 'break' ? '⏸' : roundIcon} ${shownRound}/${s.cfg.rounds}`;
+  $('bar-round').textContent = !s.cfg.intervals ? '♟' : `${s.phase === 'break' ? '⏸' : roundIcon} ${shownRound}/${s.cfg.rounds}`;
   $('bar-phase').textContent = s.phase === 'ready' ? '1er = ♚' : s.phase === 'break' ? `→ ${roundIcon}`
     : flagScreen ? methodShort(r.method)
     : s.roundOver ? 'Temps !' : s.paused ? 'Pause' : '';

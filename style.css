@@ -268,3 +268,4 @@ body {
 .eco #setup .opt.on, .eco .btn-gold { filter: brightness(.8); }
 .eco .half, .eco .bar, .eco .bar-btn { transition: none !important; animation: none !important; }
 .eco .half.countdown { animation: none !important; }
+.options .opt:first-child { grid-column: 1 / -1; }
