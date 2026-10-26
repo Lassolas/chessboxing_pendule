@@ -229,7 +229,7 @@ const OPTIONS = [
 // Rounds: one tap picks the number (the time per player follows).
 function renderPresets() {
   $('presets').innerHTML = Object.keys(PRESETS).map(r =>
-    `<button type="button" class="preset${+r === cfg.rounds ? ' on' : ''}" data-r="${r}"><b>${cfg.intervals ? r : formatClock(PRESETS[r]).replace(':', "'")}</b><small>${formatClock(playerTime({ ...cfg, rounds: +r })).replace(':', "'")}</small></button>`).join('');
+    `<button type="button" class="preset${+r === cfg.rounds ? ' on' : ''}" data-r="${r}"><b>${cfg.intervals ? roman(+r) : formatClock(PRESETS[r]).replace(':', "'")}</b><small>${formatClock(playerTime({ ...cfg, rounds: +r })).replace(':', "'")}</small></button>`).join('');
   renderSummary();
 }
 // The big COMBAT button says what it starts.
