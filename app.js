@@ -336,7 +336,7 @@ const halves = [...document.querySelectorAll('.half')].sort((a, b) => a.dataset.
 function buildHalves() {
   halves.forEach(h => {
     const p = +h.dataset.p;
-    h.innerHTML = `
+    h.innerHTML = `<div class="h-in">
       <div class="h-name"></div>
       <div class="h-phase"></div>
       <div class="h-clock"></div>
@@ -344,7 +344,7 @@ function buildHalves() {
       <div class="h-counts"></div>
       <div class="h-avg"></div>
       <div class="h-notice" hidden></div>
-      <div class="illegal-wrap"><button type="button" class="illegal-btn" aria-label="Coup illégal adverse">${redFlag}<span>Coup illégal</span></button><button type="button" class="illegal-minus" aria-label="Retirer le coup illégal">−</button></div>`;
+      <div class="illegal-wrap"><button type="button" class="illegal-btn" aria-label="Coup illégal adverse">${redFlag}<span>Coup illégal</span></button><button type="button" class="illegal-minus" aria-label="Retirer le coup illégal">−</button></div></div>`;
     h.querySelector('.illegal-btn').addEventListener('pointerdown', e => {
       e.stopPropagation();
       act(illegalMove(s, 1 - p, performance.now()));
@@ -386,6 +386,37 @@ document.addEventListener('keydown', e => {
 
 // Back to the home screen: a fight in progress is paused and kept, so
 // "Reprendre le combat" brings it back.
+// Compass in the bar: press and swipe right or left to turn both clocks'
+// digits that way, up or down for the usual face-to-face layout. A tap
+// goes round the three.
+const ORIENTS = ['normal', 'right', 'left'];
+function setOrient(o) {
+  cfg.orient = o;
+  $('fight').dataset.orient = o;
+}
+setOrient(cfg.orient || 'normal');
+let compass = null;
+$('bar-compass').addEventListener('pointerdown', e => {
+  e.stopPropagation();
+  compass = { x: e.clientX, y: e.clientY, moved: false };
+  $('bar-compass').setPointerCapture(e.pointerId);
+});
+$('bar-compass').addEventListener('pointermove', e => {
+  if (!compass) return;
+  const dx = e.clientX - compass.x, dy = e.clientY - compass.y;
+  if (Math.hypot(dx, dy) < 24) return;
+  compass.moved = true;
+  setOrient(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : 'normal');
+});
+const compassUp = () => {
+  if (!compass) return;
+  if (!compass.moved) setOrient(ORIENTS[(ORIENTS.indexOf(cfg.orient) + 1) % ORIENTS.length]);
+  compass = null;
+  save(CFG_KEY, cfg);
+};
+$('bar-compass').addEventListener('pointerup', compassUp);
+$('bar-compass').addEventListener('pointercancel', compassUp);
+
 $('bar-home').addEventListener('click', () => {
   if (s.phase === 'ready' || s.phase === 'over') { closeFight(); return; }
   if (!s.paused) togglePause(s, performance.now());
