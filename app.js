@@ -106,8 +106,8 @@ TILES.filter(t => t.flag).forEach(t => {
 // Count limits: plain − / + lines, always on.
 const LIMITS = [['countsPerRound', '/ round', 1, 10], ['countsTotal', 'total', 1, 20]];
 const tileOf = key => TILES.find(t => t.key === key);
-// The warning comes 10 s before the count, or 5 s before under 30 s.
-const warnFor = countdownMs => countdownMs - (countdownMs >= 30000 ? 10000 : 5000);
+// The warning always comes 5 s before the count.
+const warnFor = countdownMs => countdownMs - 5000;
 // Turning the count on brings the warning with it.
 tileOf('moveCountdownMs').tap = () => { cfg.countdownOn = !cfg.countdownOn; if (cfg.countdownOn) cfg.warnOn = true; };
 const tileValue = t => t.key === 'breakMs' && !t.on() ? '∞' : fmtValue(cfg[t.key], t.kind);
@@ -120,7 +120,7 @@ function tileText(t) {
     case 'breakMs': return !on ? 'Pause libre : tu relances le round.'
       : cfg.breakMs ? `Pauses de ${v}.` : 'Pas de pause : les rounds s\'enchaînent.';
     case 'boxRoundMs': return on ? `Round de boxe chronométré de ${v} entre deux pauses.` : 'Pas de round de boxe.';
-    case 'moveWarnMs': return on ? `Alerte au bout de ${v} sur un coup (${cfg.moveCountdownMs >= 30000 ? 10 : 5} s avant le compte).` : 'Pas d\'alerte.';
+    case 'moveWarnMs': return on ? `Alerte au bout de ${v} sur un coup (5 s avant le compte).` : 'Pas d\'alerte.';
     case 'illegalMoves': return on ? 'Drapeau rouge dans ton coin : coup illégal adverse = 1 compte, il rejoue.' : 'Pas de bouton coup illégal.';
     default: return on ? `Compte de 10 s dès ${v} sur un coup, puis perdu.` : 'Pas de compte.';
   }
