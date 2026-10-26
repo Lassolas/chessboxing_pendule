@@ -7,7 +7,7 @@ Pendule d'échecs pour les combats de chessboxing, faite pour le club Paris Ches
 ## Fonctionnalités
 
 - Accueil : 4 gros boutons, 5 rounds (4'30 par joueur), 7 (6'), 9 (7'30) et 11 (9'). Un clic lance l'écran de la pendule.
-- Pas de couleurs d'avance : le premier joueur qui touche sa moitié prend les Noirs et l'horloge des Blancs démarre. Ensuite chacun touche sa moitié pour finir son coup ; gros bouton pause au milieu. En pause : ▶ CONTINUER, ↺ Rejouer (deux appuis) pour recommencer à zéro, ⌂ pour l'accueil (le combat est gardé). Sans « Stop 3 min », le bouton devient STOP une fois le temps du round écoulé et lance la boxe.
+- Pas de couleurs d'avance : le premier joueur qui touche sa moitié prend les Noirs et l'horloge des Blancs démarre. Ensuite chacun touche sa moitié pour finir son coup ; gros bouton pause au milieu. En pause : ▶ CONTINUER, ♟ Round suivant ▶ (saute au prochain round d'échecs), ↺ Rejouer (deux appuis) pour recommencer à zéro, ⌂ pour l'accueil (le combat est gardé). Sans « Stop 3 min », le bouton devient STOP une fois le temps du round écoulé et lance la boxe.
 - Options à cocher (« ? » pour l'explication) :
   - **Coups illégaux** : carton jaune dans le coin de chaque moitié, côté centre. Un coup illégal = 1 compte, le fautif rejoue.
   - **Stop 3 min** : le round d'échecs s'arrête tout seul à 3 min (sinon alerte, et le coach arrête).

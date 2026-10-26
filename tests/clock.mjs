@@ -3,7 +3,7 @@
 
 import {
   defaultConfig, newFight, tick, start, press, togglePause, skipPhase,
-  illegalMove, undoCount, reopen, moveStage, moveCountdownLeft, countsOf,
+  illegalMove, undoCount, nextChessRound, goToNextChess, reopen, moveStage, moveCountdownLeft, countsOf,
 } from '../clock.js';
 
 const errors = [];
@@ -181,6 +181,20 @@ for (const [r, min] of [[5, 4.5], [7, 6], [9, 7.5], [11, 9]]) {
   run(s, 60000, 185000);
   togglePause(s, 185000);
   check(s.phase === 'boxing' && !s.paused, 'after 3 min, pause ends the chess round');
+}
+
+// Pause menu: jump to the next chess round
+{
+  const s = fight({ moveLimit: false, autoStop: true, boxTimer: true });
+  run(s, 0, 10000);
+  togglePause(s, 10000);
+  check(nextChessRound(s) === 3, 'from chess round 1 the next chess round is 3');
+  goToNextChess(s, 10000);
+  check(s.phase === 'chess' && s.round === 3 && !s.paused && s.moveElapsed === 0, 'jump to chess round 3, running');
+  skipPhase(s, 10000);
+  check(s.phase === 'break' && nextChessRound(s) === 5, 'from the break after round 3, next chess round is 5');
+  goToNextChess(s, 10000); goToNextChess(s, 10000);
+  check(s.round === 7 && nextChessRound(s) === null, 'no next chess round after the last one');
 }
 
 if (errors.length) {

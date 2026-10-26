@@ -1,6 +1,6 @@
 import {
   PRESETS, defaultConfig, newFight, tick, start, press, togglePause, skipPhase,
-  illegalMove, undoCount, reopen, endFight, moveStage, moveCountdownLeft,
+  illegalMove, undoCount, nextChessRound, goToNextChess, reopen, endFight, moveStage, moveCountdownLeft,
   countsOf, roundType, formatClock,
 } from './clock.js';
 import { unlockAudio, play, setMuted } from './sound.js';
@@ -304,7 +304,12 @@ function render() {
 }
 
 // Pause menu: big Continue, ↺ restart from zero (tap twice), ⌂ home.
-function renderPauseMenu() {}
+function renderPauseMenu() {
+  const next = nextChessRound(s);
+  $('pm-next').hidden = next === null;
+  if (next !== null) $('pm-next').textContent = `♟ Round ${next} ▶`;
+}
+$('pm-next').addEventListener('click', () => act(goToNextChess(s, performance.now())));
 
 $('pm-resume').addEventListener('click', () => act(togglePause(s, performance.now())));
 let restartTimer = null;

@@ -227,6 +227,25 @@ export function skipPhase(s, now) {
   return events;
 }
 
+// The chess round the coach can jump to from here, or null after the last one.
+export function nextChessRound(s) {
+  const r = s.phase === 'break' ? s.nextRound : s.phase === 'chess' ? s.round + 1 : s.round;
+  const target = roundType(r) === 'chess' ? r : r + 1;
+  return s.phase === 'ready' || s.phase === 'over' || target > s.cfg.rounds ? null : target;
+}
+
+// Skip straight to the next chess round, running.
+export function goToNextChess(s, now) {
+  tick(s, now);
+  const target = nextChessRound(s);
+  if (target === null) return [];
+  const events = [];
+  startPhase(s, target, events);
+  s.paused = false;
+  s.lastTick = now;
+  return events;
+}
+
 // A count against `player`, in the current chess round. Returns true when
 // it loses the fight.
 function giveCount(s, player, illegal, events) {

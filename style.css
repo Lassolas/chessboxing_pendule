@@ -210,8 +210,9 @@ body {
 }
 .panel h2 { font: 700 30px var(--font-display); letter-spacing: .08em; margin: 0 0 8px; }
 .pm-go { font-size: 34px !important; padding: 34px 16px !important; }
+.pm-next { font-size: 26px !important; padding: 20px 12px !important; }
 .pm-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.pm-row .btn { font-size: 24px; padding: 18px 8px; }
+.pm-row .btn { font-size: 22px; padding: 18px 6px; white-space: nowrap; }
 .pm-row .btn.confirm { background: var(--red-bg); border-color: var(--red); }
 .adjust { display: grid; grid-template-columns: 1fr auto auto; gap: 6px 8px; align-items: center; margin: 10px 0; text-align: left; }
 .adjust .btn { padding: 10px 12px; font-size: 16px; }
