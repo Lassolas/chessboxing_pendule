@@ -603,7 +603,7 @@ function render() {
 function renderPauseMenu() {
   const next = nextChessRound(s);
   $('pm-next').hidden = next === null;
-  if (next !== null) $('pm-next').textContent = `♟ Round ${roundNo(s.cfg, next)} ▶`;
+  if (next !== null) $('pm-next').textContent = `♟ ${roundNo(s.cfg, next)} ▶`;
 }
 $('pm-next').addEventListener('click', () => act(goToNextChess(s, performance.now())));
 

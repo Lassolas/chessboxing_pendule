@@ -408,7 +408,16 @@ body {
 .resume-wrap { position: relative; }
 .resume-x { position: absolute; top: -6px; right: -10px; width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--gold-mid);
   background: var(--bg-panel); color: var(--text); font-size: 17px; line-height: 1; padding: 0; touch-action: manipulation; }
-#pause-menu { background: transparent; }  /* halves are dimmed already; keeps ⌀ readable */
+/* Pause: the clocks are only greyed; the options sit in the middle strip,
+   over the centre bar. A tap anywhere else carries on. */
+#pause-menu { background: transparent; padding: 0; }
+.pm-strip { max-width: none; border-radius: 0; border: 0; border-block: 2px solid var(--gold-mid); background: #000;
+  display: grid; grid-template-columns: auto auto minmax(0, 1fr) minmax(0, 1.2fr); gap: 8px; align-items: stretch;
+  padding: 10px max(12px, env(safe-area-inset-left)); overflow: visible; }
+.pm-strip .btn { margin: 0; min-height: 64px; }
+.pm-ico { width: 50px; font-size: 28px !important; padding: 0 !important; }
+.pm-strip .pm-next { font-size: 21px !important; padding: 0 4px !important; white-space: nowrap; overflow: hidden; }
+.pm-strip .pm-go { font-size: 25px !important; padding: 0 8px !important; white-space: nowrap; }
 
 /* Small phones (iPhone SE…): keep the whole centre bar on screen */
 @media (max-width: 380px) {
