@@ -589,7 +589,10 @@ function render() {
   setDigits($('bar-timer'), s.phase === 'ready' || s.phase === 'over' || untimed ? '' : roundClock(s.phaseRemaining), cfg.digits);
   // Lost on time or on counts: ↺ Rejouer in the middle of the bar.
   const byCounts = !!flagScreen && r.method.includes('comptes');
-  const replay = !!flagScreen && (r.method === 'temps' || byCounts);
+  // After the referee's count reached 0: ↺ Rejouer and Continuer side by side.
+  const byCount0 = !!flagScreen && r.method === 'réflexion';
+  const replay = !!flagScreen && (r.method === 'temps' || byCounts || byCount0);
+  $('bar-replay').classList.toggle('with-btn', byCount0);
   $('bar-timer').hidden = replay;
   document.querySelector('.bar-info').hidden = replay;
   $('bar-replay').hidden = !replay;

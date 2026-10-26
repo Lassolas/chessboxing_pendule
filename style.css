@@ -320,6 +320,8 @@ body {
 .bar-phase { font: 600 15px var(--font-display); letter-spacing: .1em; text-transform: uppercase; color: var(--gold); }
 .bar-timer { font: var(--clock-weight) 34px var(--font-clock); font-variant-numeric: tabular-nums; }
 .bar-replay { grid-column: 3 / -1; grid-row: 1; justify-self: center; background: var(--gold); color: #1a1405; border: 0; border-radius: 12px; font: 700 24px var(--font-display); text-transform: uppercase; padding: 12px 18px; white-space: nowrap; touch-action: manipulation; }
+.bar-replay.with-btn { grid-column: 3 / 5; justify-self: stretch; min-width: 0; font-size: 19px; padding: 12px 6px; overflow: hidden; }
+@media (max-width: 400px) { .bar-replay.with-btn { font-size: 26px; } .bar-replay.with-btn span { display: none; } }
 .bar-replay[hidden], .bar-timer[hidden], .bar-info[hidden] { display: none; }
 .bar-btn {
   height: 72px;
