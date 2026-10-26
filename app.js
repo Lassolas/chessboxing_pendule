@@ -27,7 +27,7 @@ const homeDefaults = () => ({
   ...defaultConfig(),
   breakMs: 60000, breakOn: true,    // pause off = open pause (∞)
   warnOn: false, countdownOn: false,   // counts off by default
-  digits: 'oxanium',                  // clock digits: oxanium | dgt | teko
+  digits: 'oxanium',                  // clock digits: oxanium | dgt
   sound: true,
   v: 8,
 });
@@ -66,6 +66,7 @@ if (cfg.v < 8) {  // v8: the club's usual fight by default: 5 × (3' chess, 3' b
   Object.assign(cfg, { rounds: 5, intervals: true, chessRoundMs: 180000, boxRoundMs: 180000, boxTimer: true,
     breakOn: true, breakMs: 60000, readyCheck: true, v: 8 });
 }
+if (!DIGIT_STYLES.includes(cfg.digits)) cfg.digits = 'oxanium';  // Teko was dropped
 cfg.moveCountdownMs = Math.max(10000, cfg.moveCountdownMs);
 let s = null;
 setMuted(!!cfg.eco || !cfg.sound);
