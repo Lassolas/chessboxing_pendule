@@ -52,6 +52,7 @@ if (cfg.v < 6) {  // v6: counts off by default
   cfg.warnOn = cfg.countdownOn = false;
   cfg.v = 6;
 }
+cfg.moveCountdownMs = Math.max(10000, cfg.moveCountdownMs);
 let s = null;
 setMuted(!!cfg.eco);
 
@@ -80,9 +81,9 @@ const TILES = [
   { key: 'boxRoundMs', row: 1, icon: () => '🥊', label: 'Boxe', step: 30000, min: 30000, max: 300000,
     on: () => cfg.intervals && cfg.boxTimer,
     tap: () => { cfg.boxTimer = !(cfg.intervals && cfg.boxTimer); if (cfg.boxTimer) cfg.intervals = true; } },
-  { key: 'moveCountdownMs', flag: 'countdownOn', row: 2, icon: () => countHands(8, TILE_HAND), label: 'Compte', step: 5000, min: 5000, max: 180000 },
-  { key: 'illegalMoves', flag: 'illegalMoves', row: 2, icon: () => redFlag, label: 'Coup illégal', noValue: true },
-  { key: 'moveWarnMs', flag: 'warnOn', row: 2, icon: () => watch, label: 'Alerte', step: 5000, min: 5000, max: 120000 },
+  { key: 'moveCountdownMs', flag: 'countdownOn', row: 2, icon: () => countHands(8, TILE_HAND), label: 'Compte', step: 5000, min: 10000, max: 180000 },
+  { key: 'illegalMoves', flag: 'illegalMoves', row: 2, icon: () => redFlag, label: 'Coups illégaux', noValue: true },
+  { key: 'moveWarnMs', flag: 'warnOn', row: 2, icon: () => watch, label: 'Alerte', fixed: true },  // follows the count
 ];
 TILES.filter(t => t.flag).forEach(t => {
   t.on = () => !!cfg[t.flag];
@@ -91,6 +92,8 @@ TILES.filter(t => t.flag).forEach(t => {
 // Count limits: plain − / + lines, always on.
 const LIMITS = [['countsPerRound', '/ round', 1, 10], ['countsTotal', 'total', 1, 20]];
 const tileOf = key => TILES.find(t => t.key === key);
+// The warning comes 10 s before the count, or 5 s before under 30 s.
+const warnFor = countdownMs => countdownMs - (countdownMs >= 30000 ? 10000 : 5000);
 // Turning the count on brings the warning with it.
 tileOf('moveCountdownMs').tap = () => { cfg.countdownOn = !cfg.countdownOn; if (cfg.countdownOn) cfg.warnOn = true; };
 const tileValue = t => t.key === 'breakMs' && !t.on() ? '∞' : fmtValue(cfg[t.key], t.kind);
@@ -103,7 +106,7 @@ function tileText(t) {
     case 'breakMs': return !on ? 'Pause libre : tu relances le round.'
       : cfg.breakMs ? `Pauses de ${v}.` : 'Pas de pause : les rounds s\'enchaînent.';
     case 'boxRoundMs': return on ? `Round de boxe chronométré de ${v} entre deux pauses.` : 'Pas de round de boxe.';
-    case 'moveWarnMs': return on ? `Alerte au bout de ${v} sur un coup.` : 'Pas d\'alerte.';
+    case 'moveWarnMs': return on ? `Alerte au bout de ${v} sur un coup (${cfg.moveCountdownMs >= 30000 ? 10 : 5} s avant le compte).` : 'Pas d\'alerte.';
     case 'illegalMoves': return on ? 'Drapeau rouge dans ton coin : coup illégal adverse = 1 compte, il rejoue.' : 'Pas de bouton coup illégal.';
     default: return on ? `Compte de 10 s dès ${v} sur un coup, puis perdu.` : 'Pas de compte.';
   }
@@ -112,13 +115,14 @@ function tileText(t) {
 // showing the value like a wheel: press and slide up or down to set it.
 const valuesOf = t => { const v = []; for (let x = t.min; x <= t.max; x += t.step) v.push(x); return v; };
 function stripHTML(t) {
-  if (!t.on()) return `<span class="sv"></span><span class="sv cur">${tileValue(t)}</span><span class="sv"></span>`;
+  if (!t.on() || t.fixed) return `<span class="sv"></span><span class="sv cur">${tileValue(t)}</span><span class="sv"></span>`;
   const vals = valuesOf(t), i = Math.max(0, vals.indexOf(cfg[t.key]));
   const at = k => vals[k] === undefined ? '' : fmtValue(vals[k], t.kind);
   return `<span class="sv">${at(i + 1)}</span><span class="sv cur">${at(i)}</span><span class="sv">${at(i - 1)}</span>`;
 }
 function renderTiles() {
-  const html = t => `<div class="dur${t.row === 2 ? ' small' : ''}${t.on() ? ' on' : ''}" role="button" tabindex="0" data-tile="${t.key}">
+  cfg.moveWarnMs = warnFor(cfg.moveCountdownMs);
+  const html = t => `<div class="dur${t.row === 2 ? ' small' : ''}${t.fixed ? ' linked' : ''}${t.on() ? ' on' : ''}" role="button" tabindex="0" data-tile="${t.key}">
       <div class="dur-body"><i>${t.icon()}</i><small>${t.label}</small></div>
       ${t.noValue ? '' : `<div class="strip" data-strip="${t.key}">${stripHTML(t)}</div>`}</div>`;
   $('durations').innerHTML = TILES.filter(t => t.row === 1).map(html).join('');
@@ -163,7 +167,7 @@ function onStripDown(e) {
   const strip = e.target.closest('[data-strip]');
   if (!strip) return;
   const t = tileOf(strip.dataset.strip);
-  if (!t.on()) return;
+  if (!t.on() || t.fixed) return;
   const vals = valuesOf(t);
   drag = { t, strip, vals, y: e.clientY, i0: Math.max(0, vals.indexOf(cfg[t.key])) };
   strip.setPointerCapture(e.pointerId);
@@ -176,9 +180,11 @@ function onStripMove(e) {
   const i = Math.min(vals.length - 1, Math.max(0, drag.i0 + Math.round((drag.y - e.clientY) / STEP_PX)));
   if (vals[i] === cfg[t.key]) return;
   cfg[t.key] = vals[i];
-  // The count cannot start before the warning.
-  if (t.key === 'moveWarnMs' && cfg.moveCountdownMs < cfg.moveWarnMs) cfg.moveCountdownMs = cfg.moveWarnMs;
-  if (t.key === 'moveCountdownMs' && cfg.moveWarnMs > cfg.moveCountdownMs) cfg.moveWarnMs = cfg.moveCountdownMs;
+  if (t.key === 'moveCountdownMs') {
+    cfg.moveWarnMs = warnFor(cfg.moveCountdownMs);
+    const w = document.querySelector('[data-strip="moveWarnMs"]');
+    if (w) w.innerHTML = stripHTML(tileOf('moveWarnMs'));
+  }
   strip.innerHTML = stripHTML(t);
   strip.closest('[data-tile]').querySelector('i').innerHTML = t.icon();  // dots follow the count
   renderPresets();
@@ -262,6 +268,7 @@ function fightConfig() {
   if (!c.intervals) Object.assign(c, { illegalMoves: false, boxTimer: false, warnOn: false, countdownOn: false });
   if (!c.breakOn) c.breakMs = null;
   if (!c.countdownOn) c.warnOn = false;  // the warning comes with the count
+  c.moveWarnMs = warnFor(c.moveCountdownMs);
   if (!c.warnOn) c.moveWarnMs = NEVER;
   if (!c.countdownOn) c.moveCountdownMs = NEVER;
   c.moveLimit = c.warnOn || c.countdownOn;

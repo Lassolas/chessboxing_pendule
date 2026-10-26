@@ -70,7 +70,12 @@ body {
 .durations { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
 .dur { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; color: var(--text); padding: 10px 4px 8px; text-align: center;
   font-family: var(--font-display); touch-action: manipulation; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
-.dur { position: relative; cursor: pointer; display: grid; grid-template-columns: minmax(0, 1fr) auto; padding: 0 !important; overflow: hidden; }
+.dur { position: relative; cursor: pointer; display: grid; grid-template-columns: minmax(0, 1fr) auto; padding: 0 !important; }
+.dur .strip { border-radius: 0 11px 11px 0; }
+.dur.small .strip { border-radius: 0 9px 9px 0; }
+/* The warning hangs under the count: a short gold link between them. */
+.dur.linked::before { content: ''; position: absolute; left: calc(50% - 30px); top: -8px; width: 3px; height: 8px; background: var(--gold-mid); }
+.dur.linked .strip { cursor: default; }
 .dur-body { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px 2px 8px; min-width: 0; }
 .strip { width: 50px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 2px;
   border-left: 1px solid var(--border); background: rgba(0,0,0,.28); touch-action: none; cursor: ns-resize; user-select: none; -webkit-user-select: none;
