@@ -19,7 +19,12 @@
   --break-bg:  #0e1a2c;
   --font-display: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
   --font-body: system-ui, -apple-system, sans-serif;
+  --font-clock: 'Oxanium', 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --clock-weight: 600;
+  --clock-scale: .82;   /* wider faces get a smaller size so 10:00 fits */
 }
+:root[data-digits="teko"] { --font-clock: 'Teko', 'Barlow Condensed', 'Arial Narrow', sans-serif; --clock-weight: 500; --clock-scale: 1.12; }
+:root[data-digits="dgt"] { --clock-scale: 1; }
 
 *, *::before, *::after { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; height: 100%; -webkit-text-size-adjust: 100%; }
@@ -162,7 +167,7 @@ body {
 .half.bottom { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
 .h-name { font: 600 40px/1 var(--font-display); letter-spacing: .08em; text-transform: uppercase; color: var(--text-2); }
 .h-clock {
-  font: 700 clamp(72px, 24vw, 160px)/0.9 var(--font-display);
+  font: var(--clock-weight) calc(var(--clock-scale) * clamp(72px, 24vw, 160px))/0.9 var(--font-clock);
   font-variant-numeric: tabular-nums;
   letter-spacing: .01em;
 }
@@ -247,7 +252,7 @@ body {
 .bar-round, .bar-phase { white-space: nowrap; }
 .bar-round { font: 700 20px var(--font-display); letter-spacing: .06em; }
 .bar-phase { font: 600 15px var(--font-display); letter-spacing: .1em; text-transform: uppercase; color: var(--gold); }
-.bar-timer { font: 700 34px var(--font-display); font-variant-numeric: tabular-nums; }
+.bar-timer { font: var(--clock-weight) 34px var(--font-clock); font-variant-numeric: tabular-nums; }
 .bar-replay { grid-column: 2 / -1; grid-row: 1; justify-self: center; background: var(--gold); color: #1a1405; border: 0; border-radius: 12px; font: 700 24px var(--font-display); text-transform: uppercase; padding: 12px 18px; white-space: nowrap; touch-action: manipulation; }
 .bar-replay[hidden], .bar-timer[hidden], .bar-info[hidden] { display: none; }
 .bar-btn {
@@ -366,3 +371,15 @@ body {
   .bar-home { width: 60px; height: 60px; font-size: 32px; }
   .h-name { font-size: 56px; }
 }
+
+/* Clock digits: DGT seven-segment SVG sized like the text it replaces */
+svg.seg { height: .8em; width: auto; vertical-align: -.02em; overflow: visible; }
+svg.seg .lit { fill: currentColor; }
+svg.seg .ghost { fill: currentColor; opacity: .07; }
+.bar-timer svg.seg { height: .7em; }
+.digit-pick { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.digit-opt { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; color: var(--text-2); padding: 10px 4px;
+  font: 30px/1 var(--font-clock); touch-action: manipulation; display: grid; place-items: center; min-height: 54px; }
+.digit-opt[data-digits="oxanium"] { font-family: 'Oxanium', var(--font-display); font-weight: 600; font-size: 26px; }
+.digit-opt[data-digits="teko"] { font-family: 'Teko', var(--font-display); font-weight: 500; font-size: 34px; }
+.digit-opt.on { border-color: var(--gold-mid); background: var(--gold-soft); color: var(--gold); }

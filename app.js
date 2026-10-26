@@ -5,6 +5,7 @@ import {
 } from './clock.js';
 import { unlockAudio, play, setMuted } from './sound.js';
 import { countHands, REFEREE } from './hands.js';
+import { DIGIT_STYLES, setDigits } from './digits.js';
 
 const $ = id => document.getElementById(id);
 const CFG_KEY = 'pendule-cb-config';
@@ -23,6 +24,7 @@ const homeDefaults = () => ({
   ...defaultConfig(),
   breakMs: 60000, breakOn: false,   // pause off = open pause (∞)
   warnOn: false, countdownOn: false,   // counts off by default
+  digits: 'oxanium',                  // clock digits: oxanium | dgt | teko
   v: 6,
 });
 let cfg = { ...homeDefaults(), ...(load(CFG_KEY) || {}) };
@@ -220,6 +222,7 @@ function renderPresets() {
 
 function renderSetup() {
   document.body.className = cfg.eco ? 'eco' : '';
+  document.documentElement.dataset.digits = cfg.digits;
   renderPresets();
   // Unchecking the intervals leaves a plain clock: only Éco still applies.
   // A plain clock has no illegal-move card: dimmed, so the layout stays put.
@@ -228,6 +231,10 @@ function renderSetup() {
       <button type="button" class="opt-toggle" data-opt="${key}"><span class="box">${cfg[key] ? '✓' : ''}</span>${label}</button>
       <button type="button" class="opt-q${helpShown === key ? ' sel' : ''}" data-help="${key}" aria-label="Explication">?</button>
     </div>`).join('');
+  // Clock digits: the same time shown in each style, one tap to choose.
+  $('options').insertAdjacentHTML('beforeend', `<div class="digit-pick">${DIGIT_STYLES.map(d =>
+    `<button type="button" class="digit-opt${cfg.digits === d ? ' on' : ''}" data-digits="${d}" aria-label="Chiffres ${d}"><span></span></button>`).join('')}</div>`);
+  $('options').querySelectorAll('.digit-opt span').forEach(sp => setDigits(sp, '4:30', sp.parentNode.dataset.digits));
   const help = OPTIONS.find(o => o[0] === helpShown);
   $('opt-help').hidden = !help;
   if (help) $('opt-help').textContent = help[2]();
@@ -277,6 +284,8 @@ function fightConfig() {
 $('options').addEventListener('click', e => {
   const t = e.target.closest('[data-opt]');
   const q = e.target.closest('[data-help]');
+  const d = e.target.closest('[data-digits]');
+  if (d) { cfg.digits = d.dataset.digits; save(CFG_KEY, cfg); }
   if (t) {
     cfg[t.dataset.opt] = !cfg[t.dataset.opt];
     save(CFG_KEY, cfg);
@@ -288,7 +297,7 @@ $('options').addEventListener('click', e => {
 $('setup').addEventListener('change', () => { readSetup(); renderSetup(); });
 $('btn-reset').addEventListener('click', () => $('btn-defaults').click());
 $('btn-defaults').addEventListener('click', () => {
-  cfg = { ...homeDefaults(), rounds: cfg.rounds, names: cfg.names, eco: cfg.eco };
+  cfg = { ...homeDefaults(), rounds: cfg.rounds, names: cfg.names, eco: cfg.eco, digits: cfg.digits };
   save(CFG_KEY, cfg);
   renderSetup();
 });
@@ -466,7 +475,7 @@ function render() {
     h.classList.toggle('low', s.remaining[p] < 10000);
     h.classList.toggle('winner', !!flagScreen && (r.winner === p || r.winner === null));
     h.classList.toggle('loser', !!flagScreen && r.loser === p);
-    h.querySelector('.h-clock').textContent = formatClock(s.remaining[p]);
+    setDigits(h.querySelector('.h-clock'), formatClock(s.remaining[p]), cfg.digits);
     const phaseEl = h.querySelector('.h-phase');
     phaseEl.textContent = s.phase === 'boxing' ? (untimed ? 'BOXE' : `BOXE ${formatClock(s.phaseRemaining)}`)
       : s.phase === 'break' ? (untimed ? 'PAUSE' : `PAUSE ${formatClock(s.phaseRemaining)}`) : '';
@@ -498,7 +507,7 @@ function render() {
   $('bar-phase').textContent = s.phase === 'ready' ? '1er = NOIRS' : s.phase === 'break' ? `→ ${roundIcon}`
     : flagScreen ? methodShort(r.method)
     : s.roundOver ? 'Temps !' : s.paused ? 'Pause' : '';
-  $('bar-timer').textContent = s.phase === 'ready' || s.phase === 'over' || untimed ? '' : formatClock(s.phaseRemaining);
+  setDigits($('bar-timer'), s.phase === 'ready' || s.phase === 'over' || untimed ? '' : formatClock(s.phaseRemaining), cfg.digits);
   // Lost on time: ↺ Rejouer in the middle of the bar.
   const replay = !!flagScreen && r.method === 'temps';
   $('bar-timer').hidden = replay;
