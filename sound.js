@@ -5,11 +5,31 @@ let ctx = null;
 let muted = false;
 export function setMuted(m) { muted = m; }
 
+// Recorded punches for each press (a few variants, picked at random).
+const PUNCH_FILES = [1, 2, 3, 4, 5, 6].map(i => `sounds/coup${i}.mp3`);
+let punches = [];
+function loadPunches() {
+  PUNCH_FILES.forEach(url => fetch(url)
+    .then(r => r.arrayBuffer())
+    .then(b => new Promise((ok, ko) => ctx.decodeAudioData(b, ok, ko)))
+    .then(buf => punches.push(buf))
+    .catch(() => {}));
+}
+function punch() {
+  if (!ctx || !punches.length) { clack(); return; }
+  const src = ctx.createBufferSource();
+  src.buffer = punches[Math.floor(Math.random() * punches.length)];
+  src.playbackRate.value = 0.95 + Math.random() * 0.1;
+  src.connect(ctx.destination);
+  src.start();
+}
+
 export function unlockAudio() {
   if (!ctx) {
     const AC = window.AudioContext || window.webkitAudioContext;
     if (!AC) return;
     ctx = new AC();
+    loadPunches();
   }
   if (ctx.state === 'suspended') ctx.resume();
 }
@@ -100,7 +120,7 @@ function doorShut() {
 }
 
 const SOUNDS = {
-  press: clack,
+  press: punch,
   moveWarn: () => knock(0),
   moveCountdown: () => { wood(0); wood(0.16); },
   moveTick: () => tick(0, Math.round(performance.now() / 1000) % 2 === 0),

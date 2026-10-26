@@ -17,7 +17,7 @@ Pendule d'échecs pour les combats de chessboxing, faite pour le club Paris Ches
   - **Éco** : pas de son (vibrations seulement), écran plus sombre, pas d'animations.
 - En pause et en fin de partie, chaque côté affiche son temps moyen par coup (⌀ 12,4 s / coup).
 - Fin de partie : écran sombre, le côté et la couleur du vainqueur en doré, ⚑ chez le perdant.
-- Sons analogiques uniquement : clic de vieille pendule mécanique à chaque appui, vraie cloche de boxe (1 coup au début, 3 à la fin), claquoir en bois à 10 s de la fin et pour le compte à rebours, toc sur le bois pour l'alerte, porte qui se ferme en fin de partie. « Test son » dans ⚙ les fait tous entendre.
+- Sons analogiques uniquement : coup de poing enregistré à chaque appui (6 variantes tirées au hasard, son libre de droits Pixabay), vraie cloche de boxe (1 coup au début, 3 à la fin), claquoir en bois à 10 s de la fin et pour le compte à rebours, toc sur le bois pour l'alerte, porte qui se ferme en fin de partie. « Test son » dans ⚙ les fait tous entendre.
 - Le temps de réflexion repart à zéro après la boxe. Chaque alerte a toujours un son et un changement de couleur.
 - Écran toujours allumé, hors ligne, clavier ou bouton Bluetooth (Espace = pause, Entrée = coup joué).
 - Noms et durées modifiables dans « ⚙ Réglages ».
@@ -29,3 +29,7 @@ Ouvre le lien sur le téléphone. Android : bouton « Installer l'appli ». iPho
 ## Développer
 
 Aucune dépendance. `npm run dev` sert la page sur http://localhost:8000, `npm test` vérifie la logique de la pendule (`clock.js`). Quand les fichiers changent, augmenter `VERSION` dans `sw.js` pour que les téléphones prennent la nouvelle version.
+
+## Crédits
+
+Sons de coups : « Punch sound » de storegraphic sur Pixabay (licence Pixabay, utilisation libre).
