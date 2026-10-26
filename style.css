@@ -248,6 +248,8 @@ body {
 .bar-round { font: 700 20px var(--font-display); letter-spacing: .06em; }
 .bar-phase { font: 600 15px var(--font-display); letter-spacing: .1em; text-transform: uppercase; color: var(--gold); }
 .bar-timer { font: 700 34px var(--font-display); font-variant-numeric: tabular-nums; }
+.bar-replay { grid-column: 2 / -1; grid-row: 1; justify-self: center; background: var(--gold); color: #1a1405; border: 0; border-radius: 12px; font: 700 24px var(--font-display); text-transform: uppercase; padding: 12px 18px; white-space: nowrap; touch-action: manipulation; }
+.bar-replay[hidden], .bar-timer[hidden], .bar-info[hidden] { display: none; }
 .bar-btn {
   height: 72px;
   font: 700 28px var(--font-display); letter-spacing: .08em;

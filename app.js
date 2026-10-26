@@ -499,6 +499,11 @@ function render() {
     : flagScreen ? methodShort(r.method)
     : s.roundOver ? 'Temps !' : s.paused ? 'Pause' : '';
   $('bar-timer').textContent = s.phase === 'ready' || s.phase === 'over' || untimed ? '' : formatClock(s.phaseRemaining);
+  // Lost on time: ↺ Rejouer in the middle of the bar.
+  const replay = !!flagScreen && r.method === 'temps';
+  $('bar-timer').hidden = replay;
+  document.querySelector('.bar-info').hidden = replay;
+  $('bar-replay').hidden = !replay;
   document.querySelector('.bar').classList.toggle('alert', s.roundOver && !s.paused && s.phase !== 'over');
   // On the flag screen the bar button carries the one useful action.
   const overAction = flagScreen ? (r.method === 'réflexion' ? 'Continuer' : r.method.includes('comptes') ? 'Annuler' : null) : null;
@@ -524,11 +529,13 @@ $('pm-next').addEventListener('click', () => act(goToNextChess(s, performance.no
 $('pm-resume').addEventListener('click', () => act(togglePause(s, performance.now())));
 // A tap anywhere outside the buttons resumes too.
 $('pause-menu').addEventListener('click', e => { if (!e.target.closest('button')) $('pm-resume').click(); });
-$('pm-restart').addEventListener('click', () => {
+function restart() {
   s = newFight(structuredClone(s.cfg));
   buildHalves();
   act(['undo']);
-});
+}
+$('pm-restart').addEventListener('click', restart);
+$('bar-replay').addEventListener('click', restart);
 $('pm-home').addEventListener('click', () => $('bar-home').click());
 
 // ── MANUAL END ──
@@ -606,7 +613,13 @@ function persist(force = true) {
 // ── SCREEN ON + INSTALL ──
 let wakeLock = null;
 async function requestWakeLock() {
-  try { wakeLock = await navigator.wakeLock?.request('screen'); } catch { /* not supported */ }
+  try {
+    wakeLock = await navigator.wakeLock?.request('screen');
+    // Released by the system (battery saver…): ask again while the clock is shown.
+    wakeLock?.addEventListener('release', () => {
+      if (document.visibilityState === 'visible' && !$('fight').hidden) requestWakeLock();
+    });
+  } catch { /* not supported */ }
 }
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && s && !$('fight').hidden) requestWakeLock();
