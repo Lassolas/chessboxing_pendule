@@ -56,23 +56,28 @@ function tone(freq, start, dur, { type = 'sine', vol = 0.3, attack = 0.003, glid
 // Loud bus for the clapper and the bell: drive into soft saturation then a
 // compressor, so they cut through a noisy gym without clipping.
 let out = null;
-let bus = null, busCtx = null;
-function loud(fn) {
+const buses = new Map();
+// drive: how hard the signal hits the saturation; bias adds even harmonics.
+function makeBus(drive, bias, shelfDb, level) {
+  const g = ctx.createGain(); g.gain.value = drive;
+  const shaper = ctx.createWaveShaper();
+  const curve = new Float32Array(2048), off = Math.tanh(bias);
+  for (let i = 0; i < curve.length; i++) curve[i] = (Math.tanh((i / 1023.5 - 1) * 1.6 + bias) - off) / (1 + Math.abs(off));
+  shaper.curve = curve; shaper.oversample = '4x';
+  const shelf = ctx.createBiquadFilter();
+  shelf.type = 'highshelf'; shelf.frequency.value = 3500; shelf.gain.value = shelfDb;
+  const comp = ctx.createDynamicsCompressor();
+  comp.threshold.value = -14; comp.knee.value = 3; comp.ratio.value = 12;
+  comp.attack.value = 0.0005; comp.release.value = 0.08;
+  const trim = ctx.createGain(); trim.gain.value = level;
+  g.connect(shaper).connect(shelf).connect(comp).connect(trim).connect(ctx.destination);
+  return g;
+}
+function loud(fn, kind = 'bell') {
   if (!ctx) return;
-  if (busCtx !== ctx) {
-    const drive = ctx.createGain(); drive.gain.value = 2.2;
-    const shaper = ctx.createWaveShaper();
-    const curve = new Float32Array(1024);
-    for (let i = 0; i < curve.length; i++) curve[i] = Math.tanh((i / 511.5 - 1) * 1.6) / Math.tanh(1.6);
-    shaper.curve = curve; shaper.oversample = '4x';
-    const comp = ctx.createDynamicsCompressor();
-    comp.threshold.value = -10; comp.knee.value = 4; comp.ratio.value = 8;
-    comp.attack.value = 0.001; comp.release.value = 0.12;
-    const trim = ctx.createGain(); trim.gain.value = 0.92;
-    drive.connect(shaper).connect(comp).connect(trim).connect(ctx.destination);
-    bus = drive; busCtx = ctx;
-  }
-  out = bus; fn(); out = null;
+  if (buses.get('ctx') !== ctx) { buses.clear(); buses.set('ctx', ctx); }
+  if (!buses.has(kind)) buses.set(kind, kind === 'clap' ? makeBus(7, 0.35, 6, 1.35) : makeBus(2.2, 0, 0, 1.25));
+  out = buses.get(kind); fn(); out = null;
 }
 
 let noise = null;
@@ -124,16 +129,20 @@ function wood(start, vol = 1) {
   hit(start, 700, 6, 0.9 * vol, 0.09);
   tone(420, start, 0.06, { type: 'triangle', vol: 0.35 * vol });
 }
-// The referee's 10-second clapper, like high hardwood claves: a violent
-// full-spectrum crack, then the bright, dry ring of the sticks.
+// The referee's 10-second clapper, like high hardwood claves slammed
+// together: a violent crack over the whole spectrum, a split-wood buzz, then
+// the bright ring of the sticks, all driven hard into saturation.
 function claves(start) {
-  hit(start, 9000, 0.5, 2.4, 0.005, 'highpass');    // crack (whole spectrum)
-  hit(start, 4500, 0.7, 1.6, 0.012);                // snap
-  hit(start, 1400, 1, 1.0, 0.02);                   // body of the slap
-  [[2480, 0.7, 0.14], [2510, 0.3, 0.11], [6350, 0.3, 0.05], [11200, 0.12, 0.02]]
-    .forEach(([f, v, d]) => tone(f * (0.995 + Math.random() * 0.01), start, d, { vol: v, attack: 0.0007 }));
+  hit(start, 200, 0.5, 2.5, 0.022, 'highpass');     // crack, full spectrum
+  hit(start, 10000, 0.5, 2.5, 0.008, 'highpass');   // splinter
+  hit(start, 4500, 0.8, 1.8, 0.03);                 // snap
+  hit(start, 1100, 1, 1.4, 0.04);                   // slap body
+  hit(start, 450, 2, 0.9, 0.05);                    // low thwack
+  [[2480, 0.8, 0.18, 'triangle'], [2530, 0.35, 0.13, 'sine'], [3700, 0.3, 0.08, 'sine'],
+   [6350, 0.35, 0.06, 'sine'], [8900, 0.2, 0.03, 'sine'], [12400, 0.12, 0.02, 'sine']]
+    .forEach(([f, v, d, type]) => tone(f * (0.995 + Math.random() * 0.01), start, d, { type, vol: v, attack: 0.0005 }));
 }
-function clapper(times) { loud(() => times.forEach(t => claves(t))); }
+function clapper(times) { loud(() => times.forEach(t => claves(t)), 'clap'); }
 // For tests: render sounds into an OfflineAudioContext.
 export function useContext(c) { ctx = c; }
 
