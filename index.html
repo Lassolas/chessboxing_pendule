@@ -32,20 +32,15 @@
 
   <details class="advanced">
     <summary>⚙ Réglages</summary>
-    <div class="grid">
-      <label>Joueur du bas<input id="name-0" maxlength="20" placeholder="Joueur 1"></label>
-      <label>Joueur du haut<input id="name-1" maxlength="20" placeholder="Joueur 2"></label>
-      <label>Round d'échecs (min)<input type="number" id="cfg-chessRound" min="0.5" max="10" step="0.5"></label>
-      <label>Round de boxe (min)<input type="number" id="cfg-boxRound" min="0.5" max="5" step="0.5"></label>
-      <label>Pause (s)<input type="number" id="cfg-break" min="10" max="300" step="5"></label>
-      <label>Alerte coup (s)<input type="number" id="cfg-moveWarn" min="5" max="120" step="1"></label>
-      <label>Compte à rebours dès (s)<input type="number" id="cfg-moveCountdown" min="5" max="180" step="1"></label>
-      <label>Durée du compte (s)<input type="number" id="cfg-moveGrace" min="3" max="30" step="1"></label>
-      <label>Comptes perdants / round<input type="number" id="cfg-countsPerRound" min="1" max="10" step="1"></label>
-      <label>Comptes perdants au total<input type="number" id="cfg-countsTotal" min="1" max="20" step="1"></label>
+    <div class="names">
+      <label><span>▼</span><input id="name-0" maxlength="20" placeholder="Joueur 1"></label>
+      <label><span>▲</span><input id="name-1" maxlength="20" placeholder="Joueur 2"></label>
     </div>
-    <button type="button" id="btn-test-sound" class="btn btn-ghost wide">Test son</button>
-    <button type="button" id="btn-defaults" class="btn btn-ghost wide">Défaut</button>
+    <div class="steppers" id="steppers"></div>
+    <div class="set-actions">
+    <button type="button" id="btn-test-sound" class="btn btn-ghost wide">🔔 Test son</button>
+    <button type="button" id="btn-defaults" class="btn btn-ghost wide">↺ Défaut</button>
+    </div>
   </details>
 
   <div id="install-box" class="install" hidden>

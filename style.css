@@ -77,8 +77,19 @@ body {
 .opt-help { background: var(--bg-panel); border-left: 3px solid var(--gold); border-radius: 8px; padding: 10px 12px; margin: 10px 0 0; line-height: 1.45; font-size: 15px; }
 .advanced { margin: 18px 0 12px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 12px; padding: 10px 12px; }
 .advanced summary { cursor: pointer; font-weight: 600; color: var(--text-2); }
-.advanced .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
-.advanced label { font-size: 13px; color: var(--text-2); display: flex; flex-direction: column; gap: 4px; justify-content: flex-end; }
+.advanced .names { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; margin-top: 12px; }
+.advanced .names label { min-width: 0; display: flex; align-items: center; gap: 6px; color: var(--text-2); }
+.advanced .names input { flex: 1; min-width: 0; font: 500 18px var(--font-body); color: var(--text); background: var(--bg-alt); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+.steppers { margin-top: 10px; }
+.stepper { display: grid; grid-template-columns: 1fr 48px 76px 48px; align-items: center; gap: 6px; padding: 6px 0; border-top: 1px solid var(--border); }
+.stepper:first-child { border-top: 0; }
+.st-label { font: 600 18px var(--font-display); letter-spacing: .03em; }
+.st-label i { font-style: normal; display: inline-block; width: 30px; }
+.stepper b { text-align: center; font: 700 22px var(--font-display); font-variant-numeric: tabular-nums; }
+.stepper button { height: 44px; font: 700 26px/1 var(--font-display); color: var(--text); background: var(--bg-alt); border: 1px solid var(--border); border-radius: 10px; touch-action: manipulation; }
+.stepper button:disabled { opacity: .3; }
+.set-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.set-actions .btn { margin: 0; font-size: 16px; }
 .version { text-align: center; margin-top: 12px; }
 
 

@@ -26,16 +26,38 @@ let s = null;
 setMuted(!!cfg.eco);
 
 // ── SETUP SCREEN ──
-const NUM_FIELDS = {
-  chessRound: ['chessRoundMs', 60000],
-  boxRound: ['boxRoundMs', 60000],
-  break: ['breakMs', 1000],
-  moveWarn: ['moveWarnMs', 1000],
-  moveCountdown: ['moveCountdownMs', 1000],
-  moveGrace: ['moveGraceMs', 1000],
-  countsPerRound: ['countsPerRound', 1],
-  countsTotal: ['countsTotal', 1],
-};
+// ⚙ settings: one stepper per value. [key, icon, label, step, min, max, kind]
+const STEPPERS = [
+  ['chessRoundMs', '♟', 'Round', 30000, 30000, 600000, 'time'],
+  ['boxRoundMs', '🥊', 'Round', 30000, 30000, 300000, 'time'],
+  ['breakMs', '⏸', 'Pause', 15000, 15000, 300000, 'time'],
+  ['moveWarnMs', '⏱', 'Alerte', 5000, 5000, 120000, 'time'],
+  ['moveCountdownMs', '⏱', 'Compte dès', 5000, 5000, 180000, 'time'],
+  ['moveGraceMs', '⏱', 'Compte', 1000, 3000, 30000, 'time'],
+  ['countsPerRound', '⚑', '/ round', 1, 1, 10, 'n'],
+  ['countsTotal', '⚑', 'Total', 1, 1, 20, 'n'],
+];
+const fmtValue = (v, kind) => kind === 'n' ? String(v)
+  : v < 60000 ? `${v / 1000} s` : `${Math.floor(v / 60000)}'${String((v % 60000) / 1000).padStart(2, '0')}`;
+
+function renderSteppers() {
+  $('steppers').innerHTML = STEPPERS.map(([key, icon, label, , min, max, kind]) => `
+    <div class="stepper">
+      <span class="st-label"><i>${icon}</i>${label}</span>
+      <button type="button" data-step="${key}" data-dir="-1"${cfg[key] <= min ? ' disabled' : ''}>−</button>
+      <b>${fmtValue(cfg[key], kind)}</b>
+      <button type="button" data-step="${key}" data-dir="1"${cfg[key] >= max ? ' disabled' : ''}>+</button>
+    </div>`).join('');
+}
+$('steppers').addEventListener('click', e => {
+  const b = e.target.closest('[data-step]');
+  if (!b) return;
+  const [key, , , step, min, max] = STEPPERS.find(x => x[0] === b.dataset.step);
+  cfg[key] = Math.min(max, Math.max(min, cfg[key] + step * +b.dataset.dir));
+  if (cfg.moveCountdownMs < cfg.moveWarnMs) cfg.moveCountdownMs = cfg.moveWarnMs;
+  save(CFG_KEY, cfg);
+  renderSetup();
+});
 
 // One or two words per option; the "?" shows the explanation.
 const OPTIONS = [
@@ -61,18 +83,13 @@ function renderSetup() {
   if (help) $('opt-help').textContent = help[2]();
   $('name-0').value = cfg.names[0];
   $('name-1').value = cfg.names[1];
-  for (const [id, [key, unit]] of Object.entries(NUM_FIELDS)) $('cfg-' + id).value = cfg[key] / unit;
+  renderSteppers();
   const saved = load(FIGHT_KEY);
   $('btn-resume-saved').hidden = !(saved && saved.phase !== 'ready' && saved.phase !== 'over');
 }
 
 function readSetup() {
   cfg.names = [$('name-0').value.trim(), $('name-1').value.trim()];
-  for (const [id, [key, unit]] of Object.entries(NUM_FIELDS)) {
-    const v = parseFloat($('cfg-' + id).value);
-    if (v > 0) cfg[key] = Math.round(v * unit);
-  }
-  if (cfg.moveCountdownMs < cfg.moveWarnMs) cfg.moveCountdownMs = cfg.moveWarnMs;
   save(CFG_KEY, cfg);
 }
 
