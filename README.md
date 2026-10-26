@@ -13,6 +13,9 @@ Pendule d'échecs pour les combats de chessboxing, faite pour le club Paris Ches
   - **Stop 3 min** : le round d'échecs s'arrête tout seul à 3 min (sinon alerte, et le coach arrête).
   - **Anti-jeu** : alerte à 20 s, compte à rebours de 10 s dès 30 s, puis partie perdue (« Continuer quand même » possible). Chaque compte à rebours = 1 compte ; 3 dans un round ou 4 au total, match perdu.
   - **Timer boxe** : la pause et le round de boxe sont chronométrés, puis les échecs repartent seuls.
+  - **Éco** : pas de son (vibrations seulement), écran plus sombre, pas d'animations.
+- Fin de partie : écran sombre, le côté et la couleur du vainqueur en doré, ⚑ chez le perdant.
+- Appui : clic mécanique de vieille pendule analogique.
 - Le temps de réflexion repart à zéro après la boxe. Chaque alerte a toujours un son et un changement de couleur.
 - Écran toujours allumé, hors ligne, clavier ou bouton Bluetooth (Espace = pause, Entrée = coup joué).
 - Noms et durées modifiables dans « ⚙ Réglages ».

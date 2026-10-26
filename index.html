@@ -23,7 +23,7 @@
 <section id="setup">
   <h1 class="setup-head">PENDULE <span class="gold">CHESSBOXING</span></h1>
 
-  <button type="button" id="btn-resume-saved" class="btn btn-gold wide" hidden>Reprendre le combat</button>
+  <button type="button" id="btn-resume-saved" class="btn btn-gold wide" hidden>Continuer</button>
 
   <div class="presets" id="presets"></div>
 
@@ -44,12 +44,12 @@
       <label>Comptes perdants / round<input type="number" id="cfg-countsPerRound" min="1" max="10" step="1"></label>
       <label>Comptes perdants au total<input type="number" id="cfg-countsTotal" min="1" max="20" step="1"></label>
     </div>
-    <button type="button" id="btn-test-sound" class="btn btn-ghost wide">Tester son et couleurs</button>
-    <button type="button" id="btn-defaults" class="btn btn-ghost wide">Valeurs par défaut</button>
+    <button type="button" id="btn-test-sound" class="btn btn-ghost wide">Test son</button>
+    <button type="button" id="btn-defaults" class="btn btn-ghost wide">Défaut</button>
   </details>
 
   <div id="install-box" class="install" hidden>
-    <button type="button" id="btn-install" class="btn btn-blue wide" hidden>Installer l'appli</button>
+    <button type="button" id="btn-install" class="btn btn-blue wide" hidden>Installer</button>
     <p id="install-ios" class="muted small" hidden>iPhone : <b>Partager</b> → <b>Sur l'écran d'accueil</b></p>
   </div>
   <p class="muted small version" id="version"></p>
@@ -75,25 +75,23 @@
 <div id="pause-menu" class="overlay" hidden>
   <div class="panel">
     <h2>PAUSE</h2>
-    <button type="button" class="btn btn-gold wide big" id="pm-resume">▶ Reprendre</button>
-    <button type="button" class="btn wide" id="pm-skip">Passer à la phase suivante</button>
-    <button type="button" class="btn wide" id="pm-undo">Annuler le dernier compte</button>
+    <button type="button" class="btn btn-gold wide big" id="pm-resume">▶ GO</button>
+    <button type="button" class="btn wide" id="pm-skip">Round suivant</button>
+    <button type="button" class="btn wide" id="pm-undo">Annuler compte</button>
     <div class="adjust" id="pm-adjust"></div>
-    <button type="button" class="btn wide" id="pm-end">Terminer le combat…</button>
-    <button type="button" class="btn btn-ghost wide" id="pm-new">Nouveau combat</button>
+    <button type="button" class="btn wide" id="pm-end">Fin du combat</button>
+    <button type="button" class="btn btn-ghost wide" id="pm-new">⌂ Accueil</button>
   </div>
 </div>
 
 <!-- ── FIN DE COMBAT MANUELLE ── -->
 <div id="end-menu" class="overlay" hidden>
   <div class="panel">
-    <h2>Terminer le combat</h2>
-    <p class="muted">Vainqueur</p>
+    <h2>Vainqueur ?</h2>
     <div class="choice" id="end-winner"></div>
-    <p class="muted">Méthode</p>
     <div class="choice" id="end-method"></div>
-    <button type="button" class="btn btn-gold wide big" id="end-ok" disabled>Valider</button>
-    <button type="button" class="btn btn-ghost wide" id="end-cancel">Retour</button>
+    <button type="button" class="btn btn-gold wide big" id="end-ok" disabled>OK</button>
+    <button type="button" class="btn btn-ghost wide" id="end-cancel">←</button>
   </div>
 </div>
 
@@ -103,11 +101,8 @@
     <p class="result-kicker" id="res-kicker">VICTOIRE</p>
     <h2 class="result-name" id="res-name"></h2>
     <p class="result-method" id="res-method"></p>
-    <p class="muted small" id="res-detail"></p>
-    <button type="button" class="btn btn-gold wide" id="res-continue" hidden>Continuer quand même</button>
-    <button type="button" class="btn wide" id="res-undo" hidden>Annuler le dernier compte</button>
-    <button type="button" class="btn wide" id="res-decide" hidden>Désigner le vainqueur…</button>
-    <button type="button" class="btn btn-ghost wide" id="res-new">Nouveau combat</button>
+    <button type="button" class="btn btn-gold wide" id="res-decide">Vainqueur ?</button>
+    <button type="button" class="btn btn-ghost wide" id="res-new">⌂</button>
   </div>
 </div>
 

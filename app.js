@@ -3,7 +3,7 @@ import {
   illegalMove, undoCount, reopen, endFight, adjustTime, moveStage, moveCountdownLeft,
   countsOf, roundType, formatClock,
 } from './clock.js';
-import { unlockAudio, play } from './sound.js';
+import { unlockAudio, play, setMuted } from './sound.js';
 
 const $ = id => document.getElementById(id);
 const CFG_KEY = 'pendule-cb-config';
@@ -23,6 +23,7 @@ if ('autoPause' in cfg) {  // older versions had one option for both
   delete cfg.autoPause;
 }
 let s = null;
+setMuted(!!cfg.eco);
 
 // ── SETUP SCREEN ──
 const NUM_FIELDS = {
@@ -38,14 +39,16 @@ const NUM_FIELDS = {
 
 // One or two words per option; the "?" shows the explanation.
 const OPTIONS = [
-  ['illegalMoves', 'Coups illégaux', () => `Un carton jaune dans le coin de chaque joueur : un coup illégal de l'adversaire = 1 compte, et il rejoue.`],
-  ['autoStop', 'Stop 3 min', () => `Le round d'échecs s'arrête tout seul au bout de ${cfg.chessRoundMs / 60000} min. Sinon, alerte et c'est toi qui arrêtes.`],
-  ['moveLimit', 'Anti-jeu', () => `Alerte à ${cfg.moveWarnMs / 1000} s de réflexion, compte à rebours de ${cfg.moveGraceMs / 1000} s dès ${cfg.moveCountdownMs / 1000} s, puis partie perdue. Chaque compte à rebours = 1 compte : ${cfg.countsPerRound} dans un round ou ${cfg.countsTotal} au total, match perdu.`],
-  ['boxTimer', 'Timer boxe', () => `L'appli chronomètre la pause (${cfg.breakMs / 1000} s) et le round de boxe (${cfg.boxRoundMs / 60000} min), puis relance les échecs. Sinon, c'est toi qui lances le round suivant.`],
+  ['illegalMoves', 'Coups illégaux', () => `Carton jaune dans ton coin : coup illégal adverse = 1 compte, il rejoue.`],
+  ['autoStop', 'Stop 3 min', () => `Round d'échecs stoppé à ${cfg.chessRoundMs / 60000} min. Sinon : alerte, tu stoppes.`],
+  ['moveLimit', 'Anti-jeu', () => `${cfg.moveWarnMs / 1000} s : alerte. ${cfg.moveCountdownMs / 1000} s : compte de ${cfg.moveGraceMs / 1000} s, puis perdu. ${cfg.countsPerRound} comptes / round ou ${cfg.countsTotal} au total : perdu.`],
+  ['boxTimer', 'Timer boxe', () => `Pause ${cfg.breakMs / 1000} s + boxe ${cfg.boxRoundMs / 60000} min chronométrées. Sinon : tu relances.`],
+  ['eco', 'Éco', () => `Économie d'énergie : pas de son (vibrations seulement), écran plus sombre, pas d'animations.`],
 ];
 let helpShown = null;
 
 function renderSetup() {
+  document.body.className = cfg.eco ? 'eco' : '';
   $('presets').innerHTML = Object.keys(PRESETS).map(r =>
     `<button type="button" class="btn preset" data-r="${r}"><b>${r}</b><small>rounds</small><em>${formatClock(PRESETS[r]).replace(':', "'")}</em></button>`).join('');
   $('options').innerHTML = OPTIONS.map(([key, label]) => `
@@ -87,7 +90,7 @@ $('presets').addEventListener('click', e => {
 $('options').addEventListener('click', e => {
   const t = e.target.closest('[data-opt]');
   const q = e.target.closest('[data-help]');
-  if (t) { cfg[t.dataset.opt] = !cfg[t.dataset.opt]; save(CFG_KEY, cfg); }
+  if (t) { cfg[t.dataset.opt] = !cfg[t.dataset.opt]; save(CFG_KEY, cfg); setMuted(!!cfg.eco); }
   if (q) helpShown = helpShown === q.dataset.help ? null : q.dataset.help;
   renderSetup();
 });
@@ -139,7 +142,7 @@ function buildHalves() {
     h.querySelector('.yellow-card').addEventListener('pointerdown', e => {
       e.stopPropagation();
       act(illegalMove(s, 1 - p, performance.now()));
-      showToast(`Coup illégal de ${nameOf(1 - p)} : 1 compte`);
+      showToast(`🟨 ${nameOf(1 - p)} +1`);
     });
   });
 }
@@ -152,6 +155,10 @@ halves.forEach(h => h.addEventListener('pointerdown', e => {
 $('bar-btn').addEventListener('click', () => {
   unlockAudio();
   if (s.phase === 'ready') return;
+  if (s.phase === 'over') {
+    act(s.result.method === 'réflexion' ? reopen(s, performance.now()) : undoCount(s, performance.now()));
+    return;
+  }
   if (s.phase === 'boxing' && s.phaseRemaining === null) act(skipPhase(s, performance.now()));
   else act(togglePause(s, performance.now()));
 });
@@ -206,9 +213,8 @@ function act(events) {
   if (!events) return;
   for (const ev of events) {
     play(ev);
-    if (FLASH[ev]) flash(FLASH[ev]);
+    if (FLASH[ev] && !cfg.eco) flash(FLASH[ev]);
   }
-  if (events.includes('over')) $('result').classList.add('loss-flash');
   render();
   persist();
 }
@@ -238,12 +244,16 @@ function dots(n, max) {
   return Array.from({ length: max }, (_, i) => `<i class="dot${i < n ? ' on' : ''}"></i>`).join('');
 }
 
-const PHASE_LABEL = { ready: 'Prêt', chess: 'Échecs', boxing: 'Boxe', break: 'Pause', over: 'Terminé' };
+const PHASE_LABEL = { ready: 'Prêt', chess: 'Échecs', boxing: 'Boxe', break: 'Pause', over: 'Fin' };
+const METHOD_SHORT = { temps: 'Drapeau', 'réflexion': 'Anti-jeu', decision: 'Fin' };
+const methodShort = m => METHOD_SHORT[m] || m.replace(/ dans le round| au total/, '');
 
 function render() {
   if (!s) return;
   const body = document.body;
-  body.className = `phase-${s.phase}${s.paused ? ' paused' : ''}`;
+  const r = s.result;
+  const flagScreen = r && r.method !== 'decision';
+  body.className = `phase-${s.phase}${s.paused ? ' paused' : ''}${cfg.eco ? ' eco' : ''}${flagScreen ? ' flag' : ''}`;
   const shownRound = s.phase === 'break' ? s.nextRound : s.round;
   const stage = moveStage(s);
   const cd = moveCountdownLeft(s);
@@ -258,14 +268,18 @@ function render() {
     h.classList.toggle('warn', active && stage === 'warn');
     h.classList.toggle('countdown', active && stage === 'countdown');
     h.classList.toggle('low', s.remaining[p] < 10000);
+    h.classList.toggle('winner', !!flagScreen && (r.winner === p || r.winner === null));
+    h.classList.toggle('loser', !!flagScreen && r.loser === p);
     h.querySelector('.h-clock').textContent = formatClock(s.remaining[p]);
     const phaseEl = h.querySelector('.h-phase');
     phaseEl.textContent = s.phase === 'boxing' ? (untimed ? 'BOXE' : `BOXE ${formatClock(s.phaseRemaining)}`)
       : s.phase === 'break' ? `PAUSE ${formatClock(s.phaseRemaining)}` : '';
     const move = h.querySelector('.h-move');
     if (active && cd !== null) move.textContent = cd;
-    else if (active && s.cfg.moveLimit) move.textContent = `Coup : ${Math.floor(s.moveElapsed / 1000)} s`;
-    else if (s.phase === 'ready') move.textContent = 'Touche pour lancer';
+    else if (active && s.cfg.moveLimit) move.textContent = `${Math.floor(s.moveElapsed / 1000)} s`;
+    else if (s.phase === 'ready') move.textContent = '▶ Touche';
+    else if (flagScreen && r.loser === p) move.textContent = `⚑ ${methodShort(r.method)}`;
+    else if (flagScreen) move.textContent = r.winner === null ? '½' : 'VICTOIRE';
     else move.textContent = '';
     const icon = s.white === null ? '' : p === s.white ? '♔ ' : '♚ ';
     h.querySelector('.h-name').textContent = icon + nameOf(p);
@@ -277,12 +291,16 @@ function render() {
   $('bar-round').textContent = `Round ${shownRound}/${s.cfg.rounds}`;
   $('bar-phase').textContent = s.phase === 'ready' ? '1er = Noirs' : s.phase === 'break'
     ? `Pause → ${roundType(s.nextRound) === 'chess' ? 'échecs' : 'boxe'}`
-    : s.roundOver ? 'Temps du round !' : (s.paused ? 'En pause' : PHASE_LABEL[s.phase]);
-  $('bar-timer').textContent = s.phase === 'ready' ? '' : untimed ? '' : formatClock(s.phaseRemaining);
-  document.querySelector('.bar').classList.toggle('alert', s.roundOver && !s.paused);
-  $('bar-btn').hidden = s.phase === 'ready';
-  $('bar-btn').textContent = s.paused ? '▶ REPRENDRE'
+    : flagScreen ? methodShort(r.method)
+    : s.roundOver ? 'Temps !' : (s.paused ? 'Pause' : PHASE_LABEL[s.phase]);
+  $('bar-timer').textContent = s.phase === 'ready' || s.phase === 'over' || untimed ? '' : formatClock(s.phaseRemaining);
+  document.querySelector('.bar').classList.toggle('alert', s.roundOver && !s.paused && s.phase !== 'over');
+  // On the flag screen the bar button carries the one useful action.
+  const overAction = flagScreen ? (r.method === 'réflexion' ? 'Continuer' : r.method.includes('comptes') ? 'Annuler' : null) : null;
+  $('bar-btn').hidden = s.phase === 'ready' || (s.phase === 'over' && !overAction);
+  $('bar-btn').textContent = overAction ? overAction : s.paused ? '▶ GO'
     : untimed && s.phase === 'boxing' ? `▶ ROUND ${s.round + 1}` : 'PAUSE';
+  $('bar-btn').classList.toggle('long', $('bar-btn').textContent.length > 6);
   $('bar-btn').classList.toggle('go', untimed && s.phase === 'boxing' && !s.paused);
 
   $('pause-menu').hidden = !(s.paused && s.phase !== 'over') || !$('end-menu').hidden;
@@ -293,10 +311,9 @@ function render() {
 function renderPauseMenu() {
   const next = s.phase === 'break' ? s.nextRound : s.round + 1;
   const skip = $('pm-skip');
-  if (s.phase === 'break') skip.textContent = `Lancer le round ${next} (${roundType(next) === 'chess' ? 'échecs' : 'boxe'})`;
-  else if (s.round >= s.cfg.rounds) skip.textContent = 'Fin du dernier round';
-  else if (s.phase === 'boxing' && !s.cfg.boxTimer) skip.textContent = `Lancer le round ${s.round + 1} (échecs)`;
-  else skip.textContent = `Terminer le round ${s.round} → ${s.cfg.boxTimer ? 'pause' : 'boxe'}`;
+  if (s.phase === 'break' || (s.phase === 'boxing' && !s.cfg.boxTimer)) skip.textContent = `Round ${next} ▶`;
+  else if (s.round >= s.cfg.rounds) skip.textContent = 'Fin';
+  else skip.textContent = `Fin round ${s.round}`;
   $('pm-undo').hidden = !s.counts.length;
   $('pm-adjust').innerHTML = [0, 1].map(p => `
     <span>${escapeHtml(nameOf(p))} <b>${formatClock(s.remaining[p])}</b></span>
@@ -316,11 +333,11 @@ $('pm-adjust').addEventListener('click', e => {
   if (b) act(adjustTime(s, +b.dataset.adj, +b.dataset.d, performance.now()));
 });
 $('pm-new').addEventListener('click', () => {
-  if (confirm('Abandonner ce combat et revenir aux réglages ?')) closeFight();
+  $('bar-home').click();
 });
 
 // ── MANUAL END ──
-const METHODS = ['Échec et mat', 'Abandon', 'KO', "Arrêt de l'arbitre", 'Décision des juges', 'Disqualification', 'Nulle'];
+const METHODS = ['Mat', 'Abandon', 'KO', 'Arbitre', 'Juges', 'Disqualif.', 'Nulle'];
 let endChoice = { winner: undefined, method: null };
 
 function openEndMenu() {
@@ -330,7 +347,7 @@ function openEndMenu() {
   renderEndMenu();
 }
 function renderEndMenu() {
-  const opts = [[0, nameOf(0)], [1, nameOf(1)], [null, 'Match nul']];
+  const opts = [[0, nameOf(0)], [1, nameOf(1)], [null, 'Nul']];
   $('end-winner').innerHTML = opts.map(([w, label]) =>
     `<button type="button" class="btn${endChoice.winner === w ? ' sel' : ''}" data-w="${w}">${escapeHtml(label)}</button>`).join('');
   $('end-method').innerHTML = METHODS.map(m =>
@@ -338,7 +355,6 @@ function renderEndMenu() {
   $('end-ok').disabled = endChoice.winner === undefined || !endChoice.method;
 }
 $('pm-end').addEventListener('click', openEndMenu);
-$('res-decide').addEventListener('click', () => { $('result').hidden = true; openEndMenu(); });
 $('end-winner').addEventListener('click', e => {
   const b = e.target.closest('[data-w]');
   if (!b) return;
@@ -359,28 +375,18 @@ $('end-ok').addEventListener('click', () => {
 $('end-cancel').addEventListener('click', () => { $('end-menu').hidden = true; render(); });
 
 // ── RESULT ──
-const METHOD_TEXT = {
-  temps: 'Drapeau tombé (temps écoulé)',
-  'réflexion': 'Temps de réflexion dépassé',
-  decision: 'Fin du dernier round',
-};
+// Wins and draws show on the halves themselves (dark screen, winner in
+// gold); only the end of the last round asks for the winner here.
 function renderResult() {
   const r = s.result;
-  $('result').hidden = !r || !$('end-menu').hidden;
-  if (!r) { $('result').classList.remove('loss-flash'); return; }
-  const undecided = r.method === 'decision';
-  $('res-kicker').textContent = undecided ? 'FIN DU COMBAT' : r.winner === null ? 'MATCH NUL' : 'VICTOIRE';
-  $('res-name').textContent = undecided ? 'Décision' : r.winner === null ? '' : nameOf(r.winner);
-  $('res-method').textContent = METHOD_TEXT[r.method] || r.method;
-  $('res-detail').textContent = undecided ? 'Personne ne gagne par mat, KO ou temps : désigne le vainqueur.'
-    : r.loser === null ? '' : `${nameOf(r.loser)} perd · round ${s.round}/${s.cfg.rounds}`
-      + ` · comptes ${countsOf(s, 0)} - ${countsOf(s, 1)}`;
-  $('res-continue').hidden = r.method !== 'réflexion';
-  $('res-undo').hidden = !r.method.includes('comptes');
-  $('res-decide').hidden = !undecided;
+  const undecided = r && r.method === 'decision';
+  $('result').hidden = !undecided || !$('end-menu').hidden;
+  if (!undecided) return;
+  $('res-kicker').textContent = 'FIN';
+  $('res-name').textContent = '';
+  $('res-method').textContent = '';
 }
-$('res-continue').addEventListener('click', () => act(reopen(s, performance.now())));
-$('res-undo').addEventListener('click', () => act(undoCount(s, performance.now())));
+$('res-decide').addEventListener('click', () => { $('result').hidden = true; openEndMenu(); });
 $('res-new').addEventListener('click', closeFight);
 
 // ── LOOP ──
@@ -392,13 +398,16 @@ function persist(force = true) {
   lastSave = now;
   save(FIGHT_KEY, s);
 }
-setInterval(() => {
-  if (!s || $('fight').hidden) return;
-  const ev = tick(s, performance.now());
-  if (ev.length) act(ev);
-  else render();
-  persist(false);
-}, 100);
+// Eco mode refreshes less often.
+(function loop() {
+  if (s && !$('fight').hidden) {
+    const ev = tick(s, performance.now());
+    if (ev.length) act(ev);
+    else render();
+    persist(false);
+  }
+  setTimeout(loop, cfg.eco ? 250 : 100);
+})();
 
 // ── SCREEN ON + INSTALL ──
 let wakeLock = null;

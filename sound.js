@@ -2,6 +2,8 @@
 // created on the first tap, as browsers require a user gesture.
 
 let ctx = null;
+let muted = false;
+export function setMuted(m) { muted = m; }
 
 export function unlockAudio() {
   if (!ctx) {
@@ -31,6 +33,36 @@ function tone(freq, start, dur, { type = 'sine', vol = 0.3, decay = true } = {})
   osc.stop(t + dur + 0.05);
 }
 
+// Mechanical clock lever: a sharp filtered noise snap, a wooden thunk, and
+// the latch falling a few ms later, like an old analogue chess clock.
+let noise = null;
+function noiseBuffer() {
+  if (!noise) {
+    noise = ctx.createBuffer(1, ctx.sampleRate * 0.1, ctx.sampleRate);
+    const d = noise.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 4);
+  }
+  return noise;
+}
+function snap(start, freq, q, vol, dur) {
+  const t = ctx.currentTime + start;
+  const src = ctx.createBufferSource();
+  src.buffer = noiseBuffer();
+  const bp = ctx.createBiquadFilter();
+  bp.type = 'bandpass'; bp.frequency.value = freq; bp.Q.value = q;
+  const g = ctx.createGain();
+  g.gain.setValueAtTime(vol, t);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  src.connect(bp).connect(g).connect(ctx.destination);
+  src.start(t); src.stop(t + dur + 0.02);
+}
+function clack() {
+  if (!ctx) return;
+  snap(0, 3200, 1.2, 1.4, 0.035);       // lever snap
+  tone(180, 0, 0.07, { type: 'triangle', vol: 0.45 }); // body thunk
+  snap(0.028, 1800, 3, 0.6, 0.03);      // latch
+}
+
 // Boxing bell: a few inharmonic partials with a long decay, struck `hits` times.
 function bell(hits = 1) {
   for (let h = 0; h < hits; h++) {
@@ -41,7 +73,7 @@ function bell(hits = 1) {
 }
 
 const SOUNDS = {
-  press: () => tone(1400, 0, 0.04, { type: 'square', vol: 0.05 }),
+  press: clack,
   moveWarn: () => { tone(880, 0, 0.15, { vol: 0.35 }); tone(880, 0.2, 0.15, { vol: 0.35 }); },
   moveCountdown: () => tone(1200, 0, 0.3, { type: 'square', vol: 0.25 }),
   moveTick: () => tone(1200, 0, 0.1, { type: 'square', vol: 0.2 }),
@@ -74,6 +106,6 @@ const VIBRATE = {
 };
 
 export function play(event) {
-  SOUNDS[event]?.();
+  if (!muted) SOUNDS[event]?.();
   if (VIBRATE[event] && navigator.vibrate) navigator.vibrate(VIBRATE[event]);
 }
