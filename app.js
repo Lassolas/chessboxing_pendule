@@ -73,12 +73,12 @@ const redFlag = `<svg viewBox="0 0 32 32" class="ico"><path d="M7 3 V30" stroke=
 const TILE_HAND = { ...REFEREE, fill: 'url(#skin-tile)', defs: REFEREE.defs.replace('id="skin"', 'id="skin-tile"') };
 // key: value in cfg, on/tap: state, icon, label, strip step/min/max, kind
 const TILES = [
-  { key: 'chessRoundMs', row: 1, icon: () => '♟', label: 'Échecs', step: 30000, min: 30000, max: 600000,
+  { key: 'chessRoundMs', row: 1, icon: () => '♟', label: 'Échecs', step: 10000, min: 30000, max: 600000,
     on: () => cfg.intervals, tap: () => { cfg.intervals = !cfg.intervals; } },
-  { key: 'breakMs', row: 1, icon: () => '⏸', label: 'Pause', step: 15000, min: 0, max: 300000,
+  { key: 'breakMs', row: 1, icon: () => '⏸', label: 'Pause', step: 10000, min: 0, max: 300000,
     on: () => cfg.intervals && cfg.breakOn,
     tap: () => { cfg.breakOn = !(cfg.intervals && cfg.breakOn); if (cfg.breakOn) cfg.intervals = true; } },
-  { key: 'boxRoundMs', row: 1, icon: () => '🥊', label: 'Boxe', step: 30000, min: 30000, max: 300000,
+  { key: 'boxRoundMs', row: 1, icon: () => '🥊', label: 'Boxe', step: 10000, min: 30000, max: 300000,
     on: () => cfg.intervals && cfg.boxTimer,
     tap: () => { cfg.boxTimer = !(cfg.intervals && cfg.boxTimer); if (cfg.boxTimer) cfg.intervals = true; } },
   { key: 'moveCountdownMs', flag: 'countdownOn', row: 2, icon: () => countHands(8, TILE_HAND), label: 'Compte', step: 5000, min: 10000, max: 180000 },
@@ -161,7 +161,7 @@ $('durations').addEventListener('click', onTiles);
 $('chess-set').addEventListener('click', onTiles);
 
 // Slide on a strip: one step every STEP_PX, up = more.
-const STEP_PX = 16;
+const STEP_PX = 24;
 let drag = null;
 function onStripDown(e) {
   const strip = e.target.closest('[data-strip]');
