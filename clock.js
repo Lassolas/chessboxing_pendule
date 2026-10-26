@@ -1,7 +1,8 @@
 // Chessboxing clock: pure state machine, no DOM. Every function takes the
 // current time `now` (ms) so the logic can be tested without real timers.
 // Rounds alternate chess / boxing, starting and ending with chess, with a
-// break between rounds. Player 0 has White, player 1 has Black.
+// break between rounds. Players are the two halves of the screen (0 = bottom,
+// 1 = top); the first one to press takes Black, which starts White's clock.
 
 export const PRESETS = {
   5: 4.5 * 60000,
@@ -13,7 +14,7 @@ export const PRESETS = {
 export function defaultConfig() {
   return {
     rounds: 7,
-    names: ['Blancs', 'Noirs'],
+    names: ['', ''],       // optional, by half of the screen
     chessRoundMs: 3 * 60000,
     boxRoundMs: 3 * 60000,
     breakMs: 60000,
@@ -40,7 +41,8 @@ export function newFight(cfg) {
     round: 1,
     nextRound: 1,          // round that follows the current break
     paused: false,
-    turn: 0,
+    white: null,           // player with White, set by the first press
+    turn: null,
     remaining: [PRESETS[cfg.rounds], PRESETS[cfg.rounds]],
     moveElapsed: 0,
     phaseRemaining: cfg.chessRoundMs,
@@ -179,9 +181,12 @@ export function tick(s, now) {
   return events;
 }
 
-export function start(s, now) {
+// `black` pressed first: they take Black and White's clock starts.
+export function start(s, now, black) {
   const events = [];
   if (s.phase !== 'ready') return events;
+  s.white = 1 - black;
+  s.turn = s.white;
   s.lastTick = now;
   startPhase(s, 1, events);
   return events;
@@ -189,6 +194,7 @@ export function start(s, now) {
 
 // The player whose clock runs taps their side to end their move.
 export function press(s, player, now) {
+  if (s.phase === 'ready') return start(s, now, player);
   tick(s, now);
   if (s.phase !== 'chess' || s.paused || player !== s.turn) return [];
   s.turn = 1 - player;

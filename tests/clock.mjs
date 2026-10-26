@@ -11,7 +11,7 @@ const check = (cond, msg) => { if (!cond) errors.push(msg); };
 
 function fight(over = {}) {
   const s = newFight({ ...defaultConfig(), ...over });
-  start(s, 0);
+  start(s, 0, 1);
   return s;
 }
 // Advance in 100 ms steps like the app, collecting events.
@@ -160,6 +160,15 @@ for (const [r, min] of [[5, 4.5], [7, 6], [9, 7.5], [11, 9]]) {
   skipPhase(s, 200000);
   run(s, 200000, 200000 + 60000 + 180000 + 60000);
   check(s.phase === 'chess' && s.round === 3, 'timer only: break, boxing, break, then chess round 3');
+}
+
+// The first press picks the colours
+{
+  const s = newFight(defaultConfig());
+  press(s, 0, 0);
+  check(s.phase === 'chess' && s.white === 1 && s.turn === 1, 'first to press is Black, White to move');
+  run(s, 0, 2000);
+  check(s.remaining[1] === 6 * 60000 - 2000 && s.remaining[0] === 6 * 60000, "White's clock runs");
 }
 
 if (errors.length) {

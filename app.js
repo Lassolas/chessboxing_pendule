@@ -17,6 +17,7 @@ function save(key, value) {
 }
 
 let cfg = { ...defaultConfig(), ...(load(CFG_KEY) || {}) };
+cfg.names = cfg.names.map(n => (n === 'Blancs' || n === 'Noirs' ? '' : n));
 if ('autoPause' in cfg) {  // older versions had one option for both
   cfg.autoStop = cfg.boxTimer = cfg.autoPause;
   delete cfg.autoPause;
@@ -55,15 +56,15 @@ function renderSetup() {
   const help = OPTIONS.find(o => o[0] === helpShown);
   $('opt-help').hidden = !help;
   if (help) $('opt-help').textContent = help[2]();
-  $('name-0').value = cfg.names[0] === 'Blancs' ? '' : cfg.names[0];
-  $('name-1').value = cfg.names[1] === 'Noirs' ? '' : cfg.names[1];
+  $('name-0').value = cfg.names[0];
+  $('name-1').value = cfg.names[1];
   for (const [id, [key, unit]] of Object.entries(NUM_FIELDS)) $('cfg-' + id).value = cfg[key] / unit;
   const saved = load(FIGHT_KEY);
   $('btn-resume-saved').hidden = !(saved && saved.phase !== 'ready' && saved.phase !== 'over');
 }
 
 function readSetup() {
-  cfg.names = [$('name-0').value.trim() || 'Blancs', $('name-1').value.trim() || 'Noirs'];
+  cfg.names = [$('name-0').value.trim(), $('name-1').value.trim()];
   for (const [id, [key, unit]] of Object.entries(NUM_FIELDS)) {
     const v = parseFloat($('cfg-' + id).value);
     if (v > 0) cfg[key] = Math.round(v * unit);
@@ -112,13 +113,21 @@ $('btn-test-sound').addEventListener('click', () => {
 });
 
 // ── FIGHT SCREEN ──
+// Colours are known once the first player has pressed.
+function colourOf(p) {
+  return s.white === null ? '' : p === s.white ? 'Blancs' : 'Noirs';
+}
+function nameOf(p) {
+  return s.cfg.names[p] || colourOf(p) || `Joueur ${p + 1}`;
+}
+
 const halves = [...document.querySelectorAll('.half')].sort((a, b) => a.dataset.p - b.dataset.p);
 
 function buildHalves() {
   halves.forEach(h => {
     const p = +h.dataset.p;
     h.innerHTML = `
-      <div class="h-name">${p === 0 ? '♔' : '♚'} ${escapeHtml(s.cfg.names[p])}</div>
+      <div class="h-name"></div>
       <div class="h-phase"></div>
       <div class="h-clock"></div>
       <div class="h-move"></div>
@@ -130,7 +139,7 @@ function buildHalves() {
     h.querySelector('.yellow-card').addEventListener('pointerdown', e => {
       e.stopPropagation();
       act(illegalMove(s, 1 - p, performance.now()));
-      showToast(`Coup illégal de ${s.cfg.names[1 - p]} : 1 compte`);
+      showToast(`Coup illégal de ${nameOf(1 - p)} : 1 compte`);
     });
   });
 }
@@ -142,8 +151,8 @@ halves.forEach(h => h.addEventListener('pointerdown', e => {
 
 $('bar-btn').addEventListener('click', () => {
   unlockAudio();
-  if (s.phase === 'ready') act(start(s, performance.now()));
-  else if (s.phase === 'boxing' && s.phaseRemaining === null) act(skipPhase(s, performance.now()));
+  if (s.phase === 'ready') return;
+  if (s.phase === 'boxing' && s.phaseRemaining === null) act(skipPhase(s, performance.now()));
   else act(togglePause(s, performance.now()));
 });
 
@@ -154,6 +163,19 @@ document.addEventListener('keydown', e => {
     e.preventDefault();
     act(press(s, s.turn, performance.now()));
   }
+});
+
+// Back to the home screen: a fight in progress is paused and kept, so
+// "Reprendre le combat" brings it back.
+$('bar-home').addEventListener('click', () => {
+  if (s.phase === 'ready' || s.phase === 'over') { closeFight(); return; }
+  if (!s.paused) togglePause(s, performance.now());
+  persist();
+  s = null;
+  ['fight', 'pause-menu', 'end-menu', 'result'].forEach(id => { $(id).hidden = true; });
+  $('setup').hidden = false;
+  if (document.fullscreenElement) document.exitFullscreen?.().catch(() => {});
+  renderSetup();
 });
 
 function openFight() {
@@ -243,19 +265,23 @@ function render() {
     const move = h.querySelector('.h-move');
     if (active && cd !== null) move.textContent = cd;
     else if (active && s.cfg.moveLimit) move.textContent = `Coup : ${Math.floor(s.moveElapsed / 1000)} s`;
+    else if (s.phase === 'ready') move.textContent = 'Touche pour lancer';
     else move.textContent = '';
+    const icon = s.white === null ? '' : p === s.white ? '♔ ' : '♚ ';
+    h.querySelector('.h-name').textContent = icon + nameOf(p);
     h.querySelector('[data-k=round]').innerHTML = dots(countsOf(s, p, roundForCounts), s.cfg.countsPerRound);
     h.querySelector('[data-k=total]').innerHTML = dots(countsOf(s, p), s.cfg.countsTotal);
     h.querySelector('.yellow-card').hidden = !s.cfg.illegalMoves || s.phase !== 'chess' || s.paused;
   });
 
   $('bar-round').textContent = `Round ${shownRound}/${s.cfg.rounds}`;
-  $('bar-phase').textContent = s.phase === 'break'
+  $('bar-phase').textContent = s.phase === 'ready' ? '1er = Noirs' : s.phase === 'break'
     ? `Pause → ${roundType(s.nextRound) === 'chess' ? 'échecs' : 'boxe'}`
     : s.roundOver ? 'Temps du round !' : (s.paused ? 'En pause' : PHASE_LABEL[s.phase]);
-  $('bar-timer').textContent = s.phase === 'ready' ? formatClock(s.cfg.chessRoundMs) : untimed ? '' : formatClock(s.phaseRemaining);
+  $('bar-timer').textContent = s.phase === 'ready' ? '' : untimed ? '' : formatClock(s.phaseRemaining);
   document.querySelector('.bar').classList.toggle('alert', s.roundOver && !s.paused);
-  $('bar-btn').textContent = s.phase === 'ready' ? '▶ GO' : s.paused ? '▶ REPRENDRE'
+  $('bar-btn').hidden = s.phase === 'ready';
+  $('bar-btn').textContent = s.paused ? '▶ REPRENDRE'
     : untimed && s.phase === 'boxing' ? `▶ ROUND ${s.round + 1}` : 'PAUSE';
   $('bar-btn').classList.toggle('go', untimed && s.phase === 'boxing' && !s.paused);
 
@@ -273,7 +299,7 @@ function renderPauseMenu() {
   else skip.textContent = `Terminer le round ${s.round} → ${s.cfg.boxTimer ? 'pause' : 'boxe'}`;
   $('pm-undo').hidden = !s.counts.length;
   $('pm-adjust').innerHTML = [0, 1].map(p => `
-    <span>${escapeHtml(s.cfg.names[p])} <b>${formatClock(s.remaining[p])}</b></span>
+    <span>${escapeHtml(nameOf(p))} <b>${formatClock(s.remaining[p])}</b></span>
     <button type="button" class="btn" data-adj="${p}" data-d="-10000">−10 s</button>
     <button type="button" class="btn" data-adj="${p}" data-d="10000">+10 s</button>`).join('');
 }
@@ -304,7 +330,7 @@ function openEndMenu() {
   renderEndMenu();
 }
 function renderEndMenu() {
-  const opts = [[0, s.cfg.names[0]], [1, s.cfg.names[1]], [null, 'Match nul']];
+  const opts = [[0, nameOf(0)], [1, nameOf(1)], [null, 'Match nul']];
   $('end-winner').innerHTML = opts.map(([w, label]) =>
     `<button type="button" class="btn${endChoice.winner === w ? ' sel' : ''}" data-w="${w}">${escapeHtml(label)}</button>`).join('');
   $('end-method').innerHTML = METHODS.map(m =>
@@ -344,10 +370,10 @@ function renderResult() {
   if (!r) { $('result').classList.remove('loss-flash'); return; }
   const undecided = r.method === 'decision';
   $('res-kicker').textContent = undecided ? 'FIN DU COMBAT' : r.winner === null ? 'MATCH NUL' : 'VICTOIRE';
-  $('res-name').textContent = undecided ? 'Décision' : r.winner === null ? '' : s.cfg.names[r.winner];
+  $('res-name').textContent = undecided ? 'Décision' : r.winner === null ? '' : nameOf(r.winner);
   $('res-method').textContent = METHOD_TEXT[r.method] || r.method;
   $('res-detail').textContent = undecided ? 'Personne ne gagne par mat, KO ou temps : désigne le vainqueur.'
-    : r.loser === null ? '' : `${s.cfg.names[r.loser]} perd · round ${s.round}/${s.cfg.rounds}`
+    : r.loser === null ? '' : `${nameOf(r.loser)} perd · round ${s.round}/${s.cfg.rounds}`
       + ` · comptes ${countsOf(s, 0)} - ${countsOf(s, 1)}`;
   $('res-continue').hidden = r.method !== 'réflexion';
   $('res-undo').hidden = !r.method.includes('comptes');
