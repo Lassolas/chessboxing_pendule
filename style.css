@@ -666,3 +666,4 @@ body::after { content: ''; position: fixed; inset: 0; z-index: 40; pointer-event
 /* The hourglass lies on its side: wider than tall */
 .ic.ic-hourglass { width: auto !important; aspect-ratio: 1.7; }
 @media (max-width: 380px) { .fight-sum { gap: 8px; font-size: 17px; } .si-n small { margin-left: 3px; } }
+.dur i .ic.ic-hourglass { height: 20px; margin: 5px 0; }
