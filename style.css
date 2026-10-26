@@ -667,3 +667,10 @@ body::after { content: ''; position: fixed; inset: 0; z-index: 40; pointer-event
 .ic.ic-hourglass { width: auto !important; aspect-ratio: 1.7; }
 @media (max-width: 380px) { .fight-sum { gap: 8px; font-size: 17px; } .si-n small { margin-left: 3px; } }
 .dur i .ic.ic-hourglass { height: 20px; margin: 5px 0; }
+
+/* Numbers: counts (rounds, limits, round numerals) always in the serif
+   italic; durations (3′, 1′30, 4′30…) always in the clock's own font. */
+.si-n, .preset b, .lim b, .h-phase small em, .hc-num { font-family: var(--font-serif) !important; font-style: italic !important; font-weight: 500 !important; }
+.preset b { font-size: 36px; }
+.lim b { font-size: 24px; }
+.si:not(.si-n), .preset small, .sv, .sv.cur, .resume-live span, .h-avg, .dur b { font-family: var(--font-clock) !important; font-weight: var(--clock-weight) !important; font-variant-numeric: tabular-nums; }
