@@ -100,8 +100,8 @@ function renderSetup() {
   // The fight in progress at a glance: White's time, Continue, Black's time.
   if (live) {
     const w = saved.white ?? 0;
-    $('btn-resume-saved').innerHTML = `<span><small>BLANCS</small>${formatClock(saved.remaining[w])}</span>
-      <b>▶ CONTINUER</b><span><small>NOIRS</small>${formatClock(saved.remaining[1 - w])}</span>`;
+    $('btn-resume-saved').innerHTML = `<span class="tw">${formatClock(saved.remaining[w])}</span>
+      <b>▶ CONTINUER</b><span class="tb">${formatClock(saved.remaining[1 - w])}</span>`;
   }
 }
 
