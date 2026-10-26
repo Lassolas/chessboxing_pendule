@@ -3,9 +3,13 @@
 const svg = (body, extra = '') =>
   `<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"${extra}>${body}</svg>`;
 
+// Val's own one-line drawings (knight, glove), shown through a mask so they
+// take the text colour like the line icons.
+const drawing = name => `<i class="ic ic-mask ic-${name}" aria-hidden="true"></i>`;
+
 export const ICONS = {
-  pawn: svg('<circle cx="12" cy="6" r="2.6"/><path d="M9.3 10.4h5.4"/><path d="M10.3 10.4c0 3.2-1.3 5.6-3.3 7.6h10c-2-2-3.3-4.4-3.3-7.6"/><path d="M5.5 20.5h13"/>'),
-  glove: svg('<path d="M6.4 16.6C4.6 14.4 4.4 10.6 6.2 7.8 8 5 11.6 3.4 15.2 4.1c3.5.7 5.4 3.7 4.9 7-.4 2.5-2.3 3.9-4.6 3.9h-2.3"/><path d="M13.2 15c-1.9 0-3-1.6-2.3-3.2.6-1.3 2.2-1.7 3.4-.9"/><path d="M15.5 15l-1.3 1.6"/><path d="M6.4 16.6h7.8v4H6.4z"/>'),
+  pawn: drawing('knight'),
+  glove: drawing('glove'),
   hourglass: svg('<path d="M6.5 3.5h11M6.5 20.5h11"/><path d="M8 3.5c0 4.2 4 5.3 4 8.5s-4 4.3-4 8.5M16 3.5c0 4.2-4 5.3-4 8.5s4 4.3 4 8.5"/><path d="M10 18.6h4"/>'),
   pause: svg('<path d="M9 6v12M15 6v12"/>', ' stroke-width="2"'),
   play: svg('<path d="M8.5 5.8v12.4L18 12z"/>'),
