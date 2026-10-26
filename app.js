@@ -25,11 +25,11 @@ const homeDefaults = () => ({
   breakMs: 60000, breakOn: false,   // pause off = open pause (∞)
   warnOn: false, countdownOn: false,   // counts off by default
   digits: 'oxanium',                  // clock digits: oxanium | dgt | teko
-  v: 6,
+  sound: true,
+  v: 7,
 });
 let cfg = { ...homeDefaults(), ...(load(CFG_KEY) || {}) };
 cfg.names = ['', ''];  // no player names: BLANCS / NOIRS only
-cfg.sound ??= true;
 cfg.moveGraceMs = 10000;  // the count always lasts 10 s
 if (!cfg.v || cfg.v < 2) {  // v2: illegal moves off by default
   cfg.illegalMoves = false;
@@ -54,6 +54,10 @@ if (cfg.v < 5) {  // v5: count limits always on (− / + lines)
 if (cfg.v < 6) {  // v6: counts off by default
   cfg.warnOn = cfg.countdownOn = false;
   cfg.v = 6;
+}
+if (cfg.v < 7) {  // v7: sound back on for everyone, on by default
+  cfg.sound = true;
+  cfg.v = 7;
 }
 cfg.moveCountdownMs = Math.max(10000, cfg.moveCountdownMs);
 let s = null;
@@ -210,7 +214,7 @@ function onStripUp() {
 // Icon toggles: sound (🔊 / 🔇) and Éco (battery: no sound, darker, no animations).
 const OPTIONS = [
   ['sound', on => (on ? '🔊' : '🔇'), 'Son'],
-  ['eco', () => '🔋', 'Éco'],
+  ['eco', () => '🔋<small>Éco</small>', 'Éco'],
 ];
 
 function renderPresets() {
@@ -281,7 +285,7 @@ $('options').addEventListener('click', e => {
 });
 $('btn-reset').addEventListener('click', () => $('btn-defaults').click());
 $('btn-defaults').addEventListener('click', () => {
-  cfg = { ...homeDefaults(), rounds: cfg.rounds, names: cfg.names, eco: cfg.eco, sound: cfg.sound, digits: cfg.digits };
+  cfg = { ...homeDefaults(), rounds: cfg.rounds, names: cfg.names, eco: cfg.eco, digits: cfg.digits };
   save(CFG_KEY, cfg);
   renderSetup();
 });
