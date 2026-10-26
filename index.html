@@ -15,7 +15,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Oxanium:wght@600&family=Teko:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Oxanium:wght@600&family=Teko:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -26,7 +26,7 @@
 
   <div class="resume-wrap" id="resume-wrap" hidden>
     <button type="button" id="btn-resume-saved" class="btn btn-gold wide resume-live"></button>
-    <button type="button" id="btn-drop-saved" class="resume-x" aria-label="Effacer la partie">✕</button>
+    <button type="button" id="btn-drop-saved" class="resume-x" aria-label="Effacer la partie" data-icon="close"></button>
   </div>
 
   <button type="button" id="btn-fight" class="fight-go">
@@ -48,8 +48,8 @@
     <p class="set-title">Chiffres</p>
     <div class="options" id="digit-pick"></div>
     <div class="set-actions">
-    <button type="button" id="btn-test-sound" class="btn btn-ghost wide">🔔 Test son</button>
-    <button type="button" id="btn-defaults" class="btn btn-ghost wide">↺ Standard</button>
+    <button type="button" id="btn-test-sound" class="btn btn-ghost wide" data-icon="bell">Test son</button>
+    <button type="button" id="btn-defaults" class="btn btn-ghost wide" data-icon="replay">Standard</button>
     </div>
   </details>
 
@@ -72,13 +72,13 @@
 <section id="fight" hidden>
   <div class="half top" data-p="1"></div>
   <div class="bar">
-    <button type="button" class="bar-home" id="bar-home" aria-label="Accueil">⌂</button>
+    <button type="button" class="bar-home" id="bar-home" aria-label="Accueil" data-icon="home"></button>
     <div class="bar-info">
       <div class="bar-round" id="bar-round">Round 1/7</div>
       <div class="bar-phase" id="bar-phase">Échecs</div>
     </div>
     <div class="bar-timer" id="bar-timer">3:00</div>
-    <button type="button" class="bar-replay" id="bar-replay" hidden>↺<span> Rejouer</span></button>
+    <button type="button" class="bar-replay" id="bar-replay" data-icon="replay" hidden><span>Rejouer</span></button>
     <button type="button" class="bar-btn" id="bar-btn">PAUSE</button>
   </div>
   <div class="half bottom" data-p="0"></div>
@@ -87,10 +87,10 @@
 <!-- ── MENU PAUSE ── -->
 <div id="pause-menu" class="overlay" hidden>
   <div class="panel pm-strip">
-    <button type="button" class="btn pm-ico" id="pm-home" aria-label="Accueil">⌂</button>
-    <button type="button" class="btn pm-ico" id="pm-restart" aria-label="Rejouer">↺</button>
-    <button type="button" class="btn pm-next" id="pm-next">♟ 3 ▶</button>
-    <button type="button" class="btn btn-gold pm-go" id="pm-resume">▶ GO</button>
+    <button type="button" class="btn pm-ico" id="pm-home" aria-label="Accueil" data-icon="home"></button>
+    <button type="button" class="btn pm-ico" id="pm-restart" aria-label="Rejouer" data-icon="replay"></button>
+    <button type="button" class="btn pm-next" id="pm-next" aria-label="Étape suivante"></button>
+    <button type="button" class="btn pm-go" id="pm-resume"></button>
   </div>
 </div>
 
@@ -112,7 +112,7 @@
     <h2 class="result-name" id="res-name"></h2>
     <p class="result-method" id="res-method"></p>
     <button type="button" class="btn btn-gold wide" id="res-decide">Vainqueur ?</button>
-    <button type="button" class="btn btn-ghost wide" id="res-new">⌂</button>
+    <button type="button" class="btn btn-ghost wide" id="res-new" aria-label="Accueil" data-icon="home"></button>
   </div>
 </div>
 

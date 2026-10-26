@@ -6,8 +6,11 @@ import {
 import { unlockAudio, play, setMuted } from './sound.js';
 import { countHands, REFEREE } from './hands.js';
 import { DIGIT_STYLES, setDigits } from './digits.js';
+import { ICONS, roman } from './icons.js';
 
 const $ = id => document.getElementById(id);
+// Static buttons name their icon; it is drawn in front of their text.
+document.querySelectorAll('[data-icon]').forEach(el => el.insertAdjacentHTML('afterbegin', ICONS[el.dataset.icon]));
 const CFG_KEY = 'pendule-cb-config';
 const FIGHT_KEY = 'pendule-cb-fight';
 
@@ -84,12 +87,12 @@ const redFlag = `<svg viewBox="0 0 32 32" class="ico"><path d="M7 3 V30" stroke=
 const TILE_HAND = { ...REFEREE, fill: 'url(#skin-tile)', defs: REFEREE.defs.replace('id="skin"', 'id="skin-tile"') };
 // key: value in cfg, on/tap: state, icon, label, strip step/min/max, kind
 const TILES = [
-  { key: 'chessRoundMs', row: 1, icon: () => '♟', label: 'Échecs', step: 10000, min: 30000, max: 600000,
+  { key: 'chessRoundMs', row: 1, icon: () => ICONS.pawn, label: 'Échecs', step: 10000, min: 30000, max: 600000,
     on: () => cfg.intervals, tap: () => { cfg.intervals = !cfg.intervals; } },
-  { key: 'breakMs', row: 1, icon: () => '⏸', label: 'Pause', step: 10000, min: 0, max: 300000,
+  { key: 'breakMs', row: 1, icon: () => ICONS.hourglass, label: 'Pause', step: 10000, min: 0, max: 300000,
     on: () => cfg.intervals && cfg.breakOn,
     tap: () => { cfg.breakOn = !(cfg.intervals && cfg.breakOn); if (cfg.breakOn) cfg.intervals = true; } },
-  { key: 'boxRoundMs', row: 1, icon: () => '🥊', label: 'Boxe', step: 10000, min: 30000, max: 300000,
+  { key: 'boxRoundMs', row: 1, icon: () => ICONS.glove, label: 'Boxe', step: 10000, min: 30000, max: 300000,
     on: () => cfg.intervals && cfg.boxTimer,
     tap: () => { cfg.boxTimer = !(cfg.intervals && cfg.boxTimer); if (cfg.boxTimer) cfg.intervals = true; } },
   { key: 'moveCountdownMs', flag: 'countdownOn', row: 2, icon: () => countHands(8, TILE_HAND), label: 'Compte', step: 5000, min: 10000, max: 180000 },
@@ -217,8 +220,8 @@ function onStripUp() {
 
 // Icon toggles: sound (🔊 / 🔇) and Éco (battery: no sound, darker, no animations).
 const OPTIONS = [
-  ['sound', on => (on ? '🔊' : '🔇'), 'Son'],
-  ['eco', () => '🔋<small>Éco</small>', 'Éco'],
+  ['sound', on => (on ? ICONS.sound : ICONS.mute), 'Son'],
+  ['eco', () => `${ICONS.eco}<small>Éco</small>`, 'Éco'],
   ['readyCheck', () => '<small>Prêt ?</small>', 'Prêt ? avant chaque round d\'échecs'],
 ];
 
@@ -232,13 +235,14 @@ function renderPresets() {
 const mins = ms => ms % 60000 ? `${Math.floor(ms / 60000)}′${String((ms % 60000) / 1000).padStart(2, '0')}` : `${ms / 60000}′`;
 function renderSummary() {
   const c = cfg, parts = [];
-  if (!c.intervals) parts.push(`Pendule ${formatClock(PRESETS[c.rounds]).replace(':', "'")}`);
+  const item = (icon, text) => `<span class="si">${icon}${text}</span>`;
+  if (!c.intervals) parts.push(item(ICONS.pawn, `Pendule ${formatClock(PRESETS[c.rounds]).replace(':', "'")}`));
   else {
-    parts.push(`${c.rounds} rounds`, `♟ ${mins(c.chessRoundMs)}`);
-    if (c.boxTimer) parts.push(`🥊 ${mins(c.boxRoundMs)}`);
-    parts.push(c.breakOn ? (c.breakMs ? `⏸ ${mins(c.breakMs)}` : 'sans pause') : '⏸ libre');
+    parts.push(`<span class="si si-n">${roman(c.rounds)}<small>rounds</small></span>`, item(ICONS.pawn, mins(c.chessRoundMs)));
+    if (c.boxTimer) parts.push(item(ICONS.glove, mins(c.boxRoundMs)));
+    parts.push(item(ICONS.hourglass, c.breakOn ? (c.breakMs ? mins(c.breakMs) : '0') : '∞'));
   }
-  $('fight-sum').textContent = parts.join(' · ');
+  $('fight-sum').innerHTML = parts.join('');
 }
 
 function renderSetup() {
@@ -263,7 +267,7 @@ function renderSetup() {
   if (live) {
     const w = saved.white ?? 0;
     $('btn-resume-saved').innerHTML = `<span class="tw">${formatClock(saved.remaining[w])}</span>
-      <b>▶ CONTINUER</b><span class="tb">${formatClock(saved.remaining[1 - w])}</span>`;
+      <b>${ICONS.play}CONTINUER</b><span class="tb">${formatClock(saved.remaining[1 - w])}</span>`;
   }
 }
 
@@ -376,6 +380,7 @@ function buildHalves() {
       <div class="h-counts"></div>
       <div class="h-avg"></div>
       <div class="h-notice" hidden></div>
+      <div class="h-card"><em class="hc-num"></em><span class="hc-rule"></span><b class="hc-label"></b><i class="hc-ready">Prêt ?</i></div>
       <button type="button" class="notice-undo over-undo" hidden>Annuler</button>
       <div class="illegal-wrap"><button type="button" class="illegal-btn" aria-label="Coup illégal adverse">${redFlag}<span>Coup illégal</span></button><button type="button" class="illegal-minus" aria-label="Retirer le coup illégal">−</button></div></div>`;
     h.querySelector('.illegal-btn').addEventListener('pointerdown', e => {
@@ -497,9 +502,9 @@ function closeFight() {
 
 // Play the sounds and colour flashes of a list of events, then redraw.
 const FLASH = {
-  ready: '#f5c842', roundStart: '#f5c842', roundEnd: '#f5c842', roundTimeUp: '#ff3b3b',
+  roundEnd: '#e4be5f', roundTimeUp: '#ff3b3b',
   moveWarn: '#ff9a1f', moveCountdown: '#ff3b3b', count: '#ff3b3b', over: '#ffffff',
-  phaseTen: '#4a9eff', breakTen: '#4a9eff', pause: '#2fbf71', resume: '#2fbf71', undo: '#a3a3b8',
+  phaseTen: '#4a9eff', breakTen: '#4a9eff', undo: '#a3a3b8',
 };
 function act(events) {
   if (!events) return;
@@ -507,6 +512,8 @@ function act(events) {
     play(ev);
     if (FLASH[ev] && !cfg.eco) flash(FLASH[ev]);
   }
+  // A new step is announced like a title card: numeral, rule, name.
+  if (s && (events.includes('roundStart') || (events.includes('roundEnd') && s.phase === 'break'))) showCard();
   render();
   persist();
 }
@@ -535,6 +542,39 @@ function showNotice(p) {
   n.hidden = false;
   clearTimeout(noticeTimer);
   noticeTimer = setTimeout(() => { n.hidden = true; }, 3000);
+}
+
+// innerHTML only when it changes (the loop redraws ten times a second).
+function setHTML(el, html) {
+  if (el.dataset.html === html) return;
+  el.dataset.html = html;
+  el.innerHTML = html;
+}
+// The step on the title card: round numeral and name, or the pause.
+function stepCard() {
+  if (s.phase === 'break') return { num: ICONS.hourglass, label: 'Pause' };
+  return { num: roman(roundNo(s.cfg, s.round)), label: s.phase === 'boxing' ? 'Boxe' : 'Échecs' };
+}
+let cardTimer = null;
+function showCard() {
+  const f = $('fight');
+  f.classList.remove('carding');
+  void f.offsetWidth;
+  f.classList.add('carding');
+  clearTimeout(cardTimer);
+  cardTimer = setTimeout(() => f.classList.remove('carding'), 1800);
+}
+function trackHTML() {
+  const c = s.cfg, rounds = [];
+  for (let n = 1; n <= c.rounds; n++) if (c.boxTimer || roundType(n) === 'chess') rounds.push(n);
+  const cur = s.phase === 'break' ? null : s.phase === 'ready' ? 1 : s.round;
+  const nextR = s.phase === 'break' ? s.nextRound : null;
+  return rounds.map((n, i) => {
+    const kind = roundType(n) === 'chess' ? 'sq' : 'ci';
+    const state = n === cur ? ' now' : (n < (cur ?? nextR) || s.phase === 'over') ? ' done' : '';
+    const dash = i === 0 ? '' : `<i class="tk-dash${n === nextR ? ' now' : n < (cur ?? nextR) ? ' done' : ''}"></i>`;
+    return `${dash}<i class="tk ${kind}${state}"></i>`;
+  }).join('');
 }
 
 const METHOD_SHORT = { temps: 'Temps écoulé !', 'réflexion': 'Anti-jeu', decision: 'Fin' };
@@ -566,12 +606,15 @@ function render() {
     setDigits(h.querySelector('.h-clock'), cfg.eco ? roundClock(s.remaining[p]) : formatClock(s.remaining[p]), cfg.digits);  // Éco: no tenths
     const phaseEl = h.querySelector('.h-phase');
     // Boxing / pause: small label, the round timer in big digits.
-    phaseEl.firstChild.textContent = s.phase === 'boxing' ? 'BOXE' : s.phase === 'break' ? 'PAUSE' : s.awaitReady ? `♟ ROUND ${roundNo(s.cfg, s.round)}` : '';
+    setHTML(phaseEl.firstChild, s.phase === 'boxing' ? `<em>${roman(roundNo(s.cfg, s.round))}</em>Boxe` : s.phase === 'break' ? `${ICONS.hourglass}Pause` : '');
+    const card = stepCard();
+    setHTML(h.querySelector('.hc-num'), card.num);
+    h.querySelector('.hc-label').textContent = card.label;
     setDigits(phaseEl.lastChild, (s.phase === 'boxing' || s.phase === 'break') && !untimed ? roundClock(s.phaseRemaining) : (s.phase === 'break' ? '∞' : ''), cfg.digits);
     const move = h.querySelector('.h-move');
     if (active && cd !== null) move.innerHTML = countHands(cd);
     else if (active && stage === 'warn') move.textContent = `${Math.floor(s.moveElapsed / 1000)} s`;
-    else if (s.phase === 'ready') move.textContent = '▶ Touche';
+    else if (s.phase === 'ready') setHTML(move, `${ICONS.play}Touche`);
     else if (flagScreen && r.loser === p) move.textContent = `⚑ ${methodShort(r.method)}`;
     else if (flagScreen) move.textContent = r.winner === null ? '½' : 'VICTOIRE';
     else move.textContent = '';
@@ -591,12 +634,11 @@ function render() {
     h.querySelector('.illegal-minus').hidden = !s.counts.some(c => c.player === 1 - p && c.illegal);
   });
 
-  const roundIcon = roundType(shownRound) === 'chess' ? '♟' : '🥊';
-  $('bar-round').textContent = !s.cfg.intervals ? '♟'
-    : `${s.phase === 'break' ? '⏸' : roundIcon} ${roundNo(s.cfg, shownRound)}/${roundNo(s.cfg, s.cfg.rounds)}`;
-  $('bar-phase').textContent = s.phase === 'ready' ? '1er = NOIRS' : s.phase === 'break' ? `→ ${roundIcon}`
-    : flagScreen ? methodShort(r.method)
-    : s.roundOver ? 'Temps !' : s.paused ? 'Pause' : '';
+  // The fight as a frieze: one mark per round (square = chess, round =
+  // boxing), a short dash for each pause; done, current (gold), to come.
+  setHTML($('bar-round'), s.cfg.intervals ? trackHTML() : '');
+  $('bar-phase').textContent = s.phase === 'ready' ? '1er = Noirs' : flagScreen ? methodShort(r.method)
+    : s.roundOver ? 'Temps !' : '';
   setDigits($('bar-timer'), s.phase === 'ready' || s.phase === 'over' || untimed ? '' : roundClock(s.phaseRemaining), cfg.digits);
   // Lost on time or on counts: ↺ Rejouer in the middle of the bar.
   const byCounts = !!flagScreen && r.method.includes('comptes');
@@ -613,9 +655,10 @@ function render() {
   halves.forEach(h => { h.querySelector('.over-undo').hidden = !(byCounts && r.loser === +h.dataset.p); });
   const overAction = flagScreen && r.method === 'réflexion' ? 'Continuer' : null;
   $('bar-btn').hidden = s.phase === 'ready' || (s.phase === 'over' && !overAction);
-  $('bar-btn').textContent = overAction ? overAction : s.paused ? '▶ GO'
-    : untimed && s.phase === 'break' ? `▶ ${roundIcon} ${roundNo(s.cfg, shownRound)}` : s.roundOver ? 'STOP' : 'PAUSE';
-  $('bar-btn').classList.toggle('long', $('bar-btn').textContent.length > 6);
+  const btnText = overAction || (s.roundOver && !s.paused ? 'Stop' : '');
+  setHTML($('bar-btn'), btnText || (s.paused || (untimed && s.phase === 'break') ? ICONS.play : ICONS.pause));
+  $('bar-btn').classList.toggle('long', !!btnText);
+  $('bar-btn').setAttribute('aria-label', btnText || (s.paused ? 'Reprendre' : 'Pause'));
   $('bar-btn').classList.toggle('go', untimed && s.phase === 'break' && !s.paused);
 
   $('pause-menu').hidden = !(s.paused && s.phase !== 'over') || !$('end-menu').hidden;
@@ -632,8 +675,8 @@ function renderPauseMenu() {
   const next = s.awaitReady ? null : nextStep(s);
   $('pm-next').hidden = next === null;
   $('pm-restart').hidden = !!s.awaitReady;
-  $('pm-resume').textContent = s.awaitReady ? 'PRÊT ?' : '▶ GO';
-  if (next) $('pm-next').textContent = `→ ${next.phase === 'break' ? '⏸' : next.phase === 'chess' ? '♟' : '🥊'}`;  // same arrow as the bar
+  setHTML($('pm-resume'), s.awaitReady ? '<i class="ready-txt">Prêt ?</i>' : `${ICONS.play}<span>GO</span>`);
+  if (next) setHTML($('pm-next'), ICONS.next + (next.phase === 'break' ? ICONS.hourglass : next.phase === 'chess' ? ICONS.pawn : ICONS.glove));
 }
 $('pm-next').addEventListener('click', () => act(goToNextStep(s, performance.now())));
 
