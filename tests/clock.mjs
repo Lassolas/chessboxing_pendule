@@ -214,6 +214,16 @@ for (const [r, min] of [[5, 4.5], [7, 6], [9, 7.5], [11, 9]]) {
   check(s.phase === 'chess' && s.round === 3, 'no boxing: the pause leads to chess round 3');
 }
 
+// Pause of 0 s: the next round starts at once
+{
+  const s = fight({ moveLimit: false, rounds: 5, breakMs: 0 });
+  run(s, 0, 180000);
+  check(s.phase === 'chess' && s.round === 3, 'no pause: chess round 3 follows straight away');
+  const b = fight({ moveLimit: false, rounds: 5, breakMs: 0, boxTimer: true });
+  run(b, 0, 180000);
+  check(b.phase === 'boxing' && b.round === 2, 'no pause: boxing follows straight away');
+}
+
 if (errors.length) {
   console.error(`pendule-clock: ${errors.length} failure(s)`);
   errors.forEach(e => console.error('  ✗ ' + e));

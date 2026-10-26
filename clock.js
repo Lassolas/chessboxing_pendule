@@ -25,7 +25,7 @@ export function defaultConfig() {
     names: ['', ''],       // optional, by half of the screen
     chessRoundMs: 3 * 60000,
     boxRoundMs: 3 * 60000,
-    breakMs: 0,             // 0 = open pause (∞): the coach starts the next round
+    breakMs: null,          // null = open pause (∞): the coach starts the next round; 0 = no pause
     intervals: true,        // coached 3-min chess rounds; false = plain clock
     boxTimer: false,        // timed boxing rounds between the pauses
     illegalMoves: false,    // yellow card to claim an illegal move
@@ -119,9 +119,11 @@ function endRound(s, events) {
     return;
   }
   const skipBoxing = s.phase === 'chess' && !s.cfg.boxTimer;
+  const next = s.round + (skipBoxing ? 2 : 1);
+  if (s.cfg.breakMs === 0) { startPhase(s, next, events); return; }  // no pause
   s.phase = 'break';
-  s.nextRound = s.round + (skipBoxing ? 2 : 1);
-  s.phaseRemaining = s.cfg.breakMs || null;
+  s.nextRound = next;
+  s.phaseRemaining = s.cfg.breakMs ?? null;
   s.roundOver = false;
 }
 

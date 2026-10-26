@@ -22,8 +22,8 @@ function save(key, value) {
 const homeDefaults = () => ({
   ...defaultConfig(),
   breakMs: 60000, breakOn: false,   // pause off = open pause (∞)
-  warnOn: true, countdownOn: true, perRoundOn: true, totalOn: true,
-  v: 4,
+  warnOn: true, countdownOn: true,
+  v: 5,
 });
 let cfg = { ...homeDefaults(), ...(load(CFG_KEY) || {}) };
 cfg.names = cfg.names.map(n => (n === 'Blancs' || n === 'Noirs' ? '' : n));
@@ -44,6 +44,10 @@ if (cfg.v < 4) {  // v4: pause on/off (off = ∞), anti-play settings as tiles
   cfg.warnOn = cfg.countdownOn = cfg.moveLimit !== false;
   cfg.v = 4;
 }
+if (cfg.v < 5) {  // v5: count limits always on (− / + lines)
+  delete cfg.perRoundOn; delete cfg.totalOn;
+  cfg.v = 5;
+}
 let s = null;
 setMuted(!!cfg.eco);
 
@@ -51,37 +55,40 @@ setMuted(!!cfg.eco);
 const roundNo = (c, n) => c.boxTimer ? n : Math.ceil(n / 2);
 
 // ── SETUP SCREEN ──
-const fmtValue = (v, kind) => kind === 'n' ? String(v) : v === 0 ? '∞'
+const fmtValue = (v, kind) => kind === 'n' ? String(v)
   : v < 60000 ? `${v / 1000}″` : `${Math.floor(v / 60000)}'${String((v % 60000) / 1000).padStart(2, '0')}`;
 
 // Home tiles. A tap switches the tile on or off; its strip sets the value.
 // Row 1: the fight (chess rounds, pause, boxing). Row 2, under ♟ when it is
 // on: the anti-play settings. The icons are the signs seen during the fight.
 const watch = `<svg viewBox="0 0 32 32" class="ico"><circle cx="16" cy="18" r="11" fill="none" stroke="#ff9a1f" stroke-width="3"/><rect x="13" y="2" width="6" height="4" rx="1" fill="#ff9a1f"/><path d="M16 18 L16 11" stroke="#ff9a1f" stroke-width="3" stroke-linecap="round"/><path d="M25 8 l3-3" stroke="#ff9a1f" stroke-width="3" stroke-linecap="round"/></svg>`;
+const redFlag = `<svg viewBox="0 0 32 32" class="ico"><path d="M7 3 V30" stroke="#ff3b3b" stroke-width="3" stroke-linecap="round"/><path d="M8 4 H26 L21 10 L26 16 H8 Z" fill="#ff3b3b"/></svg>`;
 // Own gradient id: the fight's hands use #skin, and an id inside the hidden
 // home screen would leave them without fill.
 const TILE_HAND = { ...REFEREE, fill: 'url(#skin-tile)', defs: REFEREE.defs.replace('id="skin"', 'id="skin-tile"') };
-const dots = n => `<span class="ico-dots">${'<span></span>'.repeat(Math.min(n, 5))}</span>`;
 // key: value in cfg, on/tap: state, icon, label, strip step/min/max, kind
 const TILES = [
   { key: 'chessRoundMs', row: 1, icon: () => '♟', label: 'Échecs', step: 30000, min: 30000, max: 600000,
     on: () => cfg.intervals, tap: () => { cfg.intervals = !cfg.intervals; } },
-  { key: 'breakMs', row: 1, icon: () => '⏸', label: 'Pause', step: 15000, min: 15000, max: 300000,
+  { key: 'breakMs', row: 1, icon: () => '⏸', label: 'Pause', step: 15000, min: 0, max: 300000,
     on: () => cfg.intervals && cfg.breakOn,
     tap: () => { cfg.breakOn = !(cfg.intervals && cfg.breakOn); if (cfg.breakOn) cfg.intervals = true; } },
   { key: 'boxRoundMs', row: 1, icon: () => '🥊', label: 'Boxe', step: 30000, min: 30000, max: 300000,
     on: () => cfg.intervals && cfg.boxTimer,
     tap: () => { cfg.boxTimer = !(cfg.intervals && cfg.boxTimer); if (cfg.boxTimer) cfg.intervals = true; } },
-  { key: 'moveWarnMs', flag: 'warnOn', row: 2, icon: () => watch, label: 'Alerte', step: 5000, min: 5000, max: 120000 },
   { key: 'moveCountdownMs', flag: 'countdownOn', row: 2, icon: () => countHands(8, TILE_HAND), label: 'Compte', step: 5000, min: 5000, max: 180000 },
-  { key: 'countsPerRound', flag: 'perRoundOn', row: 2, icon: () => dots(cfg.countsPerRound), label: '/ round', step: 1, min: 1, max: 10, kind: 'n' },
-  { key: 'countsTotal', flag: 'totalOn', row: 2, icon: () => dots(cfg.countsTotal), label: 'Total', step: 1, min: 1, max: 20, kind: 'n' },
+  { key: 'illegalMoves', flag: 'illegalMoves', row: 2, icon: () => redFlag, label: 'Coup illégal', noValue: true },
+  { key: 'moveWarnMs', flag: 'warnOn', row: 2, icon: () => watch, label: 'Alerte', step: 5000, min: 5000, max: 120000 },
 ];
 TILES.filter(t => t.flag).forEach(t => {
   t.on = () => !!cfg[t.flag];
   t.tap = () => { cfg[t.flag] = !cfg[t.flag]; };
 });
+// Count limits: plain − / + lines, always on.
+const LIMITS = [['countsPerRound', '/ round', 1, 10], ['countsTotal', 'total', 1, 20]];
 const tileOf = key => TILES.find(t => t.key === key);
+// Turning the count on brings the warning with it.
+tileOf('moveCountdownMs').tap = () => { cfg.countdownOn = !cfg.countdownOn; if (cfg.countdownOn) cfg.warnOn = true; };
 const tileValue = t => t.key === 'breakMs' && !t.on() ? '∞' : fmtValue(cfg[t.key], t.kind);
 
 // One line on what a tile does now.
@@ -89,12 +96,12 @@ function tileText(t) {
   const v = fmtValue(cfg[t.key], t.kind), on = t.on();
   switch (t.key) {
     case 'chessRoundMs': return on ? `Rounds d'échecs de ${v}.` : 'Pendule classique, sans rounds.';
-    case 'breakMs': return on ? `Pauses de ${v}.` : 'Pause libre : tu relances le round.';
+    case 'breakMs': return !on ? 'Pause libre : tu relances le round.'
+      : cfg.breakMs ? `Pauses de ${v}.` : 'Pas de pause : les rounds s\'enchaînent.';
     case 'boxRoundMs': return on ? `Round de boxe chronométré de ${v} entre deux pauses.` : 'Pas de round de boxe.';
     case 'moveWarnMs': return on ? `Alerte au bout de ${v} sur un coup.` : 'Pas d\'alerte.';
-    case 'moveCountdownMs': return on ? `Compte de 10 s dès ${v} sur un coup, puis perdu.` : 'Pas de compte.';
-    case 'countsPerRound': return on ? `${v} comptes dans un round : perdu.` : 'Pas de limite par round.';
-    default: return on ? `${v} comptes au total : perdu.` : 'Pas de limite au total.';
+    case 'illegalMoves': return on ? 'Drapeau rouge dans ton coin : coup illégal adverse = 1 compte, il rejoue.' : 'Pas de bouton coup illégal.';
+    default: return on ? `Compte de 10 s dès ${v} sur un coup, puis perdu.` : 'Pas de compte.';
   }
 }
 // Each tile: icon and label (tap = on/off), and on the right a strip
@@ -109,10 +116,15 @@ function stripHTML(t) {
 function renderTiles() {
   const html = t => `<div class="dur${t.row === 2 ? ' small' : ''}${t.on() ? ' on' : ''}" role="button" tabindex="0" data-tile="${t.key}">
       <div class="dur-body"><i>${t.icon()}</i><small>${t.label}</small></div>
-      <div class="strip" data-strip="${t.key}">${stripHTML(t)}</div></div>`;
+      ${t.noValue ? '' : `<div class="strip" data-strip="${t.key}">${stripHTML(t)}</div>`}</div>`;
   $('durations').innerHTML = TILES.filter(t => t.row === 1).map(html).join('');
   $('chess-set').classList.toggle('dim', !cfg.intervals);  // dimmed, not hidden: nothing moves
-  $('chess-set').innerHTML = TILES.filter(t => t.row === 2).map(html).join('');
+  // Under ♟: the count first; once on, the warning and the count limits.
+  const count = tileOf('moveCountdownMs'), more = count.on();
+  // Secondary setting: one small line, − value + for each limit.
+  const limits = more || cfg.illegalMoves ? `<div class="limits"><span class="lim-t">Comptes max</span>${LIMITS.map(([key, label, min, max]) => `
+    <span class="lim"><button type="button" data-lim="${key}" data-d="-1"${cfg[key] <= min ? ' disabled' : ''}>−</button><b>${cfg[key]}</b><button type="button" data-lim="${key}" data-d="1"${cfg[key] >= max ? ' disabled' : ''}>+</button><small>${label}</small></span>`).join('')}</div>` : '';
+  $('chess-set').innerHTML = html(count) + html(tileOf('illegalMoves')) + (more ? html(tileOf('moveWarnMs')) : '') + limits;
 }
 function showTileText(t) {
   $('opt-help').hidden = false;
@@ -120,11 +132,18 @@ function showTileText(t) {
 }
 function onTiles(e) {
   if (e.target.closest('[data-strip]')) return;
+  const lim = e.target.closest('[data-lim]');
+  if (lim) {
+    const [key, , min, max] = LIMITS.find(l => l[0] === lim.dataset.lim);
+    cfg[key] = Math.min(max, Math.max(min, cfg[key] + +lim.dataset.d));
+    save(CFG_KEY, cfg);
+    renderSetup();
+    return;
+  }
   const el = e.target.closest('[data-tile]');
   if (!el) return;
   const t = tileOf(el.dataset.tile);
   t.tap();
-  if (t.key === 'breakMs' && t.on() && !cfg.breakMs) cfg.breakMs = 60000;
   save(CFG_KEY, cfg);
   helpShown = null;
   renderSetup();
@@ -178,7 +197,6 @@ function onStripUp() {
 
 // One or two words per option; the "?" shows the explanation.
 const OPTIONS = [
-  ['illegalMoves', 'Coups illégaux', () => `Carton jaune dans ton coin : coup illégal adverse = 1 compte, il rejoue.`],
   ['eco', 'Éco', () => `Économie d'énergie : pas de son (vibrations seulement), écran plus sombre, pas d'animations.`],
 ];
 let helpShown = null;
@@ -238,12 +256,11 @@ const NEVER = 1e9;
 function fightConfig() {
   const c = structuredClone(cfg);
   if (!c.intervals) Object.assign(c, { illegalMoves: false, boxTimer: false, warnOn: false, countdownOn: false });
-  if (!c.breakOn) c.breakMs = 0;
+  if (!c.breakOn) c.breakMs = null;
+  if (!c.countdownOn) c.warnOn = false;  // the warning comes with the count
   if (!c.warnOn) c.moveWarnMs = NEVER;
   if (!c.countdownOn) c.moveCountdownMs = NEVER;
   c.moveLimit = c.warnOn || c.countdownOn;
-  if (!c.perRoundOn) c.countsPerRound = 999;
-  if (!c.totalOn) c.countsTotal = 999;
   return c;
 }
 $('options').addEventListener('click', e => {
@@ -306,8 +323,8 @@ function buildHalves() {
       <div class="h-move"></div>
       <div class="h-counts"></div>
       <div class="h-avg"></div>
-      <button type="button" class="yellow-card" aria-label="Coup illégal adverse" title="Coup illégal adverse"></button>`;
-    h.querySelector('.yellow-card').addEventListener('pointerdown', e => {
+      <button type="button" class="illegal-btn" aria-label="Coup illégal adverse">${redFlag}<span>Coup illégal</span></button>`;
+    h.querySelector('.illegal-btn').addEventListener('pointerdown', e => {
       e.stopPropagation();
       act(illegalMove(s, 1 - p, performance.now()));
       showToast(`🟨 ${nameOf(1 - p)} +1`);
@@ -407,7 +424,7 @@ $('toast-undo').addEventListener('click', () => {
   act(undoCount(s, performance.now()));
 });
 
-const METHOD_SHORT = { temps: 'Drapeau', 'réflexion': 'Anti-jeu', decision: 'Fin' };
+const METHOD_SHORT = { temps: 'Temps écoulé !', 'réflexion': 'Anti-jeu', decision: 'Fin' };
 const methodShort = m => METHOD_SHORT[m] || m.replace(/ dans le round| au total/, '');
 
 function render() {
@@ -455,7 +472,7 @@ function render() {
     const mine = s.counts.filter(c => c.player === p);
     h.querySelector('.h-counts').innerHTML = mine.map(c =>
       `<i class="dot on${c.round === roundForCounts ? '' : ' old'}"></i>`).join('');
-    h.querySelector('.yellow-card').hidden = !s.cfg.illegalMoves || s.phase !== 'chess' || s.paused;
+    h.querySelector('.illegal-btn').hidden = !s.cfg.illegalMoves || s.phase !== 'chess' || s.paused;
   });
 
   const roundIcon = roundType(shownRound) === 'chess' ? '♟' : '🥊';

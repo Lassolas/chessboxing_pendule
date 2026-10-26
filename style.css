@@ -82,6 +82,13 @@ body {
 .dur.on .sv.cur { color: var(--gold); }
 .dur.small .strip { width: 56px; }
 .chess-set { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-top: 6px; position: relative; }
+.limits { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 4px; padding: 0 2px; font-family: var(--font-display); }
+.lim-t { white-space: nowrap; font-size: 13px; color: var(--text-2); }
+.lim { display: inline-flex; align-items: center; }
+.lim button { width: 30px; height: 34px; background: none; border: 0; color: var(--gold); font: 700 22px var(--font-display); padding: 0; touch-action: manipulation; }
+.lim button:disabled { color: var(--border); }
+.lim b { font-size: 20px; min-width: 16px; text-align: center; }
+.lim small { font-size: 14px; color: var(--text-2); margin-left: 2px; white-space: nowrap; }
 .chess-set.dim, .opt.dim { opacity: .3; pointer-events: none; }
 .chess-set::before { content: ''; position: absolute; left: 16%; top: -6px; width: 2px; height: 6px; background: var(--gold-mid); }
 .dur.small { padding: 8px 2px 6px; border-radius: 10px; }
@@ -161,23 +168,18 @@ body {
 .dots { display: inline-flex; gap: 4px; margin-left: 6px; vertical-align: middle; }
 .dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--text-2); }
 .dot.on { background: var(--red); border-color: var(--red); }
-/* Illegal move: yellow card in the corner nearest the centre bar
+/* Illegal move: red flag button in the corner nearest the centre bar
    (the top half is rotated, so its top corner also faces the centre) */
-.yellow-card {
-  position: absolute; top: 12px; left: 14px;
-  width: 44px; height: 60px;
-  background: #ffd400;
-  border: 2px solid #fff3a0;
-  border-radius: 6px;
-  box-shadow: 0 3px 10px rgba(0,0,0,.5);
-  transform: rotate(-8deg);
-  padding: 0;
-  touch-action: manipulation;
+.illegal-btn {
+  position: absolute; top: 12px; left: 12px;
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(90,12,12,.9); border: 2px solid var(--red); border-radius: 10px;
+  color: #fff; font: 700 17px var(--font-display); letter-spacing: .03em; text-transform: uppercase;
+  padding: 6px 10px 6px 6px; box-shadow: 0 3px 10px rgba(0,0,0,.5); touch-action: manipulation;
 }
-.yellow-card::after {
-  content: ''; position: absolute; inset: -14px;  /* bigger touch area */
-}
-.yellow-card:active { transform: rotate(-8deg) scale(.92); }
+.illegal-btn .ico { width: 26px; height: 26px; }
+.illegal-btn::after { content: ''; position: absolute; inset: -12px; }  /* bigger touch area */
+.illegal-btn:active { transform: scale(.94); }
 
 /* Player whose clock is running */
 .phase-chess .half.active { background: var(--green-bg); box-shadow: inset 0 0 0 4px var(--green); }
@@ -292,7 +294,7 @@ body {
 
 /* ── FLAG SCREEN: dark, winner's side in gold ── */
 .flag .half { background: #050507 !important; box-shadow: none !important; animation: none !important; filter: none !important; }
-.flag .half .h-counts, .flag .yellow-card { display: none; }
+.flag .half .h-counts, .flag .illegal-btn { display: none; }
 .flag .half.winner { box-shadow: inset 0 0 0 4px var(--gold) !important; }
 .flag .half.winner .h-name { color: var(--gold) !important; font-size: clamp(40px, 12vw, 64px); }
 .flag .half.winner .h-move { color: var(--gold); font: 700 clamp(28px, 8vw, 40px) var(--font-display); letter-spacing: .2em; }
@@ -322,6 +324,9 @@ body {
 
 /* Small phones (iPhone SE…): keep the whole centre bar on screen */
 @media (max-width: 380px) {
+  .lim-t { display: none; }
+  .illegal-btn { top: 6px; left: 6px; font-size: 13px; padding: 3px 8px 3px 3px; gap: 4px; }
+  .illegal-btn .ico { width: 20px; height: 20px; }
   .dur:not(.small) .strip { width: 44px; }
   .dur:not(.small) small { font-size: 13px; letter-spacing: 0; }
   .dur:not(.small) .sv.cur { font-size: 19px; }
