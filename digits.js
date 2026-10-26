@@ -21,6 +21,11 @@ export function segSVG(text) {
       x += 22;
       continue;
     }
+    if (ch === '.') {  // tenths under 10 s
+      out += `<rect class="lit" x="${x - 2}" y="${H - 12}" width="12" height="12"/>`;
+      x += 16;
+      continue;
+    }
     if (!(ch in SEGS)) continue;
     const on = SEGS[ch];
     out += `<g transform="translate(${x} 0)">` + Object.entries(SEG_PTS).map(([k, p]) =>
@@ -35,6 +40,6 @@ export function setDigits(el, text, style) {
   const key = style + '|' + text;
   if (el.dataset.shown === key) return;
   el.dataset.shown = key;
-  if (style === 'dgt' && /^[\d:']+$/.test(text)) el.innerHTML = segSVG(text);
+  if (style === 'dgt' && /^[\d:'.]+$/.test(text)) el.innerHTML = segSVG(text);
   else el.textContent = text;
 }
