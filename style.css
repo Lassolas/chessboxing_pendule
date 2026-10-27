@@ -684,6 +684,10 @@ body::after { content: ''; position: fixed; inset: 0; z-index: 40; pointer-event
 .await .h-avg { z-index: 4; }
 .await .h-in:has(.h-avg:not(:empty)) .hc-ready { display: none; }
 /* Between rounds the small chess clock sits by the edge: the average goes to the bar side. */
-.phase-break .h-avg, .await .h-avg { top: 2px; bottom: auto !important; font-size: 21px; }
 .await .h-clock, .await .h-name { visibility: hidden; }  /* nothing shows through the Prêt ? card */
 .preset b.dur-only { font-family: var(--font-clock) !important; font-weight: var(--clock-weight) !important; font-style: normal !important; font-size: 28px; font-variant-numeric: tabular-nums; }  /* a duration: the clock's font */
+/* Average per move: in the outer corner, by the player's edge, never near the bar.
+   Cormorant italic like the round numerals, with ordinary figures. */
+.h-avg { left: 14px !important; right: auto !important; bottom: 10px !important; top: auto !important; text-align: left;
+  font: italic 500 26px/1 var(--font-serif) !important; font-variant-numeric: lining-nums tabular-nums; letter-spacing: 0; color: var(--gold); }
+.h-avg small { display: block; font: 600 11px var(--font-display); letter-spacing: .16em; text-transform: uppercase; color: var(--text-2); font-style: normal; margin-top: 2px; }

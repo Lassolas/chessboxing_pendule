@@ -625,8 +625,8 @@ function render() {
     h.querySelector('.h-name').textContent = [icon, s.cfg.names[p]].filter(Boolean).join(' · ');
     // Average per move, shown in every pause (referee pause, between rounds, Prêt ?) and at the end.
     const avg = averageMove(s, p);
-    h.querySelector('.h-avg').textContent = (s.paused || s.phase === 'break' || s.phase === 'over') && avg !== null
-      ? `⌀ ${(avg / 1000).toFixed(1).replace(".", ",")} s / coup` : '';
+    setHTML(h.querySelector('.h-avg'), (s.paused || s.phase === 'break' || s.phase === 'over') && avg !== null
+      ? `⌀ ${(avg / 1000).toFixed(1).replace(".", ",")} s<small>par coup</small>` : '');
     // Counts: nothing until the first one, then one red dot each
     // (bright for this round, dim for earlier rounds).
     const mine = s.counts.filter(c => c.player === p);
