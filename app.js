@@ -27,9 +27,9 @@ const homeDefaults = () => ({
   ...defaultConfig(),
   breakMs: 60000, breakOn: true,    // pause off = open pause (∞)
   warnOn: false, countdownOn: false,   // counts off by default
-  digits: 'oxanium',                  // clock digits: oxanium | dgt | saira
+  digits: 'dgt',                      // clock digits: dgt | oxanium | saira
   sound: true,
-  v: 8,
+  v: 9,
 });
 let cfg = { ...homeDefaults(), ...(load(CFG_KEY) || {}) };
 cfg.names = ['', ''];  // no player names: BLANCS / NOIRS only
@@ -66,7 +66,11 @@ if (cfg.v < 8) {  // v8: the club's usual fight by default: 5 × (3' chess, 3' b
   Object.assign(cfg, { rounds: 5, intervals: true, chessRoundMs: 180000, boxRoundMs: 180000, boxTimer: true,
     breakOn: true, breakMs: 60000, readyCheck: true, v: 8 });
 }
-if (!DIGIT_STYLES.includes(cfg.digits)) cfg.digits = 'oxanium';  // Teko was dropped
+if (cfg.v < 9) {  // v9: DGT digits by default
+  cfg.digits = 'dgt';
+  cfg.v = 9;
+}
+if (!DIGIT_STYLES.includes(cfg.digits)) cfg.digits = 'dgt';  // Teko was dropped
 cfg.moveCountdownMs = Math.max(10000, cfg.moveCountdownMs);
 let s = null;
 setMuted(!!cfg.eco || !cfg.sound);
@@ -617,9 +621,9 @@ function render() {
     // Colour in big letters; a name only if one was typed in ⚙.
     const icon = s.white === null ? '' : p === s.white ? 'BLANCS' : 'NOIRS';
     h.querySelector('.h-name').textContent = [icon, s.cfg.names[p]].filter(Boolean).join(' · ');
-    // Average per move, shown when paused or at the end.
+    // Average per move, shown in every pause (referee pause, between rounds, Prêt ?) and at the end.
     const avg = averageMove(s, p);
-    h.querySelector('.h-avg').textContent = (s.paused || s.phase === 'over') && avg !== null
+    h.querySelector('.h-avg').textContent = (s.paused || s.phase === 'break' || s.phase === 'over') && avg !== null
       ? `⌀ ${(avg / 1000).toFixed(1).replace(".", ",")} s / coup` : '';
     // Counts: nothing until the first one, then one red dot each
     // (bright for this round, dim for earlier rounds).

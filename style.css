@@ -546,7 +546,6 @@ body::after { content: ''; position: fixed; inset: 0; z-index: 40; pointer-event
 #pause-menu.ready .pm-go { font-size: 34px !important; letter-spacing: .12em; }
 .setup-head { font-size: 20px; letter-spacing: .3em; margin: 6px 0 12px; }
 .setup-head .head-logo { width: min(260px, 72%); }
-.await .h-avg { display: none; }
 
 /* ════ v2.1: one style everywhere ════
    Line icons in the text colour, Cormorant for numerals and titles,
@@ -678,3 +677,10 @@ body::after { content: ''; position: fixed; inset: 0; z-index: 40; pointer-event
 .si:not(.si-n), .preset small, .sv, .sv.cur, .resume-live span, .h-avg, .dur b { font-family: var(--font-clock) !important; font-weight: var(--clock-weight) !important; font-variant-numeric: tabular-nums; }
 /* COMBAT: the number of rounds on its own line, above the durations */
 .fight-sum .si-n { flex-basis: 100%; justify-content: center; font-size: 1.7em; margin-bottom: -2px; }
+/* Prêt ?: the average per move sits over the title card; the card's small
+   "Prêt ?" gives way to it (the button already says it). */
+.await .h-avg { z-index: 4; }
+.await .h-in:has(.h-avg:not(:empty)) .hc-ready { display: none; }
+/* Between rounds the small chess clock sits by the edge: the average goes to the bar side. */
+.phase-break .h-avg, .await .h-avg { top: 2px; bottom: auto !important; font-size: 21px; }
+.await .h-clock, .await .h-name { visibility: hidden; }  /* nothing shows through the Prêt ? card */
