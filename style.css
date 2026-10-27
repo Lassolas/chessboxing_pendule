@@ -176,6 +176,8 @@ body {
   background: url(logo.png) center 45% / auto min(80vh, 640px) no-repeat; opacity: .05; }
 .half::before { content: ''; position: absolute; inset: 0; pointer-events: none;
   background: url(logo-glove.png) center / auto 76cqh no-repeat; opacity: .05; }
+/* The two watermark gloves always face each other, fists toward the bar, in every orientation. */
+#fight:not([data-orient="normal"]) .half.top::before { transform: rotate(180deg); }
 
 
 /* ── FIGHT LAYOUT ── */
