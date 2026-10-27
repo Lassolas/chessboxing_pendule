@@ -686,3 +686,4 @@ body::after { content: ''; position: fixed; inset: 0; z-index: 40; pointer-event
 /* Between rounds the small chess clock sits by the edge: the average goes to the bar side. */
 .phase-break .h-avg, .await .h-avg { top: 2px; bottom: auto !important; font-size: 21px; }
 .await .h-clock, .await .h-name { visibility: hidden; }  /* nothing shows through the Prêt ? card */
+.preset b.dur-only { font-family: var(--font-clock) !important; font-weight: var(--clock-weight) !important; font-style: normal !important; font-size: 28px; font-variant-numeric: tabular-nums; }  /* a duration: the clock's font */
