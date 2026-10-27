@@ -80,7 +80,7 @@ const roundNo = (c, n) => c.boxTimer ? n : Math.ceil(n / 2);
 
 // ── SETUP SCREEN ──
 const fmtValue = (v, kind) => kind === 'n' ? String(v)
-  : v < 60000 ? `${v / 1000}″` : `${Math.floor(v / 60000)}'${String((v % 60000) / 1000).padStart(2, '0')}`;
+  : `${Math.floor(v / 60000)}:${String(Math.round((v % 60000) / 1000)).padStart(2, '0')}`;  // durations as m:ss (3:00, 0:30)
 
 // Home tiles. A tap switches the tile on or off; its strip sets the value.
 // Row 1: the fight (chess rounds, pause, boxing). Row 2, under ♟ when it is
@@ -234,16 +234,16 @@ const OPTIONS = [
 function renderPresets() {
   $('presets').innerHTML = Object.keys(PRESETS).map(r =>
     `<button type="button" class="preset${+r === cfg.rounds ? ' on' : ''}" data-r="${r}">${cfg.intervals  // rounds: numeral + time per player; plain clock: the time alone
-      ? `<b>${roman(+r)}</b><small>${formatClock(playerTime({ ...cfg, rounds: +r })).replace(':', "'")}</small>`
-      : `<b class="dur-only">${formatClock(PRESETS[r]).replace(':', "'")}</b>`}</button>`).join('');
+      ? `<b>${roman(+r)}</b><small>${formatClock(playerTime({ ...cfg, rounds: +r }))}</small>`
+      : `<b class="dur-only">${formatClock(PRESETS[r])}</b>`}</button>`).join('');
   renderSummary();
 }
 // The big COMBAT button says what it starts.
-const mins = ms => ms % 60000 ? `${Math.floor(ms / 60000)}′${String((ms % 60000) / 1000).padStart(2, '0')}` : `${ms / 60000}′`;
+const mins = ms => fmtValue(ms);
 function renderSummary() {
   const c = cfg, parts = [];
   const item = (icon, text) => `<span class="si">${icon}${text}</span>`;
-  if (!c.intervals) parts.push(item(ICONS.pawn, `Pendule ${formatClock(PRESETS[c.rounds]).replace(':', "'")}`));
+  if (!c.intervals) parts.push(item(ICONS.pawn, `Pendule ${formatClock(PRESETS[c.rounds])}`));
   else {
     parts.push(`<span class="si si-n">${roman(c.rounds)}<small>rounds</small></span>`, item(ICONS.pawn, mins(c.chessRoundMs)));
     if (c.boxTimer) parts.push(item(ICONS.glove, mins(c.boxRoundMs)));

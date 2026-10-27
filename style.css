@@ -672,7 +672,7 @@ body::after { content: ''; position: fixed; inset: 0; z-index: 40; pointer-event
 .dur i .ic.ic-hourglass { height: 20px; margin: 5px 0; }
 
 /* Numbers: counts (rounds, limits, round numerals) always in the serif
-   italic; durations (3′, 1′30, 4′30…) always in the clock's own font. */
+   italic; durations (3:00, 1:30, 4:30…) always in the clock's own font. */
 .si-n, .preset b, .lim b, .h-phase small em, .hc-num { font-family: var(--font-serif) !important; font-style: italic !important; font-weight: 500 !important; }
 .preset b { font-size: 36px; }
 .lim b { font-size: 24px; }
