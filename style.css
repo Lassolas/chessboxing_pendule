@@ -691,3 +691,4 @@ body::after { content: ''; position: fixed; inset: 0; z-index: 40; pointer-event
 .h-avg { left: 14px !important; right: auto !important; bottom: 10px !important; top: auto !important; text-align: left;
   font: italic 500 clamp(18px, 6.2cqw, 26px)/1 var(--font-serif) !important; font-variant-numeric: lining-nums tabular-nums; letter-spacing: 0; color: var(--gold); }
 .h-avg small { font-size: .7em; color: var(--text-2); }
+.h-avg .avg-k { display: block; margin-bottom: 2px; }  /* label on its own line: the line stays clear of BLANCS/NOIRS */
