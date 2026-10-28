@@ -1101,3 +1101,15 @@ html.flip #ptr { top: auto; bottom: 0; }
 /* No round names on the clock: the Prêt ? card keeps only Prêt ? */
 .h-card .hc-num, .h-card .hc-label, .h-card .hc-rule { display: none !important; }
 .phase-ready .h-in > .h-phase, .h-phase.empty { display: none !important; }
+/* No dashes around the Boxe / Pause sign, nothing when empty */
+.h-phase small::before, .h-phase small::after { display: none !important; }
+.h-phase small:empty { display: none !important; }
+/* Corner switches: a small word under the drawing */
+.h-tgs .h-cnttg, .h-tgs .h-illtg { width: 58px; height: 52px; flex-direction: column; gap: 3px; }
+.h-tgs .h-illtg svg { width: 20px; height: 20px; }
+.h-tgs .h-cnttg .hands { height: 22px; } .h-tgs .h-cnttg .hands svg { width: 13px; height: 22px; }
+.h-tg small { font: 600 8.5px var(--font-display); letter-spacing: .1em; text-transform: uppercase; color: var(--text-2); line-height: 1; }
+.h-tg.on small { color: var(--bone); }
+.h-tgs .h-avgtg { height: 52px; }
+@container (max-height: 300px) { .h-tgs .h-cnttg, .h-tgs .h-illtg { width: 52px; height: 46px; } .h-tgs .h-avgtg { height: 46px; } }
+@container (max-height: 300px) { .h-tgs { bottom: 4px !important; } .h-tgs .h-cnttg, .h-tgs .h-illtg, .h-tgs .h-avgtg { height: 42px; } .h-tgs .h-cnttg .hands { height: 18px; } .h-tgs .h-cnttg .hands svg { height: 18px; width: 11px; } .h-tgs .h-illtg svg { width: 17px; height: 17px; } }
