@@ -103,7 +103,13 @@ const watch = `<svg viewBox="0 0 32 32" class="ico"><circle cx="16" cy="18" r="1
 const redFlag = `<svg viewBox="0 0 32 32" class="ico"><path d="M7 3 V30" stroke="#ff3b3b" stroke-width="3" stroke-linecap="round"/><path d="M8 4 H26 L21 10 L26 16 H8 Z" fill="#ff3b3b"/></svg>`;
 // Own gradient id: the fight's hands use #skin, and an id inside the hidden
 // home screen would leave them without fill.
+// Count switched off: the same hands as a bone outline, so they still read as hands.
+const OUTLINE_HAND = { fill: '#101418', stroke: '#ebe5d6', sw: 10, crease: 'none', shade: 'none', cuff: false, defs: '' };
+const countIcon = (on, style = TILE_HAND) => countHands(8, on ? style : OUTLINE_HAND);
 const TILE_HAND = { ...REFEREE, fill: 'url(#skin-tile)', defs: REFEREE.defs.replace('id="skin"', 'id="skin-tile"') };
+const PM_HAND = { ...REFEREE, fill: 'url(#skin-pm)', defs: REFEREE.defs.replace('id="skin"', 'id="skin-pm"') };
+// Réglages has its own copy: a gradient inside the hidden page would leave the clock's hands without fill.
+const SET_HAND = { ...REFEREE, fill: 'url(#skin-set)', defs: REFEREE.defs.replace('id="skin"', 'id="skin-set"') };
 // key: value in cfg, on/tap: state, icon, label, strip step/min/max, kind
 const TILES = [
   { key: 'chessRoundMs', row: 1, icon: () => ICONS.pawn, label: 'Échecs', step: 10000, min: 30000, max: 600000,
@@ -114,7 +120,7 @@ const TILES = [
   { key: 'boxRoundMs', row: 1, icon: () => ICONS.glove, label: 'Boxe', step: 10000, min: 30000, max: 300000,
     on: () => cfg.intervals && cfg.boxTimer,
     tap: () => { cfg.boxTimer = !(cfg.intervals && cfg.boxTimer); if (cfg.boxTimer) cfg.intervals = true; } },
-  { key: 'moveCountdownMs', flag: 'countdownOn', row: 2, icon: () => countHands(8, TILE_HAND), label: 'Compte', step: 1000, min: 1000, max: () => countMax(cfg) },
+  { key: 'moveCountdownMs', flag: 'countdownOn', row: 2, icon: () => countHands(8, SET_HAND), label: 'Compte', step: 1000, min: 1000, max: () => countMax(cfg) },
   { key: 'illegalMoves', flag: 'illegalMoves', row: 2, icon: () => redFlag, label: 'Coups illégaux', noValue: true },
   { key: 'moveWarnMs', flag: 'warnOn', row: 2, icon: () => watch, label: 'Alerte', step: 1000, min: 0, max: () => Math.max(0, cfg.moveCountdownMs - 1000) },
   // Count limits: rulers too, always on (no drawing to tap).
@@ -412,7 +418,7 @@ function buildHalves() {
       <div class="h-phase"><small></small><b></b></div>
       <div class="h-clock"></div>
       <div class="h-move"></div>
-      <div class="h-tgs"><button type="button" class="h-tg h-avgtg" aria-label="Temps moyen par coup"><b>s</b>/coup</button><button type="button" class="h-tg h-cnttg" aria-label="Comptes">${tileOf('moveCountdownMs').icon()}</button><button type="button" class="h-tg h-illtg" aria-label="Coups illégaux">${redFlag}</button></div>
+      <div class="h-tgs"><button type="button" class="h-tg h-avgtg" aria-label="Temps moyen par coup"><b>s</b>/coup</button><button type="button" class="h-tg h-cnttg" aria-label="Comptes"><span class="hc-on">${countIcon(true)}</span><span class="hc-off">${countIcon(false)}</span></button><button type="button" class="h-tg h-illtg" aria-label="Coups illégaux">${redFlag}</button></div>
       <button type="button" class="h-set">${SET_ICON}Réglages</button>
       <div class="h-counts"></div>
       <div class="h-avg"></div>
@@ -843,7 +849,7 @@ function renderPauseMenu() {
   // Switches for the rest of the fight: counts, illegal moves, sound, Éco; and Réglages.
   const sound = !cfg.eco && cfg.sound;
   const tg = (k, on, icon, label) => `<button type="button" class="pt${on ? ' on' : ''}" data-pt="${k}" aria-pressed="${on}">${icon}<small>${label}</small></button>`;
-  setHTML($('pm-tgs'), tg('count', !!s.cfg.countdownOn, tileOf('moveCountdownMs').icon(), 'Compte')
+  setHTML($('pm-tgs'), tg('count', !!s.cfg.countdownOn, countIcon(!!s.cfg.countdownOn, PM_HAND), 'Compte')
     + tg('ill', !!s.cfg.illegalMoves, redFlag, 'Illégal')
     + tg('sound', sound, sound ? ICONS.sound : ICONS.mute, 'Son')
     + tg('eco', !!cfg.eco, ICONS.eco, 'Éco')
