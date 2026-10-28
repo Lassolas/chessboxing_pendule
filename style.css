@@ -902,3 +902,9 @@ html.flip body { overflow: hidden; }
 .phase-ready .bar-timer { display: none; }
 .phase-ready .bar-round { gap: 7px; font-size: 14px; }
 .phase-ready .bar { gap: 8px; }
+/* Bar progress: round numerals, chess gold, boxing red, the current one bold */
+.trk { display: flex; align-items: baseline; gap: 9px; }
+.tr { font: italic 400 21px/1 var(--font-serif); color: rgba(235, 229, 214, .32); }
+.tr.now { font-weight: 700; font-size: 25px; }
+.tr-chess.now { color: var(--gold); }
+.tr-box.now { color: var(--red); }

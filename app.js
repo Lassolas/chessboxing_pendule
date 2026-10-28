@@ -591,11 +591,25 @@ function buildHalves() {
   });
 }
 
-halves.forEach(h => h.addEventListener('pointerdown', e => {
-  unlockAudio();  // iPhone: sound back after a call or a trip to the background
-  if (e.target.closest('button')) return;
-  act(press(s, +h.dataset.p, performance.now()));
-}));
+// A press is a sharp tap: finger down and up in place. A slide (or a long hold) does nothing.
+const TAP_SLOP = 14, TAP_MS = 600;
+const taps = new Map();
+halves.forEach(h => {
+  h.addEventListener('pointerdown', e => {
+    unlockAudio();  // iPhone: sound back after a call or a trip to the background
+    if (e.target.closest('button')) return;
+    taps.set(e.pointerId, { x: e.clientX, y: e.clientY, t: performance.now() });
+  });
+  h.addEventListener('pointerup', e => {
+    const d = taps.get(e.pointerId);
+    taps.delete(e.pointerId);
+    if (!d || !s) return;
+    const now = performance.now();
+    if (Math.hypot(e.clientX - d.x, e.clientY - d.y) > TAP_SLOP || now - d.t > TAP_MS) return;
+    act(press(s, +h.dataset.p, now));
+  });
+  h.addEventListener('pointercancel', e => taps.delete(e.pointerId));
+});
 
 $('bar-btn').addEventListener('click', () => {
   unlockAudio();
@@ -774,17 +788,14 @@ function stepCard() {
   if (s.phase === 'break') return { num: ICONS.hourglass, label: 'Pause' };
   return { num: roman(roundNo(s.cfg, s.round)), label: s.phase === 'boxing' ? 'Boxe' : 'Échecs' };
 }
+// Progress in the bar: the round numerals, chess in gold, boxing in red,
+// the round being played in bold; the others greyed.
 function trackHTML() {
   const c = s.cfg, rounds = [];
   for (let n = 1; n <= c.rounds; n++) if (c.boxTimer || roundType(n) === 'chess') rounds.push(n);
-  const cur = s.phase === 'break' ? null : s.phase === 'ready' ? 1 : s.round;
-  const nextR = s.phase === 'break' ? s.nextRound : null;
-  return rounds.map((n, i) => {
-    const kind = roundType(n) === 'chess' ? 'sq' : 'ci';
-    const state = n === cur ? ' now' : (n < (cur ?? nextR) || s.phase === 'over') ? ' done' : '';
-    const dash = i === 0 ? '' : `<i class="tk-dash${n === nextR ? ' now' : n < (cur ?? nextR) ? ' done' : ''}"></i>`;
-    return `${dash}<i class="tk ${kind}${state}"></i>`;
-  }).join('');
+  const cur = s.phase === 'break' || s.phase === 'over' ? null : s.phase === 'ready' ? 1 : s.round;
+  return `<span class="trk">${rounds.map(n =>
+    `<b class="tr ${roundType(n) === 'chess' ? 'tr-chess' : 'tr-box'}${n === cur ? ' now' : ''}">${roman(roundNo(c, n))}</b>`).join('')}</span>`;
 }
 
 const METHOD_SHORT = { temps: 'Temps écoulé !', 'réflexion': 'Anti-jeu', decision: 'Fin' };
