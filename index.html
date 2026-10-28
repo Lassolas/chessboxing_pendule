@@ -29,35 +29,26 @@
     <button type="button" id="btn-drop-saved" class="resume-x" aria-label="Effacer la partie" data-icon="close"></button>
   </div>
 
-  <button type="button" id="btn-fight" class="fight-go">
-    <span class="fg-light" aria-hidden="true"></span><span class="fg-floor" aria-hidden="true"></span><span class="fg-ropes" aria-hidden="true"><i></i><i></i><i></i></span>
-    <b>COMBAT</b>
-    <span class="fight-sum" id="fight-sum"></span>
-  </button>
+  <button type="button" id="btn-back" class="set-back" data-icon="next">Pendule</button>
 
-  <div class="rounds-pick">
-    <p class="set-title">Rounds</p>
-    <div class="presets" id="presets"></div>
+  <p class="set-title">Orientation</p>
+  <div class="orient-pick" id="orient-pick"></div>
+
+  <p class="set-title">Son</p>
+  <div class="vols" id="vols">
+    <label class="vol"><span class="vol-ico" data-icon="bell"></span><span class="vol-l">Alertes<small>cloche, claquoir</small></span><input type="range" min="0" max="100" step="5" id="vol-alerts"><b id="vol-alerts-v"></b></label>
+    <label class="vol"><span class="vol-ico" data-icon="sound"></span><span class="vol-l">Coups<small>appuis</small></span><input type="range" min="0" max="100" step="5" id="vol-clicks"><b id="vol-clicks-v"></b></label>
   </div>
+  <button type="button" id="btn-test-sound" class="btn btn-ghost wide" data-icon="bell">Test son</button>
 
-  <details class="advanced settings" id="settings">
-    <summary><svg class="sum-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="7" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="17" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/></svg> Réglages</summary>
-    <button type="button" id="btn-defaults" class="btn btn-ghost wide set-std" data-icon="replay">Standard</button>
-    <p class="set-title" id="durations-title">Durées</p>
-    <div class="frieze" id="frieze"></div>
-    <div class="durations" id="durations"></div>
-    <p class="set-title">Comptes</p>
-    <div class="chess-set" id="chess-set"></div>
-    <p class="opt-help" id="opt-help" hidden></p>
-    <div class="options" id="options"></div>
-    <p class="set-title">Orientation</p>
-    <div class="orient-pick" id="orient-pick"></div>
-    <p class="set-title">Chiffres</p>
-    <div class="options" id="digit-pick"></div>
-    <div class="set-actions">
-    <button type="button" id="btn-test-sound" class="btn btn-ghost wide" data-icon="bell">Test son</button>
-    </div>
-  </details>
+  <p class="set-title">Chiffres</p>
+  <div class="options" id="digit-pick"></div>
+
+  <p class="set-title">À propos</p>
+  <div class="about">
+    <p>Chessboxing Paris : un round d'échecs, un round de boxe, jusqu'au mat, au K.-O. ou au temps.</p>
+    <p>Cette pendule est faite par le club, gratuite et libre. Viens t'entraîner avec nous !</p>
+  </div>
 
   <div id="install-box" class="install" hidden>
     <button type="button" id="btn-install" class="btn btn-blue wide" hidden>Installer</button>
@@ -65,9 +56,7 @@
   </div>
   <footer class="credits">
     <img src="logo-wide.png" class="credits-logo" alt="Chessboxing Paris">
-    <p class="credits-line">Appli gratuite créée par le club.</p>
     <p class="credits-line homage">Inspiré par Enki Bilal et Iepe Rubingh</p>
-    <p class="credits-line">❤ Soutiens le club : viens t'entraîner !</p>
     <a id="btn-donate" class="btn btn-gold wide" href="#" target="_blank" rel="noopener" hidden>❤ Soutenir le club</a>
     <a class="insta" href="https://www.instagram.com/chessboxingparis/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="17.5" cy="6.5" r="1.3" fill="currentColor"/></svg>@chessboxingparis</a>
     <p class="credits-line dim">© 2026 Chessboxing Paris · MIT <span id="version"></span></p>
@@ -95,10 +84,12 @@
 <!-- ── MENU PAUSE ── -->
 <div id="pause-menu" class="overlay" hidden>
   <div class="panel pm-strip">
-    <button type="button" class="btn pm-ico" id="pm-home" aria-label="Accueil" data-icon="home"></button>
-    <button type="button" class="btn pm-ico" id="pm-restart" aria-label="Rejouer" data-icon="replay"></button>
-    <button type="button" class="btn pm-next" id="pm-next" aria-label="Étape suivante"></button>
-    <button type="button" class="btn pm-go" id="pm-resume"></button>
+    <div class="pm-tgs" id="pm-tgs"></div>
+    <div class="pm-main">
+      <button type="button" class="btn pm-ico" id="pm-restart" aria-label="Réinitialiser" data-icon="replay"></button>
+      <button type="button" class="btn pm-next" id="pm-next" aria-label="Étape suivante"></button>
+      <button type="button" class="btn pm-go" id="pm-resume"></button>
+    </div>
   </div>
 </div>
 

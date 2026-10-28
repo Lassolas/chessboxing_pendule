@@ -995,3 +995,72 @@ button.ri-rounds { padding: 2px 7px; }
 .trk.many { gap: 5px; } .trk.many .tr { font-size: min(18px, 4.4vw); } .trk.many .tr.now, .trk.many .tr.prev { font-size: min(21px, 5.2vw); }
 /* Played rounds: bold, same size (only the current one grows), so the row never overflows */
 .tr.prev { font-size: 27px; } .trk.more .tr.prev { font-size: min(22px, 5.6vw); } .trk.many .tr.prev { font-size: min(18px, 4.4vw); }
+/* v2.71: corner switches before the start: s/coup top-left; counts + illegal moves top-right */
+.h-tgs { position: absolute; inset: 12px 12px auto 12px; z-index: 3; display: flex; justify-content: flex-end; gap: 8px; pointer-events: none; }
+.h-tgs > * { pointer-events: auto; }
+.h-tgs .h-avgtg { margin-right: auto; }
+.half.top .h-tgs { top: max(12px, env(safe-area-inset-bottom)); }
+.h-tgs[hidden] { display: none; }
+.h-tgs .h-illtg { position: static; }
+/* Short halves (small phones): the round name gives way to the corner switches */
+@container (max-height: 300px) {
+  .phase-ready .h-in > .h-phase { display: none !important; }
+  /* and the switches move down beside Réglages, clear of the digits */
+  .h-tgs { top: auto !important; bottom: 10px; inset-inline: 8px; gap: 6px; }
+  .h-tg { width: 40px; height: 40px; }
+  .h-avgtg { padding: 0 7px; font-size: 12px; }
+}
+.h-tg { width: 44px; height: 44px; border-radius: 12px; padding: 0; display: flex; align-items: center; justify-content: center;
+  border: 1px dashed rgba(235, 229, 214, .28); background: none; color: var(--text-2); opacity: .7; touch-action: manipulation; }
+.h-tg svg { width: 26px; height: 26px; filter: grayscale(1); opacity: .6; }
+.h-tg.on { opacity: 1; }
+.h-tg.on svg { filter: none; opacity: 1; }
+.h-avgtg { width: auto; padding: 0 9px; font: 600 13px var(--font-display); letter-spacing: .04em; }
+.h-avgtg b { font-weight: 700; font-size: 16px; }
+.h-avgtg.on { border: 1px solid rgba(235, 229, 214, .55); background: rgba(235, 229, 214, .08); color: var(--bone); }
+.h-cnttg.on { border: 1px solid color-mix(in srgb, #ff9a1f 70%, transparent); background: color-mix(in srgb, #ff9a1f 14%, transparent); }
+.h-cnttg .hands { display: flex; height: 28px; } .h-cnttg .hands svg { width: 16px; height: 28px; }
+.quick-box.qflip { transform: rotate(180deg); }
+.quick-box .rl-opt { margin-top: 8px; }
+
+/* Pause strip: the switches on a light first row, the three actions under them */
+.pm-strip { display: flex !important; flex-direction: column; gap: 10px; padding: 10px max(12px, env(safe-area-inset-left)); }
+.pm-tgs { display: flex; justify-content: center; gap: 8px; }
+.pt { flex: 1 1 0; max-width: 78px; height: 54px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  padding: 0; border-radius: 12px; border: 1px dashed rgba(235, 229, 214, .25); background: none; color: var(--text-2); touch-action: manipulation; }
+.pt svg, .pt .ic { width: 22px; height: 22px; margin: 0; }
+.pt svg { filter: grayscale(1); opacity: .6; }
+.pt small { font: 600 9px var(--font-display); letter-spacing: .06em; text-transform: uppercase; white-space: nowrap; }
+.pt.on { border: 1px solid rgba(235, 229, 214, .5); color: var(--bone); background: rgba(235, 229, 214, .06); }
+.pt.on svg { filter: none; opacity: 1; }
+.pt .hands { display: flex; height: 22px; } .pt .hands svg { width: 14px; height: 22px; }
+.pt-set { border-style: solid; color: var(--bone); }
+.pt-set svg { filter: none; opacity: 1; }
+.pm-main { display: grid; grid-template-columns: 54px minmax(0, 1fr) minmax(0, 1.6fr); gap: 10px; }
+#pause-menu.ready .pm-main { grid-template-columns: 54px minmax(0, 1fr); }
+.pm-main .pm-go { letter-spacing: .1em !important; font-size: 20px !important; }
+.pm-main .btn { min-height: 56px; }
+
+/* Réglages page: only what is not on the clock */
+.set-back { display: inline-flex; align-items: center; gap: 8px; flex-direction: row-reverse; align-self: flex-start; margin: 0 0 8px;
+  padding: 10px 18px; border-radius: 999px; border: 1px solid var(--hair); background: none; color: var(--bone);
+  font: 600 13px var(--font-display); letter-spacing: .2em; text-transform: uppercase; }
+.set-back .ic { width: 18px; height: 18px; margin: 0; transform: scaleX(-1); }
+.vols { display: grid; gap: 10px; margin-bottom: 12px; }
+.vol { display: grid; grid-template-columns: 26px 92px minmax(0, 1fr) 34px; align-items: center; gap: 10px; padding: 10px 12px;
+  border: 1px solid var(--hair); border-radius: 12px; }
+.vol-ico .ic { width: 22px; height: 22px; margin: 0; color: var(--bone); }
+.vol-l { font: 600 13px var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--bone); display: flex; flex-direction: column; }
+.vol-l small { font-size: 10px; letter-spacing: .04em; text-transform: none; color: var(--text-2); font-weight: 500; }
+.vol input { width: 100%; accent-color: var(--bone); height: 32px; }
+.vol b { font: 600 14px var(--font-display); color: var(--text-2); text-align: right; }
+.about { text-align: left; color: var(--text-2); font-size: 14px; line-height: 1.5; margin-bottom: 8px; }
+.about p { margin: 0 0 8px; }
+
+/* Slide down from the top to reload the app */
+#ptr { position: fixed; left: 50%; top: 0; z-index: 99; width: 44px; height: 44px; margin-left: -22px; border-radius: 50%;
+  display: grid; place-items: center; background: #0d1114; border: 1px solid var(--hair); color: var(--bone);
+  transform: translateY(-60px); opacity: 0; pointer-events: none; }
+#ptr .ic { width: 22px; height: 22px; margin: 0; }
+#ptr.go { border-color: var(--bone); }
+html.flip #ptr { top: auto; bottom: 0; }

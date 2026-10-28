@@ -4,9 +4,23 @@
 let ctx = null;
 let muted = false;
 export function setMuted(m) { muted = m; }
-// Two switches: the clock's own noises (each press) and the alerts (bell, clapper, knocks...).
-let clicksOn = true, alertsOn = true;
-export function setSounds(clicks, alerts) { clicksOn = clicks; alertsOn = alerts; }
+// Two volumes (0..100): the clock's own noises (each press) and the alerts (bell, clapper, knocks...).
+const vol = { clicks: 100, alerts: 100 };
+const groups = new Map();  // one gain per group, in front of the speakers
+let group = 'alerts';      // the group of the sound being built
+const gainOf = v => (v / 100) ** 2;  // a slider that feels even to the ear
+export function setVolumes(clicks, alerts) {
+  vol.clicks = clicks; vol.alerts = alerts;
+  groups.forEach((g, k) => { if (k !== 'ctx') g.gain.value = gainOf(vol[k]); });
+}
+function dest() {
+  if (groups.get('ctx') !== ctx) { groups.clear(); groups.set('ctx', ctx); }
+  if (!groups.has(group)) {
+    const g = ctx.createGain(); g.gain.value = gainOf(vol[group]); g.connect(ctx.destination);
+    groups.set(group, g);
+  }
+  return groups.get(group);
+}
 const CLICKS = new Set(['press', 'pause', 'resume', 'undo']);
 
 // Recorded sounds, a few variants each, picked at random: a punch for each
@@ -25,14 +39,14 @@ function loadSamples() {
 }
 // Plays a sample of the bank (a random one, slightly detuned, unless
 // `pick` is given); false if none is loaded yet.
-function sample(bank, start = 0, vol = 1, pick = null, dest = null) {
+function sample(bank, start = 0, level = 1, pick = null, to = null) {
   const list = samples[bank];
   if (!ctx || !list.length) return false;
   const src = ctx.createBufferSource();
   src.buffer = pick ?? list[Math.floor(Math.random() * list.length)];
   src.playbackRate.value = pick ? 1 : 0.95 + Math.random() * 0.1;
-  const g = ctx.createGain(); g.gain.value = vol;
-  src.connect(g).connect(dest || ctx.destination);
+  const g = ctx.createGain(); g.gain.value = level;
+  src.connect(g).connect(to || out || dest());
   src.start(ctx.currentTime + start);
   return true;
 }
@@ -69,7 +83,7 @@ function tone(freq, start, dur, { type = 'sine', vol = 0.3, attack = 0.003, glid
   gain.gain.setValueAtTime(0.0001, t);
   gain.gain.exponentialRampToValueAtTime(vol, t + attack);
   gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  osc.connect(gain).connect(out || ctx.destination);
+  osc.connect(gain).connect(out || dest());
   osc.start(t);
   osc.stop(t + dur + 0.05);
 }
@@ -85,7 +99,7 @@ const buses = new Map();
 const LOOKAHEAD = 0.006;
 function makeBus(kind) {
   const g = ctx.createGain();
-  if (kind === 'clap') { g.gain.value = 0.66; g.connect(ctx.destination); return g; }
+  if (kind === 'clap') { g.gain.value = 0.66; g.connect(dest()); return g; }
   if (kind === 'hammer') {
     // Recorded clapper made much louder on phone speakers: lows they can't
     // play are cut, the woody crack (~2.5 kHz) is lifted, then a gentle
@@ -101,7 +115,7 @@ function makeBus(kind) {
     lim.attack.value = 0.001; lim.release.value = 0.08;
     g.gain.value = 1;
     const trim = ctx.createGain(); trim.gain.value = 0.9;
-    g.connect(hp).connect(eq).connect(comp).connect(makeup).connect(lim).connect(trim).connect(ctx.destination);
+    g.connect(hp).connect(eq).connect(comp).connect(makeup).connect(lim).connect(trim).connect(dest());
     return g;
   }
   g.gain.value = 2.2;
@@ -113,16 +127,17 @@ function makeBus(kind) {
   comp.threshold.value = -14; comp.knee.value = 3; comp.ratio.value = 12;
   comp.attack.value = 0.015; comp.release.value = 0.15; // slow attack lets the strike punch through
   const trim = ctx.createGain(); trim.gain.value = 0.85;
-  g.connect(shaper).connect(comp).connect(trim).connect(ctx.destination);
+  g.connect(shaper).connect(comp).connect(trim).connect(dest());
   return g;
 }
 function loud(fn, kind = 'bell') {
   if (!ctx) return;
   if (buses.get('ctx') !== ctx) { buses.clear(); buses.set('ctx', ctx); }
-  if (!buses.has(kind)) buses.set(kind, makeBus(kind));
-  out = buses.get(kind); fn(); out = null;
+  const key = kind + group;
+  if (!buses.has(key)) buses.set(key, makeBus(kind));
+  out = buses.get(key); fn(); out = null;
 }
-function direct(fn) { const o = out; out = ctx.destination; fn(); out = o; }
+function direct(fn) { const o = out; out = dest(); fn(); out = o; }
 
 let noise = null;
 function noiseBuffer() {
@@ -144,7 +159,7 @@ function hit(start, freq, q, vol, dur, type = 'bandpass') {
   const g = ctx.createGain();
   g.gain.setValueAtTime(vol, t);
   g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  src.connect(f).connect(g).connect(out || ctx.destination);
+  src.connect(f).connect(g).connect(out || dest());
   src.start(t); src.stop(t + dur + 0.02);
 }
 
@@ -193,7 +208,7 @@ function ring(start, freq, decay, vol) {
   const g = ctx.createGain();
   g.gain.setValueAtTime(vol, t);
   g.gain.exponentialRampToValueAtTime(0.0001, t + 0.004);
-  src.connect(f).connect(g).connect(out || ctx.destination);
+  src.connect(f).connect(g).connect(out || dest());
   src.start(t); src.stop(t + decay + 0.05);
 }
 // The referee's 10-second clapper: two hardwood sticks slammed together.
@@ -272,6 +287,7 @@ const VIBRATE = {
 };
 
 export function play(event) {
-  if (!muted && (CLICKS.has(event) ? clicksOn : alertsOn)) SOUNDS[event]?.();
+  group = CLICKS.has(event) ? 'clicks' : 'alerts';
+  if (!muted && ctx && vol[group] > 0) SOUNDS[event]?.();
   if (VIBRATE[event] && navigator.vibrate) navigator.vibrate(VIBRATE[event]);
 }

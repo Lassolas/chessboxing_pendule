@@ -3,7 +3,7 @@ import {
   illegalMove, removeIllegal, undoCount, averageMove, nextChessRound, goToNextChess, nextStep, goToNextStep, reopen, endFight, moveStage, moveCountdownLeft,
   countsOf, roundType, formatClock,
 } from './clock.js';
-import { unlockAudio, play, setMuted, setSounds } from './sound.js';
+import { unlockAudio, play, setMuted, setVolumes } from './sound.js';
 import { countHands, REFEREE } from './hands.js';
 import { DIGIT_STYLES, setDigits } from './digits.js';
 import { ICONS, roman } from './icons.js';
@@ -29,8 +29,9 @@ const homeDefaults = () => ({
   warnOn: false, countdownOn: false,   // counts off by default
   digits: 'dgt',                      // clock digits: dgt | oxanium | saira
   moveWarnMs: 25000,                  // the warning, 5 s before the count unless moved
-  sound: true, clicks: true, showAvg: true,          // alerts (bell, clapper...) and the clock presses
-  v: 10,
+  sound: true, showAvg: true,         // Son (all sounds on / off), average per move
+  volAlerts: 100, volClicks: 100,     // volumes: alerts (bell, clapper...) and the clock presses
+  v: 11,
 });
 let cfg = { ...homeDefaults(), ...(load(CFG_KEY) || {}) };
 cfg.names = ['', ''];  // no player names: BLANCS / NOIRS only
@@ -75,10 +76,17 @@ if (cfg.v < 10) {  // v10: the warning has its own ruler, starting 5 s before th
   cfg.moveWarnMs = cfg.moveCountdownMs - 5000;
   cfg.v = 10;
 }
+if (cfg.v < 11) {  // v11: one Son switch, a volume per group
+  cfg.sound = !!(cfg.sound || cfg.clicks);
+  delete cfg.clicks;
+  cfg.v = 11;
+}
 if (!DIGIT_STYLES.includes(cfg.digits)) cfg.digits = 'dgt';  // Teko was dropped
 cfg.moveCountdownMs = Math.max(10000, cfg.moveCountdownMs);
 let s = null;
-setMuted(!!cfg.eco); setSounds(cfg.clicks !== false, !!cfg.sound);
+// Silent in Éco or with Son off; otherwise each group at its volume.
+function applySound() { setMuted(!!cfg.eco || !cfg.sound); setVolumes(cfg.volClicks ?? 100, cfg.volAlerts ?? 100); }
+applySound();
 
 // Round number as shown: always the real one, so chess rounds stay odd (I, III, V…).
 // Without a boxing timer the boxing round sits inside the pause and is not shown.
@@ -135,30 +143,8 @@ function clampCount(c) {
 const warnFor = countdownMs => Math.max(0, countdownMs - 5000);
 // Turning the count on brings the warning with it.
 tileOf('moveCountdownMs').tap = () => { cfg.countdownOn = !cfg.countdownOn; if (cfg.countdownOn) cfg.warnOn = true; };
-const tileValue = t => t.key === 'breakMs' && !t.on() ? '∞' : fmtValue(cfg[t.key], t.kind);
 
-// One line on what a tile does now.
-function tileText(t) {
-  const v = fmtValue(cfg[t.key], t.kind), on = t.on();
-  switch (t.key) {
-    case 'chessRoundMs': return on ? `Rounds d'échecs de ${v}.` : 'Pendule classique, sans rounds.';
-    case 'breakMs': return !on ? 'Pause libre : tu relances le round.'
-      : cfg.breakMs ? `Pauses de ${v}.` : 'Pas de pause : les rounds s\'enchaînent.';
-    case 'boxRoundMs': return on ? `Round de boxe chronométré de ${v} entre deux pauses.` : 'Pas de round de boxe.';
-    case 'moveWarnMs': return on ? `Alerte au bout de ${v} sur un coup.` : 'Pas d\'alerte.';
-    case 'illegalMoves': return on ? 'Drapeau rouge : coup illégal adverse = 1 compte, il rejoue.' : 'Déclarer les coups illégaux.';
-    default: return on ? `Compte de 10 s dès ${v} sur un coup, puis perdu.` : 'Pas de compte.';
-  }
-}
-// Each tile: icon and label (tap = on/off), and on the right a strip
-// showing the value like a wheel: press and slide up or down to set it.
 const valuesOf = t => { const v = [], max = typeof t.max === 'function' ? t.max() : t.max; for (let x = t.min; x <= max; x += t.step) v.push(x); return v; };
-function stripHTML(t) {
-  if (!t.on() || t.fixed) return `<span class="sv"></span><span class="sv cur">${tileValue(t)}</span><span class="sv"></span>`;
-  const vals = valuesOf(t), i = Math.max(0, vals.indexOf(cfg[t.key]));
-  const at = k => vals[k] === undefined ? '' : fmtValue(vals[k], t.kind);
-  return `<span class="sv">${at(i + 1)}</span><span class="sv cur">${at(i)}</span><span class="sv">${at(i - 1)}</span>`;
-}
 // Durées: one ruler per step, like a radio dial. Slide the scale under the
 // needle (or tap either side for one step); tap the drawing to switch the step on / off.
 const TICK_PX = 10;  // one step (10 s) of the scale
@@ -188,6 +174,8 @@ function rulerHTML(t) {
 // The ↺ value: 3:00 rounds, 1:00 pause, the warning 5 s before the count, 3 / 4 counts.
 const standardOf = key => key === 'moveWarnMs' ? warnFor(cfg.moveCountdownMs) : homeDefaults()[key];
 let rdrag = null;
+// Turned towards the far player: the settings page, or a panel opened from the top half.
+const flipped = el => document.documentElement.classList.contains('flip') || !!el.closest('.qflip');
 function setRuler(t, el, i, vals) {
   i = Math.min(vals.length - 1, Math.max(0, i));
   if (vals[i] === cfg[t.key]) return false;
@@ -197,7 +185,6 @@ function setRuler(t, el, i, vals) {
   el.querySelector('.rl-strip').style.transform = `translateX(${-i * tickOf(t)}px)`;
   el.querySelector('.rl-cur').textContent = fmtValue(vals[i], t.kind);
   hideNear(t, el, i);
-  renderPresets();
   if (navigator.vibrate) navigator.vibrate(4);
   return true;
 }
@@ -213,7 +200,7 @@ const onRulerDown = e => {
 };
 const onRulerMove = e => {
   if (!rdrag) return;
-  const dx = (e.clientX - rdrag.x) * (document.documentElement.classList.contains('flip') ? -1 : 1);
+  const dx = (e.clientX - rdrag.x) * (flipped(rdrag.el) ? -1 : 1);
   if (Math.abs(dx) > 4) rdrag.moved = true;
   if (rdrag.moved) setRuler(rdrag.t, rdrag.el, rdrag.i0 - Math.round(dx / tickOf(rdrag.t)), rdrag.vals);  // drag left = more
 };
@@ -223,41 +210,12 @@ const endRuler = e => {
   rdrag = null;
   if (!moved && e.type === 'pointerup') {  // a tap: one step towards that side
     const r = el.getBoundingClientRect();
-    const right = (e.clientX > r.left + r.width / 2) !== document.documentElement.classList.contains('flip');
+    const right = (e.clientX > r.left + r.width / 2) !== flipped(el);
     setRuler(t, el, i0 + (right ? 1 : -1), vals);
   }
   save(CFG_KEY, cfg);
   renderSetup();
 };
-['durations', 'chess-set'].forEach(id => {
-  $(id).addEventListener('pointerdown', onRulerDown);
-  $(id).addEventListener('pointermove', onRulerMove);
-  $(id).addEventListener('pointerup', endRuler);
-  $(id).addEventListener('pointercancel', endRuler);
-});
-function renderTiles() {
-  if (clampCount(cfg)) save(CFG_KEY, cfg);
-  // Prêt ? right under the pause: it decides how each chess round starts after a timed pause (an open pause already waits for the coach).
-  $('durations').innerHTML = ['chessRoundMs', 'boxRoundMs', 'breakMs'].map(k => rulerHTML(tileOf(k))).join('')
-    + optRow(OPTIONS.find(o => o[0] === 'readyCheck')).replace('class="ruler rl-opt', `class="ruler rl-opt rl-ready${cfg.intervals && cfg.breakOn ? '' : ' dim'}`);
-  // Under the rulers: the count and its warning; once on, the count limits
-  // (a plain clock is one game: only the total), after the illegal-move switch.
-  const more = cfg.countdownOn || cfg.illegalMoves;
-  const limits = !more ? [] : cfg.intervals ? ['countsPerRound', 'countsTotal'] : ['countsTotal'];
-  const ill = tileOf('illegalMoves'), illOn = !!cfg.illegalMoves;
-  const illRow = `<button type="button" class="ruler rl-opt rl-ill${illOn ? ' on' : ''}" data-tile="illegalMoves" aria-pressed="${illOn}">
-      <span class="rl-ico">${ill.icon()}<small>Illégal</small></span><span class="rl-note">${tileText(ill)}</span></button>`;
-  // Count off: just a switch saying what it is for; on: its ruler and the warning's.
-  const count = tileOf('moveCountdownMs');
-  const countRow = cfg.countdownOn ? rulerHTML(count) + rulerHTML(tileOf('moveWarnMs'))
-    : `<button type="button" class="ruler rl-opt rl-cnt" data-tile="moveCountdownMs" aria-pressed="false">
-      <span class="rl-ico">${count.icon()}<small>Compte</small></span><span class="rl-note">Déclarer un temps de réflexion maximal.</span></button>`;
-  $('chess-set').innerHTML = countRow + illRow + limits.map(k => rulerHTML(tileOf(k))).join('');
-}
-function showTileText(t) {
-  $('opt-help').hidden = false;
-  $('opt-help').textContent = tileText(t);
-}
 function onTiles(e) {
   if (e.target.closest('[data-strip]')) return;
   const reset = e.target.closest('[data-reset]');
@@ -285,71 +243,13 @@ function onTiles(e) {
   t.tap();
   save(CFG_KEY, cfg);
   renderSetup();
-  if (t.key !== 'illegalMoves') showTileText(t);  // its row already says it
 }
-$('durations').addEventListener('click', onTiles);
-$('chess-set').addEventListener('click', onTiles);
-
-// Slide on a strip: one step every STEP_PX, down = more (like turning a wheel).
-const STEP_PX = 24;
-let drag = null;
-function onStripDown(e) {
-  const strip = e.target.closest('[data-strip]');
-  if (!strip) return;
-  const t = tileOf(strip.dataset.strip);
-  if (!t.on() || t.fixed) return;
-  const vals = valuesOf(t);
-  drag = { t, strip, vals, y: e.clientY, i0: Math.max(0, vals.indexOf(cfg[t.key])) };
-  strip.setPointerCapture(e.pointerId);
-  strip.classList.add('drag');
-  e.preventDefault();
-}
-function onStripMove(e) {
-  if (!drag) return;
-  const { t, strip, vals } = drag;
-  const i = Math.min(vals.length - 1, Math.max(0, drag.i0 + Math.round((e.clientY - drag.y) / STEP_PX)));
-  if (vals[i] === cfg[t.key]) return;
-  cfg[t.key] = vals[i];
-  if (t.key === 'moveCountdownMs') {
-    cfg.moveWarnMs = warnFor(cfg.moveCountdownMs);
-    const w = document.querySelector('[data-strip="moveWarnMs"]');
-    if (w) w.innerHTML = stripHTML(tileOf('moveWarnMs'));
-  }
-  strip.innerHTML = stripHTML(t);
-  strip.closest('[data-tile]').querySelector('i').innerHTML = t.icon();  // dots follow the count
-  renderPresets();
-  showTileText(t);
-  if (navigator.vibrate) navigator.vibrate(5);
-}
-function onStripUp() {
-  if (!drag) return;
-  drag.strip.classList.remove('drag');
-  drag = null;
-  save(CFG_KEY, cfg);
-  renderSetup();
-}
-['durations', 'chess-set'].forEach(id => {
-  $(id).addEventListener('pointerdown', onStripDown);
-  $(id).addEventListener('pointermove', onStripMove);
-  $(id).addEventListener('pointerup', onStripUp);
-  $(id).addEventListener('pointercancel', onStripUp);
-});
 
 // Toggles, laid out like the rulers: the drawing on the left, what it does on the right.
 const OPTIONS = [
   ['readyCheck', () => ICONS.play, 'Prêt ?', on => on
     ? 'Attend une touche avant chaque round d\'échecs.'
     : 'Les échecs repartent seuls après la pause.'],
-  ['sound', () => ICONS.bell, 'Alertes', on => on
-    ? 'Cloche des rounds et claquoir des 10 s.'
-    : 'Pas d\'alerte sonore : les couleurs seules.'],
-  ['clicks', on => (on ? ICONS.sound : ICONS.mute), 'Coups', on => on
-    ? 'Le bruit de la pendule à chaque appui.'
-    : 'Appuis silencieux.'],
-  ['showAvg', () => '<b class="opt-avg">s</b>', 'Moyenne', on => on
-    ? 'Temps moyen par coup de chaque joueur, dans son coin.'
-    : 'Pas de temps moyen par coup.'],
-  ['eco', () => ICONS.eco, 'Éco', () => 'Écran noir, sans son ni animation.'],
 ];
 
 const optRow = ([key, icon, label, note]) => `
@@ -357,78 +257,21 @@ const optRow = ([key, icon, label, note]) => `
       <span class="rl-ico">${icon(cfg[key])}<small>${label}</small></span>
       <span class="rl-note">${note(cfg[key])}</span></button>`;
 
-// Rounds: one tap picks the number (the time per player follows).
-function renderPresets() {
-  $('presets').innerHTML = Object.keys(PRESETS).map(r =>
-    `<button type="button" class="preset${+r === cfg.rounds ? ' on' : ''}" data-r="${r}">${cfg.intervals  // rounds: numeral + time per player; plain clock: the time alone
-      ? `<b>${roman(+r)}</b><small>${formatClock(playerTime({ ...cfg, rounds: +r }))}</small>`
-      : `<b class="dur-only">${formatClock(PRESETS[r])}</b>`}</button>`).join('');
-  renderFrieze();
-  renderSummary();
-}
-// Durées: the fight step by step (chess, pause, boxing),
-// each step with its time. The last chess round runs until a flag falls.
-function renderFrieze() {
-  // Plain clock: one white bar, no rounds nor pauses, same height and total.
-  if (!cfg.intervals) {
-    $('frieze').innerHTML = `<div class="tl"><span class="tl-r tl-chess" style="flex-grow:1"><em>&nbsp;</em><i></i></span></div><div class="tl-total">Total <b>${fmtValue(totalMs(cfg))}</b></div>`;
-    return;
-  }
-  // A thin time line, each step as long as it lasts: chess in bone, boxing in red,
-  // pauses in blue. The last chess round runs until a flag falls: it fades out.
-  const chessRounds = Array.from({ length: cfg.rounds }, (_, i) => i + 1).filter(n => roundType(n) === 'chess');
-  const lastChess = Math.max(...chessRounds);
-  const lastMs = Math.max(cfg.chessRoundMs, 2 * playerTime(cfg) - (chessRounds.length - 1) * cfg.chessRoundMs);
-  const pauseMs = cfg.breakOn ? cfg.breakMs : 0;
-  const cols = [];
-  for (let n = 1; n <= cfg.rounds; n++) {
-    const chess = roundType(n) === 'chess';
-    if (!chess && !cfg.boxTimer) continue;
-    // An open pause (∞, the coach restarts) gets a short dotted bar of its own.
-    if (cols.length && !cfg.breakOn) cols.push(`<span class="tl-r tl-p tl-inf" style="flex-grow:${cfg.chessRoundMs / 3}"><em>∞</em><i></i></span>`);
-    else if (cols.length && pauseMs) cols.push(`<span class="tl-r tl-p" style="flex-grow:${pauseMs}"><em></em><i></i></span>`);
-    const ms = chess ? (n === lastChess ? lastMs : cfg.chessRoundMs) : cfg.boxRoundMs;
-    cols.push(`<span class="tl-r ${chess ? 'tl-chess' : 'tl-box'}${n === lastChess ? ' tl-last' : ''}" style="flex-grow:${ms}"><em>${roman(roundNo(cfg, n))}</em><i></i></span>`);
-  }
-  // The total, small, under the last round.
-  $('frieze').innerHTML = `<div class="tl">${cols.join('')}</div><div class="tl-total">Total <b>${fmtValue(totalMs(cfg))}</b></div>`;
-}
-// Longest fight: both chess clocks run out, plus boxing and timed pauses (an open pause counts 0).
-function totalMs(c) {
-  if (!c.intervals) return 2 * PRESETS[c.rounds];
-  let boxing = 0, steps = 0;
-  for (let n = 1; n <= c.rounds; n++) if (c.boxTimer || roundType(n) === 'chess') { steps++; if (roundType(n) !== 'chess') boxing++; }
-  return 2 * playerTime(c) + boxing * c.boxRoundMs + (c.breakOn ? (steps - 1) * c.breakMs : 0);
-}
-// The big COMBAT button says what it starts.
 const mins = ms => fmtValue(ms);
-function renderSummary() {
-  const c = cfg, parts = [];
-  const item = (icon, text) => `<span class="si">${icon}${text}</span>`;
-  if (!c.intervals) parts.push(item(ICONS.pawn, `Pendule ${formatClock(PRESETS[c.rounds])}`));
-  else {
-    parts.push(`<span class="si si-n">${roman(c.rounds)}<small>rounds</small></span>`, item(ICONS.pawn, mins(c.chessRoundMs)));
-    if (c.boxTimer) parts.push(item(ICONS.glove, mins(c.boxRoundMs)));
-    parts.push(item(ICONS.hourglass, c.breakOn ? (c.breakMs ? mins(c.breakMs) : '0') : '∞'));
-  }
-  parts.push(`<span class="si si-total">Total ${fmtValue(totalMs(c))}</span>`);
-  $('fight-sum').innerHTML = parts.join('');
-}
-
 function renderSetup() {
   document.body.className = cfg.eco ? 'eco' : '';
   document.documentElement.dataset.digits = cfg.digits;
-  renderPresets();
-  // Unchecking the intervals leaves a plain clock: only Éco still applies.
-  // A plain clock has no illegal-move card: dimmed, so the layout stays put.
-  $('options').innerHTML = OPTIONS.filter(o => o[0] !== 'readyCheck').map(optRow).join('');
+  if (clampCount(cfg)) save(CFG_KEY, cfg);
+  [['vol-alerts', 'volAlerts'], ['vol-clicks', 'volClicks']].forEach(([id, k]) => {
+    $(id).value = cfg[k] ?? 100;
+    $(id + '-v').textContent = cfg[k] ?? 100;
+  });
   // Clock digits: the same time shown in each style, one tap to choose.
   $('digit-pick').innerHTML = `<div class="digit-pick">${DIGIT_STYLES.map(d =>
     `<button type="button" class="digit-opt${cfg.digits === d ? ' on' : ''}" data-digits="${d}" aria-label="Chiffres ${d}"><span></span></button>`).join('')}</div>`;
   $('digit-pick').querySelectorAll('.digit-opt span').forEach(sp => setDigits(sp, '4:30', sp.parentNode.dataset.digits));
   $('orient-pick').innerHTML = ORIENT_PICK.map(([o, icon, label]) =>
     `<button type="button" class="orient-opt${(cfg.orient || 'normal') === o ? ' on' : ''}" data-orient="${o}" aria-label="${label}">${icon}<small>${label}</small></button>`).join('');
-  renderTiles();
   // The clock waiting to start follows the settings at once.
   if (s && s.phase === 'ready' && !$('fight').hidden) { s = newFight(fightConfig()); render(); }
   renderQuick();
@@ -444,19 +287,6 @@ function renderSetup() {
 }
 
 
-$('presets').addEventListener('click', e => {
-  const b = e.target.closest('[data-r]');
-  if (!b) return;
-  cfg.rounds = +b.dataset.r;
-  save(CFG_KEY, cfg);
-  renderSetup();
-});
-// COMBAT: the fight as set, straight away.
-$('btn-fight').addEventListener('click', () => {
-  unlockAudio();
-  document.documentElement.classList.remove('flip');
-  readyClock();
-});
 // Orientation of the digits: face to face, or both turned to one side
 // (the phone's tilt also sets it during the fight).
 const ORIENT_PICK = [
@@ -489,23 +319,32 @@ function onOptions(e) {
   const t = e.target.closest('[data-opt]');
   const d = e.target.closest('[data-digits]');
   if (!t && !d) return;
-  if (d) { cfg.digits = d.dataset.digits; save(CFG_KEY, cfg); }
-  if (t) {
-    cfg[t.dataset.opt] = !cfg[t.dataset.opt];
-    if (t.dataset.opt === 'eco') { cfg.sound = cfg.clicks = !cfg.eco; updateMotion(); }  // Éco mutes; leaving it brings the sound back
-    else if (cfg.eco && (cfg.sound || cfg.clicks)) { cfg.eco = false; updateMotion(); }  // a sound switched on leaves Éco
-    save(CFG_KEY, cfg);
-    setMuted(!!cfg.eco); setSounds(cfg.clicks !== false, !!cfg.sound);
-  }
-  renderSetup();
-}
-$('options').addEventListener('click', onOptions);
-$('durations').addEventListener('click', onOptions);
-$('digit-pick').addEventListener('click', onOptions);
-$('btn-defaults').addEventListener('click', () => {
-  cfg = { ...homeDefaults(), readyCheck: true, names: cfg.names, eco: cfg.eco, sound: cfg.sound, clicks: cfg.clicks, digits: cfg.digits, orient: cfg.orient };
+  if (d) cfg.digits = d.dataset.digits;
+  if (t) cfg[t.dataset.opt] = !cfg[t.dataset.opt];
   save(CFG_KEY, cfg);
   renderSetup();
+}
+$('digit-pick').addEventListener('click', onOptions);
+// Volume sliders: heard at once on the next sound; a short sample when let go.
+[['vol-alerts', 'volAlerts', 'roundStart'], ['vol-clicks', 'volClicks', 'press']].forEach(([id, k, ev]) => {
+  $(id).addEventListener('input', () => { cfg[k] = +$(id).value; $(id + '-v').textContent = cfg[k]; applySound(); });
+  $(id).addEventListener('change', () => {
+    unlockAudio();
+    if (!cfg.sound || cfg.eco) { cfg.sound = true; cfg.eco = false; applySound(); updateMotion(); renderSetup(); }  // moving a volume turns the sound on
+    save(CFG_KEY, cfg);
+    play(ev);
+  });
+});
+// ‹ Pendule: back to the clock (a fight left in progress comes back paused).
+$('btn-back').addEventListener('click', () => {
+  unlockAudio();
+  const saved = load(FIGHT_KEY);
+  if (saved && saved.phase !== 'ready' && saved.phase !== 'over') {
+    s = saved;
+    s.paused = true;
+    s.lastTick = performance.now();
+    openFight();
+  } else readyClock();
 });
 // ✕ on the Continue button drops the saved fight.
 $('btn-drop-saved').addEventListener('click', () => {
@@ -521,18 +360,20 @@ $('btn-resume-saved').addEventListener('click', () => {
   act(['resume']);
 });
 
-// Son: all sounds on or off; Éco: dark, silent. Both apply to the waiting clock at once.
-$('bar-tg').addEventListener('click', e => {
-  const b = e.target.closest('[data-tg]');
-  if (!b) return;
+// Son: all sounds on or off; Éco: dark, silent. Both apply to the clock at once.
+function toggleSoundOrEco(which) {
   unlockAudio();
-  if (b.dataset.tg === 'eco') { cfg.eco = !cfg.eco; cfg.sound = cfg.clicks = !cfg.eco; updateMotion(); }
-  else { const on = !(!cfg.eco && (cfg.sound || cfg.clicks)); cfg.sound = cfg.clicks = on; if (on) { cfg.eco = false; updateMotion(); } }
+  if (which === 'eco') { cfg.eco = !cfg.eco; cfg.sound = !cfg.eco; updateMotion(); }  // Éco mutes; leaving it brings the sound back
+  else { cfg.sound = !(cfg.sound && !cfg.eco); if (cfg.sound && cfg.eco) { cfg.eco = false; updateMotion(); } }
   save(CFG_KEY, cfg);
-  setMuted(!!cfg.eco); setSounds(cfg.clicks !== false, !!cfg.sound);
-  s.cfg.eco = cfg.eco;
+  applySound();
+  if (s) s.cfg.eco = cfg.eco;
   document.body.classList.toggle('eco', !!cfg.eco);
   render();
+}
+$('bar-tg').addEventListener('click', e => {
+  const b = e.target.closest('[data-tg]');
+  if (b) toggleSoundOrEco(b.dataset.tg);
 });
 
 // Sound and colour test, one after the other.
@@ -557,6 +398,7 @@ function nameOf(p) {
   return s.cfg.names[p] || colourOf(p) || `Joueur ${p + 1}`;
 }
 
+const SET_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="7" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="17" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
 const halves = [...document.querySelectorAll('.half')].sort((a, b) => a.dataset.p - b.dataset.p);
 
 function buildHalves() {
@@ -567,8 +409,8 @@ function buildHalves() {
       <div class="h-phase"><small></small><b></b></div>
       <div class="h-clock"></div>
       <div class="h-move"></div>
-      <button type="button" class="h-illtg" aria-label="Coups illégaux">${redFlag}</button>
-      <button type="button" class="h-set"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="7" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="17" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/></svg>Réglages</button>
+      <div class="h-tgs"><button type="button" class="h-tg h-avgtg" aria-label="Temps moyen par coup"><b>s</b>/coup</button><button type="button" class="h-tg h-cnttg" aria-label="Comptes">${tileOf('moveCountdownMs').icon()}</button><button type="button" class="h-tg h-illtg" aria-label="Coups illégaux">${redFlag}</button></div>
+      <button type="button" class="h-set">${SET_ICON}Réglages</button>
       <div class="h-counts"></div>
       <div class="h-avg"></div>
       <div class="h-notice" hidden></div>
@@ -581,9 +423,21 @@ function buildHalves() {
       showNotice(1 - p);
     });
     // Before the start: Réglages, turned towards the player who asked for them.
+    const far = () => h.classList.contains('top') && (s.cfg.orient || 'normal') === 'normal' && matchMedia('(orientation: portrait)').matches;
     h.querySelector('.h-set').addEventListener('click', e => {
       e.stopPropagation();
-      openSettings(h.classList.contains('top') && (s.cfg.orient || 'normal') === 'normal' && matchMedia('(orientation: portrait)').matches);
+      openSettings(far());
+    });
+    // s/coup: the average per move shown or not; the hands: the counts panel.
+    h.querySelector('.h-avgtg').addEventListener('click', e => {
+      e.stopPropagation();
+      cfg.showAvg = cfg.showAvg === false;
+      save(CFG_KEY, cfg);
+      renderSetup();
+    });
+    h.querySelector('.h-cnttg').addEventListener('click', e => {
+      e.stopPropagation();
+      openQuick('count', far());
     });
     // Before the start: the red flag in the corner switches illegal moves on / off.
     h.querySelector('.h-illtg').addEventListener('click', e => {
@@ -724,16 +578,19 @@ function readyClock() {
   openFight();
 }
 // Réglages from the clock; from the far half, the page turns to face that player.
+// A fight in progress is kept, paused (Continuer on the page, or ‹ Pendule).
 function openSettings(flip) {
-  save(FIGHT_KEY, null);
+  if (s && s.phase !== 'ready' && s.phase !== 'over') {
+    if (!s.paused) togglePause(s, performance.now());
+    persist();
+  } else save(FIGHT_KEY, null);
   s = null;
+  quickKey = null; renderQuick();
   ['fight', 'pause-menu', 'end-menu', 'result'].forEach(id => { $(id).hidden = true; });
   document.documentElement.classList.toggle('flip', !!flip);
   $('setup').hidden = false;
-  $('settings').open = true;
   renderSetup();
-  // Straight to the settings, the rounds pick just above them.
-  requestAnimationFrame(() => document.querySelector('.rounds-pick').scrollIntoView({ block: 'start' }));
+  window.scrollTo(0, 0); $('setup').scrollTop = 0;
 }
 // Compact summary for the bar before the start: V  ♞ 3:00  🥊 3:00  ⧗ 1:00.
 // Each part can be tapped to change it right there (see the quick panel).
@@ -746,23 +603,36 @@ function readyInfoHTML(c) {
 }
 // Quick panel over the waiting clock: the step's ruler, on / off and back to the
 // original time; for the rounds, the four numbers. Tap outside to close.
-let quickKey = null;
+let quickKey = null, quickFlip = false;
 function renderQuick() {
   const k = quickKey;
   $('quick').hidden = !k;
+  $('quick-box').classList.toggle('qflip', !!k && quickFlip);
   if (!k) return;
+  if (k === 'count') {  // the count, its warning, and the limits (also for illegal moves)
+    const c = tileOf('moveCountdownMs'), on = c.on();
+    const limits = !(on || cfg.illegalMoves) ? [] : cfg.intervals ? ['countsPerRound', 'countsTotal'] : ['countsTotal'];
+    $('quick-box').innerHTML = `<p class="q-t">Comptes</p>` + rulerHTML(c) + (on ? rulerHTML(tileOf('moveWarnMs')) : '')
+      + limits.map(l => rulerHTML(tileOf(l))).join('') + `<div class="q-act">
+    <button type="button" class="q-btn" data-tile="moveCountdownMs">${on ? 'Désactiver' : 'Activer'}</button>
+    <button type="button" class="q-btn" data-reset="moveCountdownMs"${on && cfg.moveCountdownMs !== standardOf('moveCountdownMs') ? '' : ' disabled'}>${ICONS.replay}${fmtValue(standardOf('moveCountdownMs'))}</button>
+    <button type="button" class="q-btn q-ok" data-qclose>OK</button></div>`;
+    return;
+  }
   if (k === 'rounds') {
     $('quick-box').innerHTML = `<p class="q-t">Rounds</p><div class="q-rounds">${Object.keys(PRESETS).map(r =>
       `<button type="button" class="${+r === cfg.rounds ? 'on' : ''}" data-qr="${r}"><b>${roman(+r)}</b><small>${formatClock(playerTime({ ...cfg, rounds: +r }))}</small></button>`).join('')}</div>`;
     return;
   }
   const t = tileOf(k), on = t.on();
-  $('quick-box').innerHTML = rulerHTML(t) + `<div class="q-act">
+  // Prêt ? goes with a timed pause (an open pause already waits for the coach).
+  const ready = k === 'breakMs' && on ? optRow(OPTIONS[0]) : '';
+  $('quick-box').innerHTML = rulerHTML(t) + ready + `<div class="q-act">
     <button type="button" class="q-btn" data-tile="${k}">${on ? 'Désactiver' : 'Activer'}</button>
     <button type="button" class="q-btn" data-reset="${k}"${on && cfg[k] !== standardOf(k) ? '' : ' disabled'}>${ICONS.replay}${fmtValue(standardOf(k))}</button>
     <button type="button" class="q-btn q-ok" data-qclose>OK</button></div>`;
 }
-function openQuick(k) { quickKey = k; renderQuick(); render(); }
+function openQuick(k, flip = false) { quickKey = k; quickFlip = flip; renderQuick(); render(); }
 $('bar-round').addEventListener('click', e => {
   const b = e.target.closest('[data-q]');
   if (b && s && s.phase === 'ready') openQuick(b.dataset.q);
@@ -773,10 +643,11 @@ $('quick').addEventListener('click', e => {
   if (r) { cfg.rounds = +r.dataset.qr; save(CFG_KEY, cfg); renderSetup(); }
 });
 $('quick').addEventListener('click', onTiles);
+$('quick').addEventListener('click', onOptions);
 ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach((ev, i) =>
   $('quick').addEventListener(ev, [onRulerDown, onRulerMove, endRuler, endRuler][i]));
 function renderBarToggles() {
-  const sound = !cfg.eco && (cfg.sound || cfg.clicks);
+  const sound = !cfg.eco && cfg.sound;
   $('bar-tg').innerHTML = `<button type="button" class="tg${sound ? ' on' : ''}" data-tg="sound" aria-label="Son">${sound ? ICONS.sound : ICONS.mute}Son</button>`
     + `<button type="button" class="tg${cfg.eco ? ' on' : ''}" data-tg="eco" aria-label="Éco">${ICONS.eco}Éco</button>`;
 }
@@ -950,10 +821,12 @@ function render() {
   if (s.phase === 'ready') renderBarToggles();
   halves.forEach(h => {
     h.querySelector('.h-set').hidden = s.phase !== 'ready';
-    const f = h.querySelector('.h-illtg');
-    f.hidden = s.phase !== 'ready';
-    f.classList.toggle('on', !!s.cfg.illegalMoves);
-    f.setAttribute('aria-pressed', !!s.cfg.illegalMoves);
+    h.querySelector('.h-tgs').hidden = s.phase !== 'ready';
+    [['.h-illtg', !!s.cfg.illegalMoves], ['.h-cnttg', !!cfg.countdownOn], ['.h-avgtg', cfg.showAvg !== false]].forEach(([q, on]) => {
+      const b = h.querySelector(q);
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-pressed', on);
+    });
   });
   if (!$('pause-menu').hidden) renderPauseMenu();
   renderResult();
@@ -964,10 +837,33 @@ function renderPauseMenu() {
   // Next step in fight order: → ⏸ pause, then → 🥊 boxing or → ♟ chess.
   const next = s.awaitReady ? null : nextStep(s);
   $('pm-next').hidden = next === null;
-  $('pm-restart').hidden = !!s.awaitReady;
   setHTML($('pm-resume'), s.awaitReady ? '<i class="ready-txt">Prêt ?</i>' : `${ICONS.play}<span>GO</span>`);
   if (next) setHTML($('pm-next'), ICONS.next + (next.phase === 'break' ? ICONS.hourglass : next.phase === 'chess' ? ICONS.pawn : ICONS.glove));
+  // Switches for the rest of the fight: counts, illegal moves, sound, Éco; and Réglages.
+  const sound = !cfg.eco && cfg.sound;
+  const tg = (k, on, icon, label) => `<button type="button" class="pt${on ? ' on' : ''}" data-pt="${k}" aria-pressed="${on}">${icon}<small>${label}</small></button>`;
+  setHTML($('pm-tgs'), tg('count', !!s.cfg.countdownOn, tileOf('moveCountdownMs').icon(), 'Compte')
+    + tg('ill', !!s.cfg.illegalMoves, redFlag, 'Illégal')
+    + tg('sound', sound, sound ? ICONS.sound : ICONS.mute, 'Son')
+    + tg('eco', !!cfg.eco, ICONS.eco, 'Éco')
+    + `<button type="button" class="pt pt-set" data-pt="set">${SET_ICON}<small>Réglages</small></button>`);
 }
+// Counts and illegal moves switched during a fight: the clock takes them at once.
+const COUNT_KEYS = ['countdownOn', 'warnOn', 'moveWarnMs', 'moveCountdownMs', 'moveLimit', 'illegalMoves', 'countsPerRound', 'countsTotal'];
+$('pm-tgs').addEventListener('click', e => {
+  const b = e.target.closest('[data-pt]');
+  if (!b) return;
+  const k = b.dataset.pt;
+  if (k === 'set') { openSettings(false); return; }
+  if (k === 'sound' || k === 'eco') { toggleSoundOrEco(k); return; }
+  if (k === 'count') { cfg.countdownOn = !s.cfg.countdownOn; if (cfg.countdownOn) cfg.warnOn = true; }
+  else cfg.illegalMoves = !s.cfg.illegalMoves;
+  save(CFG_KEY, cfg);
+  const f = fightConfig();
+  COUNT_KEYS.forEach(c => { s.cfg[c] = f[c]; });
+  persist();
+  render();
+});
 $('pm-next').addEventListener('click', () => act(goToNextStep(s, performance.now())));
 
 $('pm-resume').addEventListener('click', () => act(togglePause(s, performance.now())));
@@ -980,7 +876,6 @@ function restart() {
 }
 $('pm-restart').addEventListener('click', restart);
 $('bar-replay').addEventListener('click', restart);
-$('pm-home').addEventListener('click', () => $('bar-home').click());
 
 // ── MANUAL END ──
 const METHODS = ['Mat', 'Abandon', 'KO', 'Arbitre', 'Juges', 'Disqualif.', 'Nulle'];
@@ -1089,6 +984,11 @@ function keepAwakeVideo() {
   awake.play().catch(() => {});
 }
 document.addEventListener('visibilitychange', () => {
+  // Screen locked (or app left) during a chess round: the chess clock stops. Boxing and pauses keep running.
+  if (document.visibilityState === 'hidden' && s && s.phase === 'chess' && !s.paused && !s.roundOver && !$('fight').hidden) {
+    act(togglePause(s, performance.now()));
+    persist();
+  }
   if (document.visibilityState === 'visible' && s && !$('fight').hidden) { requestWakeLock(); unlockAudio(); }
 });
 
@@ -1112,6 +1012,56 @@ if (!standalone && /iphone|ipad|ipod/i.test(navigator.userAgent)) {
   $('install-ios').hidden = false;
 }
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => {});
+
+// Slide down from anywhere (clock stopped, or Réglages scrolled to the top) to
+// reload the app: the newest version, everything set afresh.
+const PTR_PX = 110;
+const ptr = document.createElement('div');
+ptr.id = 'ptr';
+ptr.innerHTML = ICONS.replay;
+document.body.append(ptr);
+let pull = null;
+function pullAllowed(target) {
+  if (target.closest('[data-ruler], input, .quick-box')) return false;
+  if (!$('setup').hidden) {
+    const el = $('setup');
+    return document.documentElement.classList.contains('flip')
+      ? el.scrollTop >= el.scrollHeight - el.clientHeight - 2  // turned page: its top is at the bottom
+      : window.scrollY <= 0 && el.scrollTop <= 0;
+  }
+  return !!s && (s.phase === 'ready' || s.phase === 'over' || s.paused);
+}
+function pullStart(x, y, target) { pull = pullAllowed(target) ? { x, y, d: 0 } : null; }
+function pullMove(x, y) {
+  if (!pull) return;
+  const flip = document.documentElement.classList.contains('flip') && !$('setup').hidden;
+  const dy = (y - pull.y) * (flip ? -1 : 1), dx = Math.abs(x - pull.x);
+  if (dx > Math.max(40, dy)) { pullEnd(false); return; }  // sideways: not a pull
+  pull.d = Math.max(0, dy);
+  const k = Math.min(1, pull.d / PTR_PX);
+  ptr.style.opacity = k;
+  ptr.style.transform = `translateY(${(flip ? -1 : 1) * (-60 + k * 100)}px) rotate(${k * 300}deg)`;
+  ptr.classList.toggle('go', k >= 1);
+}
+function pullEnd(ok = true) {
+  const go = ok && pull && pull.d >= PTR_PX;
+  pull = null;
+  ptr.style.opacity = 0;
+  ptr.style.transform = '';
+  ptr.classList.remove('go');
+  if (!go) return;
+  persist();
+  const reg = navigator.serviceWorker ? navigator.serviceWorker.getRegistration().then(r => r && r.update()).catch(() => {}) : Promise.resolve();
+  Promise.race([reg, new Promise(ok => setTimeout(ok, 1500))]).then(() => location.reload());
+}
+document.addEventListener('touchstart', e => { if (e.touches.length === 1) pullStart(e.touches[0].clientX, e.touches[0].clientY, e.target); else pull = null; }, { passive: true });
+document.addEventListener('touchmove', e => { if (e.touches.length === 1) pullMove(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
+document.addEventListener('touchend', () => pullEnd(), { passive: true });
+document.addEventListener('touchcancel', () => pullEnd(false), { passive: true });
+// A mouse can pull too (computer, tests).
+document.addEventListener('pointerdown', e => { if (e.pointerType === 'mouse') pullStart(e.clientX, e.clientY, e.target); });
+document.addEventListener('pointermove', e => { if (e.pointerType === 'mouse' && e.buttons) pullMove(e.clientX, e.clientY); });
+document.addEventListener('pointerup', e => { if (e.pointerType === 'mouse') pullEnd(); });
 
 function escapeHtml(t) {
   return String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
