@@ -1145,3 +1145,14 @@ html.flip #ptr { top: auto; bottom: 0; }
 .cnt-pick button { aspect-ratio: 1; max-width: 48px; width: 100%; justify-self: center; border-radius: 50%; padding: 0;
   border: 1px solid rgba(235, 229, 214, .18); background: none; color: var(--text-2); font: italic 500 22px/1 var(--font-serif); touch-action: manipulation; }
 .cnt-pick button.on { border-color: rgba(235, 229, 214, .75); background: rgba(235, 229, 214, .1); color: var(--bone); }
+/* Rounds wheel, 0.2.85: the neighbours small, in the sans, low at the sides, almost whole */
+.ri-peek { font: 600 calc(var(--rb) * .2)/1 var(--font-display) !important; font-style: normal !important; letter-spacing: .04em;
+  opacity: .45; top: 66%; }
+.ri-prev { left: 0; right: auto; transform: translate(-18%, -50%); }
+.ri-next { right: 0; left: auto; transform: translate(18%, -50%); }
+.phase-ready button.ri-rounds .ri-n { transform: translateY(-6%); }
+.ri-peek { top: 70%; opacity: .5; }
+.ri-prev { left: calc(var(--rb) * .06); transform: translate(0, -50%); }
+.ri-next { right: calc(var(--rb) * .06); transform: translate(0, -50%); }
+.phase-ready button.ri-rounds .ri-n { font-size: calc(var(--rb) * .42) !important; transform: translateY(-14%); }
+.phase-ready button.ri-rounds .ri-n.long { font-size: calc(var(--rb) * .34) !important; }
