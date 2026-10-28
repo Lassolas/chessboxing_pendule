@@ -973,3 +973,10 @@ button.ri-rounds { padding: 2px 7px; }
   font: 600 11px var(--font-display); letter-spacing: .18em; text-transform: uppercase; }
 @media (orientation: landscape) { .phase-ready .bar { flex-wrap: nowrap; } .phase-ready .bar-info { flex: 1 1 auto; } .phase-ready .bar-tg { flex: none; } }
 @media (max-height: 620px) and (orientation: portrait) { .phase-ready button.ri { height: 42px; } .phase-ready .bar-tg .tg { height: 34px; } .phase-ready .bar { row-gap: 6px; padding: 6px 8px; } }
+/* Ready bar buttons lightly tinted in their own colour */
+.phase-ready button.ri { background: color-mix(in srgb, var(--c) 9%, transparent); border-color: color-mix(in srgb, var(--c) 42%, transparent); }
+.phase-ready button.ri .ic { color: var(--c); }
+.phase-ready button.ri-rounds .ri-n { color: var(--gold); }
+.phase-ready button.ri.off { background: none; border-color: rgba(235, 229, 214, .25); }
+.phase-ready button.ri.off .ic { color: var(--text-2); }
+.phase-ready button.ri:active, .phase-ready button.ri.open { background: color-mix(in srgb, var(--c) 22%, transparent); border-color: var(--c); }
