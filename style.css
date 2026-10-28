@@ -1098,3 +1098,6 @@ html.flip #ptr { top: auto; bottom: 0; }
 .quick-box .q-act-one .q-ok { min-width: 140px; }
 .quick-box .ruler + .ruler { margin-top: 8px; }
 #opt-ready .rl-opt { width: 100%; margin-bottom: 12px; }
+/* No round names on the clock: the Prêt ? card keeps only Prêt ? */
+.h-card .hc-num, .h-card .hc-label, .h-card .hc-rule { display: none !important; }
+.phase-ready .h-in > .h-phase, .h-phase.empty { display: none !important; }

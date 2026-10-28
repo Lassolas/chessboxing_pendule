@@ -727,11 +727,6 @@ function setHTML(el, html) {
   el.dataset.html = html;
   el.innerHTML = html;
 }
-// The step on the title card: round numeral and name, or the pause.
-function stepCard() {
-  if (s.phase === 'break') return { num: ICONS.hourglass, label: 'Pause' };
-  return { num: roman(roundNo(s.cfg, s.round)), label: s.phase === 'boxing' ? 'Boxe' : 'Échecs' };
-}
 // Progress in the bar: the round numerals, chess in gold, boxing in red,
 // the round being played in bold; the others greyed.
 function trackHTML() {
@@ -779,14 +774,9 @@ function render() {
     // Boxing / pause: small label, the round timer in big digits.
     // Nothing ever covers a running clock: the next round is announced in
     // the last 10 s of the pause (and before the first one), above the timer.
-    const soon = s.phase === 'break' && s.phaseRemaining !== null && s.phaseRemaining <= 10000;
-    const upcoming = n => `<em>${roman(roundNo(s.cfg, n))}</em>${roundType(n) === 'chess' ? 'Échecs' : 'Boxe'}`;
-    phaseEl.classList.toggle('soon', soon || s.phase === 'ready');
-    setHTML(phaseEl.firstChild, s.phase === 'boxing' ? upcoming(s.round) : soon ? upcoming(s.nextRound)
-      : s.phase === 'break' ? `${ICONS.hourglass}Pause` : s.phase === 'ready' ? upcoming(1) : '');
-    const card = stepCard();
-    setHTML(h.querySelector('.hc-num'), card.num);
-    h.querySelector('.hc-label').textContent = card.label;
+    // No round names on the clock (Val): only Boxe / Pause over their timer; the rounds are in the bar.
+    phaseEl.classList.remove('soon');
+    setHTML(phaseEl.firstChild, s.phase === 'boxing' ? `${ICONS.glove}Boxe` : s.phase === 'break' ? `${ICONS.hourglass}Pause` : '');
     setDigits(phaseEl.lastChild, (s.phase === 'boxing' || s.phase === 'break') && !untimed ? roundClock(s.phaseRemaining) : (s.phase === 'break' ? '∞' : ''), cfg.digits);
     const move = h.querySelector('.h-move');
     if (active && cd !== null) move.innerHTML = countHands(cd);
