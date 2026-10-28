@@ -750,6 +750,8 @@ function showNotice(p) {
 }
 
 // innerHTML only when it changes (the loop redraws ten times a second).
+// A round numeral in its colour, bold: chess white, boxing red.
+const roundTag = n => `<span class="rtag ${roundType(n) === 'chess' ? 'rt-chess' : 'rt-box'}">${roman(n)}</span>`;
 function setHTML(el, html) {
   if (el.dataset.html === html) return;
   el.dataset.html = html;
@@ -804,7 +806,8 @@ function render() {
     // the last 10 s of the pause (and before the first one), above the timer.
     // No round names on the clock (Val): only Boxe / Pause over their timer; the rounds are in the bar.
     phaseEl.classList.remove('soon');
-    setHTML(phaseEl.firstChild, s.phase === 'break' ? `${ICONS.hourglass}Pause` : '');
+    // Pause: round just played (grey) → ⧗ → next round in its colour (chess white, boxing red).
+    setHTML(phaseEl.firstChild, s.phase === 'break' ? `<span class="pv-prev">${roman(s.round)}</span><span class="pv-arr">→</span>${ICONS.hourglass}<span class="pv-arr">→</span>${roundTag(s.nextRound)}` : '');
     setDigits(phaseEl.lastChild, (s.phase === 'boxing' || s.phase === 'break') && !untimed ? roundClock(s.phaseRemaining) : (s.phase === 'break' ? '∞' : ''), cfg.digits);
     const move = h.querySelector('.h-move');
     if (active && cd !== null) move.innerHTML = countHands(cd);
@@ -852,7 +855,9 @@ function render() {
   const overAction = flagScreen && r.method === 'réflexion' ? 'Continuer' : null;
   $('bar-btn').hidden = s.phase === 'ready' || (s.phase === 'over' && !overAction);
   const btnText = overAction || (s.roundOver && !s.paused ? 'Stop' : '');
-  setHTML($('bar-btn'), btnText || (s.paused || (untimed && s.phase === 'break') ? ICONS.play : ICONS.pause));
+  // Open pause: the button starts the next round, so it says which one (→ IV in its colour).
+  setHTML($('bar-btn'), btnText || (untimed && s.phase === 'break' && !s.paused ? `<span class="bb-next">${ICONS.next}${roundTag(s.nextRound)}</span>`
+    : s.paused || (untimed && s.phase === 'break') ? ICONS.play : ICONS.pause));
   $('bar-btn').classList.toggle('long', !!btnText);
   $('bar-btn').setAttribute('aria-label', btnText || (s.paused ? 'Reprendre' : 'Pause'));
   $('bar-btn').classList.toggle('go', untimed && s.phase === 'break' && !s.paused);
@@ -885,7 +890,7 @@ function renderPauseMenu() {
   const next = s.awaitReady ? null : nextStep(s);
   $('pm-next').hidden = next === null;
   setHTML($('pm-resume'), s.awaitReady ? '<i class="ready-txt">Prêt ?</i>' : `${ICONS.play}<span>GO</span>`);
-  if (next) setHTML($('pm-next'), ICONS.next + (next.phase === 'break' ? ICONS.hourglass : next.phase === 'chess' ? ICONS.pawn : ICONS.glove));
+  if (next) setHTML($('pm-next'), ICONS.next + (next.phase === 'break' ? ICONS.hourglass : roundTag(next.round)));
   // Switches for the rest of the fight: counts, illegal moves, sound, Éco; and Réglages.
   const sound = !cfg.eco && cfg.sound;
   const tg = (k, on, icon, label) => `<button type="button" class="pt${on ? ' on' : ''}" data-pt="${k}" aria-pressed="${on}">${icon}<small>${label}</small></button>`;

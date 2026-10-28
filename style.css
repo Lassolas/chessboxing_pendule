@@ -1181,3 +1181,12 @@ html.flip #ptr { top: auto; bottom: 0; }
 .ri-o2 { left: 76% !important; top: 72% !important; }
 .phase-ready button.ri-rounds .ri-n { transform: translateY(-16%); font-size: calc(var(--rb) * .38) !important; }
 .phase-ready button.ri-rounds .ri-n.long { font-size: calc(var(--rb) * .3) !important; }
+/* Pause: III → ⧗ → IV above the timer; the next round bold in its colour */
+.phase-break .h-phase small { display: inline-flex !important; align-items: center; gap: 10px; font-size: clamp(22px, 7cqw, 34px) !important; letter-spacing: 0 !important; }
+.pv-prev { font: italic 600 1em/1 var(--font-serif); color: var(--text-2); opacity: .7; }
+.pv-arr { font: 400 .8em/1 var(--font-display); color: var(--text-2); }
+.phase-break .h-phase small .ic { width: auto; height: .75em; color: var(--blue); }
+.rtag { font: italic 700 1.1em/1 var(--font-serif); }
+.rt-chess { color: var(--bone); } .rt-box { color: var(--red); }
+.pm-next .rtag { font-size: 30px; }
+.bb-next { display: inline-flex; align-items: center; gap: 4px; } .bb-next .ic { width: 18px; height: 18px; } .bb-next .rtag { font-size: 24px; }
