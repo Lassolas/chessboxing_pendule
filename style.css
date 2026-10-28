@@ -1084,3 +1084,11 @@ html.flip #ptr { top: auto; bottom: 0; }
 .phase-ready .bar-tg .tg { border: 1px solid rgba(235, 229, 214, .2); background: none; color: var(--text-2); }
 .phase-ready .bar-tg .tg.on { border-color: rgba(235, 229, 214, .5); background: rgba(235, 229, 214, .08); color: var(--bone); }
 .phase-ready button.ri.off { border-style: dashed; }
+/* Prêt ? round switch in the ready bar */
+.phase-ready .bar { --rb: min(54px, 11vw); }
+.phase-ready button.ri-ready { --c: var(--gold); }
+.ri-q { font: italic 500 calc(var(--rb) * .36)/1 var(--font-serif); color: var(--text-2); }
+.phase-ready button.ri-ready.on { background: color-mix(in srgb, var(--gold) 12%, transparent); border-color: color-mix(in srgb, var(--gold) 55%, transparent); border-style: solid; }
+.phase-ready button.ri-ready.on .ri-q { color: var(--gold); }
+.phase-ready button.ri-ready.off { background: none; border-color: rgba(235, 229, 214, .25); }
+.phase-ready button.ri.dim { opacity: .45; }

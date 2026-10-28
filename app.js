@@ -613,7 +613,9 @@ function readyInfoHTML(c) {
   const rounds = item('rounds', `<span class="ri-n">${roman(c.rounds)}</span>`, false, 'Rounds');
   if (!c.intervals) return rounds + item('chessRoundMs', ICONS.pawn, false, 'Échecs');
   return rounds + item('chessRoundMs', ICONS.pawn, false, 'Échecs') + item('boxRoundMs', ICONS.glove, !c.boxTimer, 'Boxe')
-    + item('breakMs', ICONS.hourglass, !c.breakOn, 'Pause');
+    + item('breakMs', ICONS.hourglass, !c.breakOn, 'Pause')
+    // Prêt ?: a switch (it only matters after a timed pause).
+    + `<button type="button" class="ri ri-ready${c.readyCheck ? ' on' : ' off'}${c.breakOn ? '' : ' dim'}" data-q="ready" aria-label="Prêt ?" aria-pressed="${!!c.readyCheck}"><i class="ri-q">Prêt</i></button>`;
 }
 // Quick panel over the waiting clock: the step's ruler, on / off and back to the
 // original time; for the rounds, the four numbers. Tap outside to close.
@@ -629,9 +631,7 @@ function renderQuick() {
     return;
   }
   const t = tileOf(k), on = t.on();
-  // Prêt ? goes with a timed pause (an open pause already waits for the coach).
-  const ready = k === 'breakMs' && on ? optRow(OPTIONS[0]) : '';
-  $('quick-box').innerHTML = rulerHTML(t) + ready + `<div class="q-act">
+  $('quick-box').innerHTML = rulerHTML(t) + `<div class="q-act">
     <button type="button" class="q-btn" data-tile="${k}">${on ? 'Désactiver' : 'Activer'}</button>
     <button type="button" class="q-btn" data-reset="${k}"${on && cfg[k] !== standardOf(k) ? '' : ' disabled'}>${ICONS.replay}${fmtValue(standardOf(k))}</button>
     <button type="button" class="q-btn q-ok" data-qclose>OK</button></div>`;
@@ -639,7 +639,9 @@ function renderQuick() {
 function openQuick(k, flip = false) { quickKey = k; quickFlip = flip; renderQuick(); render(); }
 $('bar-round').addEventListener('click', e => {
   const b = e.target.closest('[data-q]');
-  if (b && s && s.phase === 'ready') openQuick(b.dataset.q);
+  if (!b || !s || s.phase !== 'ready') return;
+  if (b.dataset.q === 'ready') { cfg.readyCheck = !cfg.readyCheck; save(CFG_KEY, cfg); renderSetup(); return; }
+  openQuick(b.dataset.q);
 });
 $('quick').addEventListener('click', e => {
   if (e.target === $('quick') || e.target.closest('[data-qclose]')) { quickKey = null; renderQuick(); render(); return; }
