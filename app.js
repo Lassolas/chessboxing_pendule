@@ -236,7 +236,9 @@ const endRuler = e => {
 });
 function renderTiles() {
   if (clampCount(cfg)) save(CFG_KEY, cfg);
-  $('durations').innerHTML = ['chessRoundMs', 'boxRoundMs', 'breakMs'].map(k => rulerHTML(tileOf(k))).join('');
+  // Prêt ? right under the pause: it decides how each chess round starts (rounds only).
+  $('durations').innerHTML = ['chessRoundMs', 'boxRoundMs', 'breakMs'].map(k => rulerHTML(tileOf(k))).join('')
+    + optRow(OPTIONS.find(o => o[0] === 'readyCheck')).replace('class="ruler rl-opt', `class="ruler rl-opt rl-ready${cfg.intervals ? '' : ' dim'}`);
   // Under the rulers: the count and its warning; once on, the count limits
   // (a plain clock is one game: only the total), after the illegal-move switch.
   const more = cfg.countdownOn || cfg.illegalMoves;
@@ -346,6 +348,11 @@ const OPTIONS = [
   ['eco', () => ICONS.eco, 'Éco', () => 'Écran noir, sans son ni animation.'],
 ];
 
+const optRow = ([key, icon, label, note]) => `
+    <button type="button" class="ruler rl-opt${cfg[key] ? ' on' : ''}" data-opt="${key}" aria-pressed="${!!cfg[key]}">
+      <span class="rl-ico">${icon(cfg[key])}<small>${label}</small></span>
+      <span class="rl-note">${note(cfg[key])}</span></button>`;
+
 // Rounds: one tap picks the number (the time per player follows).
 function renderPresets() {
   $('presets').innerHTML = Object.keys(PRESETS).map(r =>
@@ -410,10 +417,7 @@ function renderSetup() {
   renderPresets();
   // Unchecking the intervals leaves a plain clock: only Éco still applies.
   // A plain clock has no illegal-move card: dimmed, so the layout stays put.
-  $('options').innerHTML = OPTIONS.map(([key, icon, label, note]) => `
-    <button type="button" class="ruler rl-opt${cfg[key] ? ' on' : ''}" data-opt="${key}" aria-pressed="${!!cfg[key]}">
-      <span class="rl-ico">${icon(cfg[key])}<small>${label}</small></span>
-      <span class="rl-note">${note(cfg[key])}</span></button>`).join('');
+  $('options').innerHTML = OPTIONS.filter(o => o[0] !== 'readyCheck').map(optRow).join('');
   // Clock digits: the same time shown in each style, one tap to choose.
   $('digit-pick').innerHTML = `<div class="digit-pick">${DIGIT_STYLES.map(d =>
     `<button type="button" class="digit-opt${cfg.digits === d ? ' on' : ''}" data-digits="${d}" aria-label="Chiffres ${d}"><span></span></button>`).join('')}</div>`;
@@ -477,6 +481,7 @@ function fightConfig() {
 function onOptions(e) {
   const t = e.target.closest('[data-opt]');
   const d = e.target.closest('[data-digits]');
+  if (!t && !d) return;
   if (d) { cfg.digits = d.dataset.digits; save(CFG_KEY, cfg); }
   if (t) {
     cfg[t.dataset.opt] = !cfg[t.dataset.opt];
@@ -488,6 +493,7 @@ function onOptions(e) {
   renderSetup();
 }
 $('options').addEventListener('click', onOptions);
+$('durations').addEventListener('click', onOptions);
 $('digit-pick').addEventListener('click', onOptions);
 $('btn-defaults').addEventListener('click', () => {
   cfg = { ...homeDefaults(), readyCheck: true, names: cfg.names, eco: cfg.eco, sound: cfg.sound, clicks: cfg.clicks, digits: cfg.digits, orient: cfg.orient };
