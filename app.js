@@ -866,7 +866,11 @@ function render() {
   const byCount0 = !!flagScreen && r.method === 'réflexion';
   const replay = !!flagScreen && (r.method === 'temps' || byCounts || byCount0);
   $('bar-replay').classList.toggle('with-btn', byCount0);
-  $('bar-timer').hidden = replay;
+  // Timed pause: the halves already show the time; the bar offers → next round instead.
+  const skipTo = s.phase === 'break' && !untimed && !s.awaitReady ? nextStep(s) : null;
+  $('bar-next').hidden = !skipTo;
+  if (skipTo) setHTML($('bar-next'), ICONS.next + roundTag(skipTo.round));
+  $('bar-timer').hidden = replay || !!skipTo;
   document.querySelector('.bar-info').hidden = replay;
   $('bar-replay').hidden = !replay;
   document.querySelector('.bar').classList.toggle('alert', s.roundOver && !s.paused && s.phase !== 'over');
@@ -907,13 +911,9 @@ function render() {
 
 // Pause menu: big Continue, ↺ restart from zero (tap twice), ⌂ home.
 function renderPauseMenu() {
-  // Next step in fight order: → ⏸ pause, then → 🥊 boxing or → ♟ chess.
-  const next = s.awaitReady ? null : nextStep(s);
-  $('pm-next').hidden = next === null;
   // Prêt ?: nothing in the middle but Prêt ? (no pause settings).
   $('pm-tgs').hidden = $('pm-restart').hidden = !!s.awaitReady;
   setHTML($('pm-resume'), s.awaitReady ? '<i class="ready-txt">Prêt ?</i>' : `${ICONS.play}<span>GO</span>`);
-  if (next) setHTML($('pm-next'), ICONS.next + (next.phase === 'break' ? ICONS.hourglass : roundTag(next.round)));
   // Switches for the rest of the fight: counts, illegal moves, sound, Éco; and Réglages.
   const sound = !cfg.eco && cfg.sound;
   const tg = (k, on, icon, label) => `<button type="button" class="pt${on ? ' on' : ''}" data-pt="${k}" aria-pressed="${on}">${icon}<small>${label}</small></button>`;
@@ -948,7 +948,8 @@ $('pm-tgs').addEventListener('click', e => {
   persist();
   render();
 });
-$('pm-next').addEventListener('click', () => act(goToNextStep(s, performance.now())));
+// Timed pause: → next round beside ⏸, where the timer was.
+$('bar-next').addEventListener('click', () => { unlockAudio(); act(goToNextStep(s, performance.now())); });
 
 $('pm-resume').addEventListener('click', () => act(togglePause(s, performance.now())));
 // A tap anywhere outside the buttons resumes too.
