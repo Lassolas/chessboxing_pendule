@@ -1090,3 +1090,11 @@ html.flip #ptr { top: auto; bottom: 0; }
 .phase-ready button.ri-ready.on .ri-q { color: var(--gold); }
 .phase-ready button.ri-ready.off { background: none; border-color: rgba(235, 229, 214, .25); }
 .phase-ready button.ri.dim { opacity: .45; }
+/* 0.2.77: bar = rounds, clock | sound, Éco, standard */
+.phase-ready button.ri-times { --c: var(--bone); }
+.phase-ready button.ri-times .ic { width: calc(var(--rb) * .5) !important; height: calc(var(--rb) * .5) !important; color: var(--bone); }
+.phase-ready .bar { --rb: min(54px, 12.6vw); }
+.quick-box .q-act-one { grid-template-columns: 1fr; justify-items: center; }
+.quick-box .q-act-one .q-ok { min-width: 140px; }
+.quick-box .ruler + .ruler { margin-top: 8px; }
+#opt-ready .rl-opt { width: 100%; margin-bottom: 12px; }

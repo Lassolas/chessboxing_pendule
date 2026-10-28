@@ -268,6 +268,7 @@ function renderSetup() {
   document.body.className = cfg.eco ? 'eco' : '';
   document.documentElement.dataset.digits = cfg.digits;
   if (clampCount(cfg)) save(CFG_KEY, cfg);
+  $('opt-ready').innerHTML = optRow(OPTIONS[0]);
   // Comptes: the count's times and the limits (switched on from the clock). Alerte 0:00 = none.
   $('chess-set').innerHTML = ['moveCountdownMs', 'moveWarnMs', ...(cfg.intervals ? ['countsPerRound'] : []), 'countsTotal']
     .map(k => rulerHTML(tileOf(k), true)).join('');
@@ -334,6 +335,7 @@ function onOptions(e) {
   renderSetup();
 }
 $('digit-pick').addEventListener('click', onOptions);
+$('opt-ready').addEventListener('click', onOptions);
 // Volume sliders: heard at once on the next sound; a short sample when let go.
 [['vol-alerts', 'volAlerts', 'roundStart'], ['vol-clicks', 'volClicks', 'press']].forEach(([id, k, ev]) => {
   $(id).addEventListener('input', () => { cfg[k] = +$(id).value; $(id + '-v').textContent = cfg[k]; applySound(); });
@@ -369,6 +371,17 @@ $('btn-resume-saved').addEventListener('click', () => {
   act(['resume']);
 });
 
+// ↺ Standard: the club's usual fight (5 rounds, 3:00 / 3:00 / 1:00, counts off);
+// how the app looks and sounds stays as set.
+function standard() {
+  const keep = ['eco', 'sound', 'volAlerts', 'volClicks', 'digits', 'orient', 'showAvg', 'readyCheck', 'moveCountdownMs', 'moveWarnMs', 'countsPerRound', 'countsTotal'];
+  const old = cfg;
+  cfg = { ...homeDefaults(), names: cfg.names, moveGraceMs: cfg.moveGraceMs };
+  keep.forEach(k => { if (old[k] !== undefined) cfg[k] = old[k]; });
+  save(CFG_KEY, cfg);
+  if (navigator.vibrate) navigator.vibrate(8);
+  renderSetup();
+}
 // Son: all sounds on or off; Éco: dark, silent. Both apply to the clock at once.
 function toggleSoundOrEco(which) {
   unlockAudio();
@@ -382,7 +395,9 @@ function toggleSoundOrEco(which) {
 }
 $('bar-tg').addEventListener('click', e => {
   const b = e.target.closest('[data-tg]');
-  if (b) toggleSoundOrEco(b.dataset.tg);
+  if (!b) return;
+  if (b.dataset.tg === 'std') { standard(); return; }
+  toggleSoundOrEco(b.dataset.tg);
 });
 
 // Sound and colour test, one after the other.
@@ -607,15 +622,12 @@ function openSettings(flip) {
 }
 // Before the start the bar holds round buttons: rounds, chess, boxing, pause.
 // Each part can be tapped to change it right there (see the quick panel).
+// A chess clock seen from the front: the bar's "times" button.
+const CLOCK_ICON = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="8" width="19" height="12" rx="2"/><circle cx="8" cy="14" r="3.2"/><circle cx="16" cy="14" r="3.2"/><path d="M8 14v-1.8M16 14l1.3-1.3M6 8V6.2h4V8M14 8V5.5h4V8"/></svg>';
 function readyInfoHTML(c) {
-  // Round buttons, all the same size, no durations: the rounds, then chess, boxing, pause.
-  const item = (q, icon, off, label) => `<button type="button" class="ri ri-${q}${off ? ' off' : ''}${quickKey === q ? ' open' : ''}" data-q="${q}" aria-label="${label}">${icon}</button>`;
-  const rounds = item('rounds', `<span class="ri-n">${roman(c.rounds)}</span>`, false, 'Rounds');
-  if (!c.intervals) return rounds + item('chessRoundMs', ICONS.pawn, false, 'Échecs');
-  return rounds + item('chessRoundMs', ICONS.pawn, false, 'Échecs') + item('boxRoundMs', ICONS.glove, !c.boxTimer, 'Boxe')
-    + item('breakMs', ICONS.hourglass, !c.breakOn, 'Pause')
-    // Prêt ?: a switch (it only matters after a timed pause).
-    + `<button type="button" class="ri ri-ready${c.readyCheck ? ' on' : ' off'}${c.breakOn ? '' : ' dim'}" data-q="ready" aria-label="Prêt ?" aria-pressed="${!!c.readyCheck}"><i class="ri-q">Prêt</i></button>`;
+  // Round buttons, all the same size: the rounds, and the clock (chess, boxing and pause times).
+  const item = (q, icon, label) => `<button type="button" class="ri ri-${q}${quickKey === q ? ' open' : ''}" data-q="${q}" aria-label="${label}">${icon}</button>`;
+  return item('rounds', `<span class="ri-n">${roman(c.rounds)}</span>`, 'Rounds') + item('times', CLOCK_ICON, 'Temps');
 }
 // Quick panel over the waiting clock: the step's ruler, on / off and back to the
 // original time; for the rounds, the four numbers. Tap outside to close.
@@ -630,6 +642,11 @@ function renderQuick() {
       `<button type="button" class="${+r === cfg.rounds ? 'on' : ''}" data-qr="${r}"><b>${roman(+r)}</b><small>${formatClock(playerTime({ ...cfg, rounds: +r }))}</small></button>`).join('')}</div>`;
     return;
   }
+  if (k === 'times') {  // the three wheels; tap a drawing to switch that step on / off
+    $('quick-box').innerHTML = `<p class="q-t">Temps</p>` + ['chessRoundMs', 'boxRoundMs', 'breakMs'].map(x => rulerHTML(tileOf(x))).join('')
+      + `<div class="q-act q-act-one"><button type="button" class="q-btn q-ok" data-qclose>OK</button></div>`;
+    return;
+  }
   const t = tileOf(k), on = t.on();
   $('quick-box').innerHTML = rulerHTML(t) + `<div class="q-act">
     <button type="button" class="q-btn" data-tile="${k}">${on ? 'Désactiver' : 'Activer'}</button>
@@ -640,7 +657,6 @@ function openQuick(k, flip = false) { quickKey = k; quickFlip = flip; renderQuic
 $('bar-round').addEventListener('click', e => {
   const b = e.target.closest('[data-q]');
   if (!b || !s || s.phase !== 'ready') return;
-  if (b.dataset.q === 'ready') { cfg.readyCheck = !cfg.readyCheck; save(CFG_KEY, cfg); renderSetup(); return; }
   openQuick(b.dataset.q);
 });
 $('quick').addEventListener('click', e => {
@@ -659,7 +675,8 @@ $('quick').addEventListener('click', onOptions);
 function renderBarToggles() {
   const sound = !cfg.eco && cfg.sound;
   $('bar-tg').innerHTML = `<button type="button" class="tg${sound ? ' on' : ''}" data-tg="sound" aria-label="Son">${sound ? ICONS.sound : ICONS.mute}</button>`
-    + `<button type="button" class="tg${cfg.eco ? ' on' : ''}" data-tg="eco" aria-label="Éco">${ICONS.eco}</button>`;
+    + `<button type="button" class="tg${cfg.eco ? ' on' : ''}" data-tg="eco" aria-label="Éco">${ICONS.eco}</button>`
+    + `<button type="button" class="tg tg-std" data-tg="std" aria-label="Standard">${ICONS.replay}</button>`;
 }
 
 // Play the sounds and colour flashes of a list of events, then redraw.
