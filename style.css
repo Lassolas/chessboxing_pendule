@@ -694,19 +694,21 @@ body::after { content: ''; position: fixed; inset: 0; z-index: 40; pointer-event
 /* Sideways, the average stays at the far end of each half, so the two mirror each other across the bar. */
 #fight[data-orient="right"] .half.top .h-avg, #fight[data-orient="left"] .half.bottom .h-avg { left: auto !important; right: 14px !important; text-align: right; }
 /* Durées in Réglages: the bar's frieze, each step with its time under it */
-.frieze { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; row-gap: 12px; padding: 4px 0 6px; }
-.fz { display: flex; flex-direction: column; align-items: center; gap: 7px; min-width: 30px; }
-.fz-m { height: 24px; display: flex; align-items: center; justify-content: center; }
-.fz-m .ic { width: 22px; height: 22px; color: var(--text); }
-.fz-box .fz-m .ic { color: var(--red); }
-.fz .tk { width: 11px; height: 11px; }
-.fz .tk.ci { background: var(--red); border-color: var(--red); }
-.fz .tk-dash { width: 16px; height: 1.6px; background: var(--blue); }
-.fz small { font: var(--clock-weight) 12px var(--font-clock); color: var(--text-2); font-variant-numeric: tabular-nums; }
-.fz:has(.ic) small { color: var(--text); }
-.fz em { height: 18px; font: italic 500 17px/1 var(--font-serif); color: var(--text-2); }
-.fz-box em { color: color-mix(in srgb, var(--red) 80%, var(--text)); }
-.frieze-total { margin: 4px 0 6px; text-align: center; color: var(--text-2); font: 600 14px var(--font-display); letter-spacing: .16em; text-transform: uppercase; }
+/* Durées: a thin, proportional time line, numerals above, the durations once below */
+.frieze { padding: 2px 0 4px; }
+.tl { display: flex; align-items: flex-end; gap: 2px; }
+.tl-p { flex-basis: 0; min-width: 0; }
+.tl-r { flex-basis: 0; min-width: 6px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.tl-r em { font: italic 500 13px/1 var(--font-serif); color: var(--text-2); white-space: nowrap; }
+.tl-r i { display: block; align-self: stretch; height: 3px; border-radius: 2px; background: color-mix(in srgb, var(--text) 75%, transparent); }
+.tl-box i { background: color-mix(in srgb, var(--red) 85%, transparent); }
+.tl-box em { color: color-mix(in srgb, var(--red) 75%, var(--text)); }
+.tl-last i { background: linear-gradient(90deg, color-mix(in srgb, var(--text) 75%, transparent), transparent); }
+.tl-key { display: flex; justify-content: center; gap: 18px; margin-top: 12px; color: var(--text-2); }
+.tl-key span { display: inline-flex; align-items: center; gap: 5px; font: var(--clock-weight) 14px var(--font-clock); font-variant-numeric: tabular-nums; }
+.tl-key .ic { width: 16px; height: 16px; }
+.tl-key .ic.ic-hourglass { height: 10px; }
+.frieze-total { margin: 8px 0 4px; text-align: center; color: var(--text-2); font: 600 14px var(--font-display); letter-spacing: .16em; text-transform: uppercase; }
 .frieze-total b { margin-left: 6px; color: var(--text); font: var(--clock-weight) 18px var(--font-clock); letter-spacing: 0; }
 .frieze-total small { text-transform: none; letter-spacing: .02em; font-size: 13px; }
 .rounds-pick { margin-top: 16px; }

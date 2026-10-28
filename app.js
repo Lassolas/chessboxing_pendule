@@ -245,16 +245,22 @@ function renderPresets() {
 function renderFrieze() {
   $('durations-title').hidden = $('frieze').hidden = $('frieze-total').hidden = !cfg.intervals;
   if (!cfg.intervals) return;
-  const steps = [], lastChess = Math.max(...Array.from({ length: cfg.rounds }, (_, i) => i + 1).filter(n => roundType(n) === 'chess'));
+  // A thin time line, each step as long as it lasts: chess in bone, boxing in red,
+  // pauses as gaps. The last chess round runs until a flag falls: it fades out.
+  const chessRounds = Array.from({ length: cfg.rounds }, (_, i) => i + 1).filter(n => roundType(n) === 'chess');
+  const lastChess = Math.max(...chessRounds);
+  const lastMs = Math.max(cfg.chessRoundMs, 2 * playerTime(cfg) - (chessRounds.length - 1) * cfg.chessRoundMs);
+  const pauseMs = cfg.breakOn ? cfg.breakMs : 0;
+  const cols = [];
   for (let n = 1; n <= cfg.rounds; n++) {
     const chess = roundType(n) === 'chess';
     if (!chess && !cfg.boxTimer) continue;
-    if (steps.length) steps.push(['tk-dash', '', cfg.breakOn ? fmtValue(cfg.breakMs) : '∞']);
-    steps.push([chess ? 'tk sq' : 'tk ci', roman(roundNo(cfg, n)), chess ? (n === lastChess ? '⚑' : fmtValue(cfg.chessRoundMs)) : fmtValue(cfg.boxRoundMs)]);
+    if (cols.length) cols.push(`<span class="tl-p" style="flex-grow:${pauseMs}"></span>`);
+    const ms = chess ? (n === lastChess ? lastMs : cfg.chessRoundMs) : cfg.boxRoundMs;
+    cols.push(`<span class="tl-r ${chess ? 'tl-chess' : 'tl-box'}${n === lastChess ? ' tl-last' : ''}" style="flex-grow:${ms}"><em>${roman(roundNo(cfg, n))}</em><i></i></span>`);
   }
-  // Val's drawings for the rounds (knight, glove); a pause is just its time.
-  const mark = k => k === 'tk sq' ? ICONS.pawn : k === 'tk ci' ? ICONS.glove : '';
-  $('frieze').innerHTML = steps.map(([k, n, t]) => `<span class="fz${k === 'tk ci' ? ' fz-box' : ''}"><em>${n}</em><span class="fz-m">${mark(k)}</span><small>${t}</small></span>`).join('');
+  const item = (icon, t) => `<span>${icon}${t}</span>`;
+  $('frieze').innerHTML = `<div class="tl">${cols.join('')}</div><div class="tl-key">${item(ICONS.pawn, fmtValue(cfg.chessRoundMs))}${cfg.boxTimer ? item(ICONS.glove, fmtValue(cfg.boxRoundMs)) : ''}${item(ICONS.hourglass, cfg.breakOn ? fmtValue(cfg.breakMs) : '∞')}</div>`;
   $('frieze-total').innerHTML = `Total <b>${fmtValue(totalMs(cfg))}</b>`;
 }
 // Longest fight: both chess clocks run out, plus boxing and timed pauses (an open pause counts 0).
