@@ -1245,3 +1245,13 @@ html.flip #ptr { top: auto; bottom: 0; }
 .bar-next .ic { width: 14px; height: 14px; }
 .bar.next-t { gap: 8px; }
 @media (max-width: 380px) { .bar-next { height: 40px; padding: 0 7px; gap: 1px; font-size: 19px; } .bar-next .ic { width: 12px; height: 12px; } .bar.next-t { gap: 5px; } .bar.next-t .bar-timer { font-size: 24px; } }
+/* 0.2.100: the clock button shows its three settings: bone, red, blue. */
+.phase-ready button.ri-times .ic { transform: translateY(-12%); }
+.ri-marks { position: absolute; left: 50%; top: 77%; transform: translate(-50%, -50%); display: flex; align-items: center; gap: calc(var(--rb) * .07); pointer-events: none; }
+.ri-marks i { display: block; width: calc(var(--rb) * .085); height: calc(var(--rb) * .085); }
+.ri-marks .rm-chess { background: var(--bone); transform: rotate(45deg) scale(.86); }
+.ri-marks .rm-box { background: var(--red); border-radius: 50%; }
+.ri-marks .rm-pause { width: calc(var(--rb) * .14); height: 2px; background: var(--blue); }
+.ri-marks .off { opacity: .3; }
+.phase-ready button.ri-times { position: relative; }
+.ri-marks { gap: 5px; } .ri-marks i { width: 6px; height: 6px; } .ri-marks .rm-pause { width: 9px; height: 2px; }
