@@ -251,7 +251,9 @@ function renderFrieze() {
     if (steps.length) steps.push(['tk-dash', cfg.breakOn ? fmtValue(cfg.breakMs) : '∞']);
     steps.push([chess ? 'tk sq' : 'tk ci', chess ? (n === lastChess ? '⚑' : fmtValue(cfg.chessRoundMs)) : fmtValue(cfg.boxRoundMs)]);
   }
-  $('frieze').innerHTML = steps.map(([k, t]) => `<span class="fz"><span class="fz-m"><i class="${k}"></i></span><small>${t}</small></span>`).join('');
+  // Val's drawings for the rounds (knight, glove), the bar's dash for the pauses.
+  const mark = k => k === 'tk sq' ? ICONS.pawn : k === 'tk ci' ? ICONS.glove : `<i class="${k}"></i>`;
+  $('frieze').innerHTML = steps.map(([k, t]) => `<span class="fz${k === 'tk ci' ? ' fz-box' : ''}"><span class="fz-m">${mark(k)}</span><small>${t}</small></span>`).join('');
 }
 // The big COMBAT button says what it starts.
 const mins = ms => fmtValue(ms);
