@@ -980,3 +980,12 @@ button.ri-rounds { padding: 2px 7px; }
 .phase-ready button.ri.off { background: none; border-color: rgba(235, 229, 214, .25); }
 .phase-ready button.ri.off .ic { color: var(--text-2); }
 .phase-ready button.ri:active, .phase-ready button.ri.open { background: color-mix(in srgb, var(--c) 22%, transparent); border-color: var(--c); }
+/* Before the start: red flag toggle in each player's top-right corner (illegal moves) */
+.h-illtg { position: absolute; top: 12px; right: 12px; z-index: 3; width: 48px; height: 48px; border-radius: 12px; padding: 0;
+  display: flex; align-items: center; justify-content: center; border: 1px dashed rgba(235, 229, 214, .28); background: none;
+  color: var(--text-2); opacity: .7; touch-action: manipulation; }
+.h-illtg svg { width: 26px; height: 26px; filter: grayscale(1); opacity: .6; }
+.h-illtg.on { border: 1px solid color-mix(in srgb, var(--red) 70%, transparent); background: color-mix(in srgb, var(--red) 16%, transparent); opacity: 1; }
+.h-illtg.on svg { filter: none; opacity: 1; }
+.h-illtg[hidden] { display: none; }
+.half.top .h-illtg { top: max(12px, env(safe-area-inset-bottom)); }

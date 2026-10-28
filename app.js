@@ -567,6 +567,7 @@ function buildHalves() {
       <div class="h-phase"><small></small><b></b></div>
       <div class="h-clock"></div>
       <div class="h-move"></div>
+      <button type="button" class="h-illtg" aria-label="Coups illégaux">${redFlag}</button>
       <button type="button" class="h-set"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="7" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="17" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/></svg>Réglages</button>
       <div class="h-counts"></div>
       <div class="h-avg"></div>
@@ -583,6 +584,13 @@ function buildHalves() {
     h.querySelector('.h-set').addEventListener('click', e => {
       e.stopPropagation();
       openSettings(h.classList.contains('top') && (s.cfg.orient || 'normal') === 'normal' && matchMedia('(orientation: portrait)').matches);
+    });
+    // Before the start: the red flag in the corner switches illegal moves on / off.
+    h.querySelector('.h-illtg').addEventListener('click', e => {
+      e.stopPropagation();
+      cfg.illegalMoves = !cfg.illegalMoves;
+      save(CFG_KEY, cfg);
+      renderSetup();
     });
     h.querySelector('.over-undo').addEventListener('pointerdown', e => {
       e.stopPropagation();
@@ -939,7 +947,13 @@ function render() {
   // Before the start: Son and Éco in the bar, Réglages in each half.
   $('bar-tg').hidden = s.phase !== 'ready';
   if (s.phase === 'ready') renderBarToggles();
-  halves.forEach(h => { h.querySelector('.h-set').hidden = s.phase !== 'ready'; });
+  halves.forEach(h => {
+    h.querySelector('.h-set').hidden = s.phase !== 'ready';
+    const f = h.querySelector('.h-illtg');
+    f.hidden = s.phase !== 'ready';
+    f.classList.toggle('on', !!s.cfg.illegalMoves);
+    f.setAttribute('aria-pressed', !!s.cfg.illegalMoves);
+  });
   if (!$('pause-menu').hidden) renderPauseMenu();
   renderResult();
 }
