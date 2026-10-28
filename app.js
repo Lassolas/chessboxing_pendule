@@ -889,9 +889,9 @@ function render() {
     // Colour in big letters; a name only if one was typed in ⚙.
     const icon = s.white === null ? '' : p === s.white ? 'BLANCS' : 'NOIRS';
     h.querySelector('.h-name').textContent = [icon, s.cfg.names[p]].filter(Boolean).join(' · ');
-    // Average per move, shown in every pause (referee pause, between rounds, Prêt ?) and at the end.
+    // Average per move: always shown once there is one, during play too.
     const avg = averageMove(s, p);
-    setHTML(h.querySelector('.h-avg'), (s.paused || s.phase === 'break' || s.phase === 'over') && avg !== null
+    setHTML(h.querySelector('.h-avg'), s.phase !== 'ready' && avg !== null
       ? `${(avg / 1000).toFixed(1)}s<small>/coup</small>` : '');
     // Counts: nothing until the first one, then one red dot each
     // (bright for this round, dim for earlier rounds).
