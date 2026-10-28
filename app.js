@@ -75,8 +75,9 @@ cfg.moveCountdownMs = Math.max(10000, cfg.moveCountdownMs);
 let s = null;
 setMuted(!!cfg.eco || !cfg.sound);
 
-// Round number as shown: without boxing, only chess rounds are counted.
-const roundNo = (c, n) => c.boxTimer ? n : Math.ceil(n / 2);
+// Round number as shown: always the real one, so chess rounds stay odd (I, III, V…).
+// Without a boxing timer the boxing round sits inside the pause and is not shown.
+const roundNo = (c, n) => n;
 
 // ── SETUP SCREEN ──
 const fmtValue = (v, kind) => kind === 'n' ? String(v)
