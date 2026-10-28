@@ -88,7 +88,7 @@ if (!DIGIT_STYLES.includes(cfg.digits)) cfg.digits = 'dgt';  // Teko was dropped
 cfg.moveCountdownMs = Math.max(10000, cfg.moveCountdownMs);
 let s = null;
 // Silent in Éco or with Son off; otherwise each group at its volume.
-function applySound() { setMuted(!!cfg.eco || !cfg.sound); setVolumes(cfg.volClicks ?? 100, cfg.volAlerts ?? 100); }
+function applySound() { setMuted(!cfg.sound); setVolumes(cfg.volClicks ?? 100, cfg.volAlerts ?? 100); }
 applySound();
 
 // Round number as shown: always the real one, so chess rounds stay odd (I, III, V…).
@@ -340,7 +340,7 @@ $('opt-ready').addEventListener('click', onOptions);
   $(id).addEventListener('input', () => { cfg[k] = +$(id).value; $(id + '-v').textContent = cfg[k]; applySound(); });
   $(id).addEventListener('change', () => {
     unlockAudio();
-    if (!cfg.sound || cfg.eco) { cfg.sound = true; cfg.eco = false; applySound(); updateMotion(); renderSetup(); }  // moving a volume turns the sound on
+    if (!cfg.sound) { cfg.sound = true; applySound(); renderSetup(); }  // moving a volume turns the sound on
     save(CFG_KEY, cfg);
     play(ev);
   });
@@ -372,7 +372,7 @@ function standard() {
 function toggleSoundOrEco(which) {
   unlockAudio();
   if (which === 'eco') { cfg.eco = !cfg.eco; cfg.sound = !cfg.eco; updateMotion(); }  // Éco mutes; leaving it brings the sound back
-  else { cfg.sound = !(cfg.sound && !cfg.eco); if (cfg.sound && cfg.eco) { cfg.eco = false; updateMotion(); } }
+  else cfg.sound = !cfg.sound;  // the sound can come back on in Éco too
   save(CFG_KEY, cfg);
   applySound();
   if (s) s.cfg.eco = cfg.eco;
@@ -399,7 +399,7 @@ $('quick-box').addEventListener('change', e => {
   const r = e.target.closest('[data-vol]');
   if (!r) return;
   unlockAudio();
-  if (!cfg.sound || cfg.eco) { cfg.sound = true; cfg.eco = false; applySound(); updateMotion(); render(); }  // moving a volume turns the sound on
+  if (!cfg.sound) { cfg.sound = true; applySound(); render(); }  // moving a volume turns the sound on
   save(CFG_KEY, cfg);
   play(r.dataset.vol === 'volAlerts' ? 'roundStart' : 'press');
 });
@@ -721,7 +721,7 @@ const ORIENT_ICON = {
   left: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12H3M7 8l-4 4 4 4"/></svg>',
 };
 function renderBarToggles() {
-  const sound = !cfg.eco && cfg.sound;
+  const sound = !!cfg.sound;
   $('bar-tg').innerHTML = `<button type="button" class="tg${sound ? ' on' : ''}" data-tg="sound" aria-label="Son">${sound ? ICONS.sound : ICONS.mute}</button>`
     + `<button type="button" class="tg${cfg.eco ? ' on' : ''}" data-tg="eco" aria-label="Éco">${ICONS.eco}</button>`
     + `<button type="button" class="tg tg-orient" data-tg="orient" aria-label="Orientation">${ORIENT_ICON[cfg.orient || 'normal']}</button>`
@@ -917,7 +917,7 @@ function renderPauseMenu() {
   $('pm-tgs').hidden = $('pm-restart').hidden = !!s.awaitReady;
   setHTML($('pm-resume'), s.awaitReady ? '<i class="ready-txt">Prêt ?</i>' : `${ICONS.play}<span>GO</span>`);
   // Switches for the rest of the fight: counts, illegal moves, sound, Éco; and Réglages.
-  const sound = !cfg.eco && cfg.sound;
+  const sound = !!cfg.sound;
   const tg = (k, on, icon, label) => `<button type="button" class="pt${on ? ' on' : ''}" data-pt="${k}" aria-pressed="${on}">${icon}<small>${label}</small></button>`;
   setHTML($('pm-tgs'), tg('count', !!s.cfg.countdownOn, countIcon(!!s.cfg.countdownOn, PM_HAND), 'Compte')
     + tg('ill', !!s.cfg.illegalMoves, redFlag, 'Illégal')
