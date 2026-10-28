@@ -320,8 +320,11 @@ function renderPresets() {
 // Durées: the fight step by step (chess, pause, boxing),
 // each step with its time. The last chess round runs until a flag falls.
 function renderFrieze() {
-  $('frieze').hidden = !cfg.intervals;
-  if (!cfg.intervals) return;
+  // Plain clock: one white bar, no rounds nor pauses, same height and total.
+  if (!cfg.intervals) {
+    $('frieze').innerHTML = `<div class="tl"><span class="tl-r tl-chess" style="flex-grow:1"><em>&nbsp;</em><i></i></span></div><div class="tl-total">Total <b>${fmtValue(totalMs(cfg))}</b></div>`;
+    return;
+  }
   // A thin time line, each step as long as it lasts: chess in bone, boxing in red,
   // pauses in blue. The last chess round runs until a flag falls: it fades out.
   const chessRounds = Array.from({ length: cfg.rounds }, (_, i) => i + 1).filter(n => roundType(n) === 'chess');
