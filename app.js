@@ -143,11 +143,11 @@ function stripHTML(t) {
 // Durées: one ruler per step, like a radio dial. Slide the scale under the
 // needle (or tap either side for one step); tap the drawing to switch the step on / off.
 const TICK_PX = 10;  // one step (10 s) of the scale
-const RULER_TONE = { chessRoundMs: 'chess', boxRoundMs: 'box', breakMs: 'pause' };
+const RULER_TONE = { chessRoundMs: 'chess', boxRoundMs: 'box', breakMs: 'pause', moveCountdownMs: 'count' };
 function rulerHTML(t) {
-  const on = t.on(), dim = t.key !== 'chessRoundMs' && !cfg.intervals;
+  const on = t.on(), dim = (t.key === 'boxRoundMs' || t.key === 'breakMs') && !cfg.intervals;
   const vals = valuesOf(t), i = Math.max(0, vals.indexOf(cfg[t.key]));
-  const labels = vals.map((v, k) => v % 60000 === 0 ? `<b style="left:${k * TICK_PX}px">${fmtValue(v)}</b>` : '').join('');
+  const labels = vals.map((v, k) => v % (t.step * 6) === 0 ? `<b style="left:${k * TICK_PX}px">${fmtValue(v)}</b>` : '').join('');
   return `<div class="ruler rl-${RULER_TONE[t.key]}${on ? ' on' : ''}${dim ? ' dim' : ''}">
     <button type="button" class="rl-ico" data-tile="${t.key}" aria-pressed="${on}">${t.icon()}<small>${on || t.key !== 'breakMs' ? t.label : '∞'}</small></button>
     <div class="rl-scale" data-ruler="${t.key}">
@@ -160,13 +160,14 @@ function setRuler(t, el, i, vals) {
   i = Math.min(vals.length - 1, Math.max(0, i));
   if (vals[i] === cfg[t.key]) return false;
   cfg[t.key] = vals[i];
+  if (t.key === 'moveCountdownMs') cfg.moveWarnMs = warnFor(cfg.moveCountdownMs);
   el.querySelector('.rl-strip').style.transform = `translateX(${-i * TICK_PX}px)`;
   el.querySelector('.rl-cur').textContent = fmtValue(vals[i]);
   renderPresets();
   if (navigator.vibrate) navigator.vibrate(4);
   return true;
 }
-$('durations').addEventListener('pointerdown', e => {
+const onRulerDown = e => {
   const el = e.target.closest('[data-ruler]');
   if (!el) return;
   const t = tileOf(el.dataset.ruler);
@@ -175,13 +176,13 @@ $('durations').addEventListener('pointerdown', e => {
   rdrag = { t, el, vals, x: e.clientX, i0: Math.max(0, vals.indexOf(cfg[t.key])), moved: false };
   el.setPointerCapture(e.pointerId);
   e.preventDefault();
-});
-$('durations').addEventListener('pointermove', e => {
+};
+const onRulerMove = e => {
   if (!rdrag) return;
   const dx = e.clientX - rdrag.x;
   if (Math.abs(dx) > 4) rdrag.moved = true;
   if (rdrag.moved) setRuler(rdrag.t, rdrag.el, rdrag.i0 - Math.round(dx / TICK_PX), rdrag.vals);  // drag left = more
-});
+};
 const endRuler = e => {
   if (!rdrag) return;
   const { t, el, vals, i0, moved } = rdrag;
@@ -193,21 +194,27 @@ const endRuler = e => {
   save(CFG_KEY, cfg);
   renderSetup();
 };
-$('durations').addEventListener('pointerup', endRuler);
-$('durations').addEventListener('pointercancel', endRuler);
+['durations', 'chess-set'].forEach(id => {
+  $(id).addEventListener('pointerdown', onRulerDown);
+  $(id).addEventListener('pointermove', onRulerMove);
+  $(id).addEventListener('pointerup', endRuler);
+  $(id).addEventListener('pointercancel', endRuler);
+});
 function renderTiles() {
   cfg.moveWarnMs = warnFor(cfg.moveCountdownMs);
   const html = t => `<div class="dur${t.row === 2 ? ' small' : ''}${t.fixed ? ' linked' : ''}${t.on() ? ' on' : ''}" role="button" tabindex="0" data-tile="${t.key}">
       <div class="dur-body"><i>${t.icon()}</i><small>${t.label}</small></div>
       ${t.noValue ? '' : `<div class="strip" data-strip="${t.key}">${stripHTML(t)}</div>`}</div>`;
   $('durations').innerHTML = ['chessRoundMs', 'boxRoundMs', 'breakMs'].map(k => rulerHTML(tileOf(k))).join('');
-  $('chess-set').classList.toggle('dim', !cfg.intervals);  // dimmed, not hidden: nothing moves
-  // Under ♟: the count first; once on, the warning and the count limits.
-  const count = tileOf('moveCountdownMs'), more = count.on();
+  // The count works in a plain clock too; only the illegal-move flag needs rounds.
+  // Under the rulers: the count's own ruler; once on, the warning and the count limits.
+  const count = tileOf('moveCountdownMs'), more = count.on(), illegal = cfg.intervals && cfg.illegalMoves;
+  // Plain clock: one game, so only the total limit.
+  const limitsShown = cfg.intervals ? LIMITS : LIMITS.filter(l => l[0] === 'countsTotal');
   // Secondary setting: one small line, − value + for each limit.
-  const limits = more || cfg.illegalMoves ? `<div class="limits"><span class="lim-t">Comptes max</span>${LIMITS.map(([key, label, min, max]) => `
+  const limits = more || illegal ? `<div class="limits"><span class="lim-t">Comptes max</span>${limitsShown.map(([key, label, min, max]) => `
     <span class="lim"><button type="button" data-lim="${key}" data-d="-1"${cfg[key] <= min ? ' disabled' : ''}>−</button><b>${cfg[key]}</b><button type="button" data-lim="${key}" data-d="1"${cfg[key] >= max ? ' disabled' : ''}>+</button><small>${label}</small></span>`).join('')}</div>` : '';
-  $('chess-set').innerHTML = html(count) + html(tileOf('illegalMoves')) + (more ? html(tileOf('moveWarnMs')) : '') + limits;
+  $('chess-set').innerHTML = rulerHTML(count) + `<div class="chess-tiles">${html(tileOf('illegalMoves')).replace('class="dur', `class="dur${cfg.intervals ? '' : ' off-plain'}`)}${more ? html(tileOf('moveWarnMs')) : ''}</div>` + limits;
 }
 function showTileText(t) {
   $('opt-help').hidden = false;
@@ -395,11 +402,12 @@ $('orient-pick').addEventListener('click', e => {
   save(CFG_KEY, cfg);
   renderSetup();
 });
-// A plain clock (no intervals) has no counts and no chessboxing options.
+// A plain clock (no intervals) has no chessboxing options; counts only count towards the total.
 const NEVER = 1e9;
 function fightConfig() {
   const c = structuredClone(cfg);
-  if (!c.intervals) Object.assign(c, { illegalMoves: false, boxTimer: false, warnOn: false, countdownOn: false });
+  // Plain clock: no boxing, no illegal-move flag; the count stays, judged on the total only.
+  if (!c.intervals) Object.assign(c, { illegalMoves: false, boxTimer: false, countsPerRound: 999 });
   if (!c.breakOn) c.breakMs = null;
   if (!c.countdownOn) c.warnOn = false;  // the warning comes with the count
   c.moveWarnMs = warnFor(c.moveCountdownMs);

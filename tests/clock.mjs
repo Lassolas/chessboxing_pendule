@@ -292,6 +292,15 @@ check(formatClock(9960) === '9.9' && formatClock(10000) === '0:10', 'tenths unde
   check(s.phase === 'chess' && !s.paused && !s.awaitReady, 'coach skipping to chess: no Prêt ?');
 }
 
+// Plain clock with counts (app: countsPerRound 999): only the total decides
+{
+  const s = fight({ intervals: false, countsPerRound: 999, countsTotal: 4 });
+  let t = 0;
+  for (let i = 0; i < 3; i++) { run(s, t, t + 31000); t += 31000; press(s, 0, t); run(s, t, t + 1000); t += 1000; press(s, 1, t); }
+  check(s.phase === 'chess' && countsOf(s, 0) === 3, 'plain clock: three counts are not a loss');
+  run(s, t, t + 31000);
+  check(s.phase === 'over' && s.result.loser === 0 && s.result.method.includes('total'), 'plain clock: the 4th count loses');
+}
 if (errors.length) {
   console.error(`pendule-clock: ${errors.length} failure(s)`);
   errors.forEach(e => console.error('  ✗ ' + e));
