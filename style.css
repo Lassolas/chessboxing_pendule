@@ -1113,3 +1113,6 @@ html.flip #ptr { top: auto; bottom: 0; }
 .h-tgs .h-avgtg { height: 52px; }
 @container (max-height: 300px) { .h-tgs .h-cnttg, .h-tgs .h-illtg { width: 52px; height: 46px; } .h-tgs .h-avgtg { height: 46px; } }
 @container (max-height: 300px) { .h-tgs { bottom: 4px !important; } .h-tgs .h-cnttg, .h-tgs .h-illtg, .h-tgs .h-avgtg { height: 42px; } .h-tgs .h-cnttg .hands { height: 18px; } .h-tgs .h-cnttg .hands svg { height: 18px; width: 11px; } .h-tgs .h-illtg svg { width: 17px; height: 17px; } }
+/* Val's one-line chess clock drawing for the times button */
+.ic-clock { --m: url(clock.png); }
+.phase-ready button.ri-times .ic.ic-clock { width: calc(var(--rb) * .62) !important; height: calc(var(--rb) * .37) !important; }

@@ -10,6 +10,7 @@ const drawing = name => `<i class="ic ic-mask ic-${name}" aria-hidden="true"></i
 export const ICONS = {
   pawn: drawing('knight'),
   glove: drawing('glove'),
+  clock: drawing('clock'),
   hourglass: drawing('hourglass'),
   pause: svg('<path d="M9 6v12M15 6v12"/>', ' stroke-width="2"'),
   play: svg('<path d="M8.5 5.8v12.4L18 12z"/>'),

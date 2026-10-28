@@ -622,12 +622,10 @@ function openSettings(flip) {
 }
 // Before the start the bar holds round buttons: rounds, chess, boxing, pause.
 // Each part can be tapped to change it right there (see the quick panel).
-// A chess clock seen from the front: the bar's "times" button.
-const CLOCK_ICON = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="8" width="19" height="12" rx="2"/><circle cx="8" cy="14" r="3.2"/><circle cx="16" cy="14" r="3.2"/><path d="M8 14v-1.8M16 14l1.3-1.3M6 8V6.2h4V8M14 8V5.5h4V8"/></svg>';
 function readyInfoHTML(c) {
   // Round buttons, all the same size: the rounds, and the clock (chess, boxing and pause times).
   const item = (q, icon, label) => `<button type="button" class="ri ri-${q}${quickKey === q ? ' open' : ''}" data-q="${q}" aria-label="${label}">${icon}</button>`;
-  return item('rounds', `<span class="ri-n">${roman(c.rounds)}</span>`, 'Rounds') + item('times', CLOCK_ICON, 'Temps');
+  return item('rounds', `<span class="ri-n">${roman(c.rounds)}</span>`, 'Rounds') + item('times', ICONS.clock, 'Temps');
 }
 // Quick panel over the waiting clock: the step's ruler, on / off and back to the
 // original time; for the rounds, the four numbers. Tap outside to close.
