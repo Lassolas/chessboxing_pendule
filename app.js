@@ -162,14 +162,17 @@ function stripHTML(t) {
 // Durées: one ruler per step, like a radio dial. Slide the scale under the
 // needle (or tap either side for one step); tap the drawing to switch the step on / off.
 const TICK_PX = 10;  // one step (10 s) of the scale
-const tickOf = t => t.kind === 'n' ? 18 : TICK_PX;  // counts: wider steps
+const tickOf = t => t.kind === 'n' ? 18 : t.step === 1000 ? 5 : TICK_PX;  // counts: wider steps; seconds: finer
+// Scale labels too close to the needle would peek out from under the value: hidden.
+const hidesLabel = (t, k, i) => Math.abs(k - i) * tickOf(t) < (t.kind === 'n' ? 26 : 46);
+function hideNear(t, el, i) { el.querySelectorAll('.rl-strip b').forEach(b => b.classList.toggle('hid', hidesLabel(t, +b.dataset.k, i))); }
 const RULER_TONE = { chessRoundMs: 'chess', boxRoundMs: 'box', breakMs: 'pause', moveCountdownMs: 'count', moveWarnMs: 'count', countsPerRound: 'n', countsTotal: 'n' };
 function rulerHTML(t) {
   const on = t.on(), px = tickOf(t);
   const dim = ((t.key === 'boxRoundMs' || t.key === 'breakMs') && !cfg.intervals) || (t.key === 'moveWarnMs' && !cfg.countdownOn);
   const vals = valuesOf(t), i = Math.max(0, vals.indexOf(cfg[t.key]));
   const every = t.kind === 'n' ? 5 : t.step === 1000 ? 10000 : t.step * 6;
-  const labels = vals.map((v, k) => v % every === 0 ? `<b style="left:${k * px}px">${fmtValue(v, t.kind)}</b>` : '').join('');
+  const labels = vals.map((v, k) => v % every === 0 ? `<b data-k="${k}"${hidesLabel(t, k, i) ? ' class="hid"' : ''} style="left:${k * px}px">${fmtValue(v, t.kind)}</b>` : '').join('');
   const std = standardOf(t.key);
   // Count limits have no on / off: their name is a plain label, not a button.
   const ico = t.kind === 'n'
@@ -193,6 +196,7 @@ function setRuler(t, el, i, vals) {
   cfg[t.key] = vals[i];
   el.querySelector('.rl-strip').style.transform = `translateX(${-i * tickOf(t)}px)`;
   el.querySelector('.rl-cur').textContent = fmtValue(vals[i], t.kind);
+  hideNear(t, el, i);
   renderPresets();
   if (navigator.vibrate) navigator.vibrate(4);
   return true;
