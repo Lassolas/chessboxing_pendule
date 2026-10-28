@@ -1067,8 +1067,6 @@ html.flip #ptr { top: auto; bottom: 0; }
 .set-note { margin: -4px 0 10px; color: var(--text-2); font-size: 13px; }
 #chess-set .rl-ico { pointer-events: none; }
 /* ✋ off: bone outline hands, fully visible; on: skin hands in an orange frame */
-.h-cnttg .hc-on, .h-cnttg.on .hc-off { display: none; }
-.h-cnttg.on .hc-on { display: block; }
 .h-cnttg:not(.on) { opacity: 1; border-color: rgba(235, 229, 214, .45); }
 .h-cnttg:not(.on) svg, .pt[data-pt="count"]:not(.on) svg { filter: none; opacity: .85; }
 /* 0.2.74: ready bar = one row of round buttons, all the same size, like lichess: rounds, chess, boxing, pause | sound, Éco */

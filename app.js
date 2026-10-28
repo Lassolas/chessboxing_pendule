@@ -418,7 +418,7 @@ function buildHalves() {
       <div class="h-phase"><small></small><b></b></div>
       <div class="h-clock"></div>
       <div class="h-move"></div>
-      <div class="h-tgs"><button type="button" class="h-tg h-avgtg" aria-label="Temps moyen par coup"><b>s</b>/coup</button><button type="button" class="h-tg h-cnttg" aria-label="Comptes"><span class="hc-on">${countIcon(true)}</span><span class="hc-off">${countIcon(false)}</span></button><button type="button" class="h-tg h-illtg" aria-label="Coups illégaux">${redFlag}</button></div>
+      <div class="h-tgs"><button type="button" class="h-tg h-avgtg" aria-label="Temps moyen par coup"><b>s</b>/coup</button><button type="button" class="h-tg h-cnttg" aria-label="Comptes"></button><button type="button" class="h-tg h-illtg" aria-label="Coups illégaux">${redFlag}</button></div>
       <button type="button" class="h-set">${SET_ICON}Réglages</button>
       <div class="h-counts"></div>
       <div class="h-avg"></div>
@@ -836,6 +836,8 @@ function render() {
       const b = h.querySelector(q);
       b.classList.toggle('on', on);
       b.setAttribute('aria-pressed', on);
+      // One pair of hands only: skin when on, outline when off.
+      if (q === '.h-cnttg' && b.dataset.on !== String(on)) { b.dataset.on = on; b.innerHTML = countIcon(on); }
     });
   });
   if (!$('pause-menu').hidden) renderPauseMenu();
