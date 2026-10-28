@@ -146,7 +146,7 @@ function tileText(t) {
       : cfg.breakMs ? `Pauses de ${v}.` : 'Pas de pause : les rounds s\'enchaînent.';
     case 'boxRoundMs': return on ? `Round de boxe chronométré de ${v} entre deux pauses.` : 'Pas de round de boxe.';
     case 'moveWarnMs': return on ? `Alerte au bout de ${v} sur un coup.` : 'Pas d\'alerte.';
-    case 'illegalMoves': return on ? 'Drapeau rouge : coup illégal adverse = 1 compte, il rejoue.' : 'Pas de bouton coup illégal.';
+    case 'illegalMoves': return on ? 'Drapeau rouge : coup illégal adverse = 1 compte, il rejoue.' : 'Déclarer les coups illégaux.';
     default: return on ? `Compte de 10 s dès ${v} sur un coup, puis perdu.` : 'Pas de compte.';
   }
 }
@@ -238,13 +238,18 @@ function renderTiles() {
   if (clampCount(cfg)) save(CFG_KEY, cfg);
   $('durations').innerHTML = ['chessRoundMs', 'boxRoundMs', 'breakMs'].map(k => rulerHTML(tileOf(k))).join('');
   // Under the rulers: the count and its warning; once on, the count limits
-  // (a plain clock is one game: only the total); then the illegal-move switch.
+  // (a plain clock is one game: only the total), after the illegal-move switch.
   const more = cfg.countdownOn || (cfg.intervals && cfg.illegalMoves);
   const limits = !more ? [] : cfg.intervals ? ['countsPerRound', 'countsTotal'] : ['countsTotal'];
   const ill = tileOf('illegalMoves'), illOn = cfg.intervals && cfg.illegalMoves;
   const illRow = `<button type="button" class="ruler rl-opt rl-ill${illOn ? ' on' : ''}${cfg.intervals ? '' : ' dim'}" data-tile="illegalMoves" aria-pressed="${illOn}">
       <span class="rl-ico">${ill.icon()}<small>Illégal</small></span><span class="rl-note">${cfg.intervals ? tileText(ill) : 'Avec les rounds seulement.'}</span></button>`;
-  $('chess-set').innerHTML = ['moveCountdownMs', 'moveWarnMs', ...limits].map(k => rulerHTML(tileOf(k))).join('') + illRow;
+  // Count off: just a switch saying what it is for; on: its ruler and the warning's.
+  const count = tileOf('moveCountdownMs');
+  const countRow = cfg.countdownOn ? rulerHTML(count) + rulerHTML(tileOf('moveWarnMs'))
+    : `<button type="button" class="ruler rl-opt rl-cnt" data-tile="moveCountdownMs" aria-pressed="false">
+      <span class="rl-ico">${count.icon()}<small>Compte</small></span><span class="rl-note">Déclarer un temps de réflexion maximal.</span></button>`;
+  $('chess-set').innerHTML = countRow + illRow + limits.map(k => rulerHTML(tileOf(k))).join('');
 }
 function showTileText(t) {
   $('opt-help').hidden = false;
