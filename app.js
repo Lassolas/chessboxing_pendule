@@ -153,7 +153,8 @@ function rulerHTML(t) {
     <div class="rl-scale" data-ruler="${t.key}">
       <div class="rl-strip" style="width:${(vals.length - 1) * TICK_PX}px;transform:translateX(${-i * TICK_PX}px)">${labels}</div>
       <i class="rl-needle"></i><span class="rl-cur">${on ? fmtValue(cfg[t.key]) : t.key === 'breakMs' ? 'libre' : '—'}</span>
-    </div></div>`;
+    </div>
+    <button type="button" class="rl-reset${on && cfg[t.key] !== homeDefaults()[t.key] ? '' : ' same'}" data-reset="${t.key}" aria-label="${t.label} : valeur standard">${ICONS.replay}</button></div>`;
 }
 let rdrag = null;
 function setRuler(t, el, i, vals) {
@@ -222,6 +223,16 @@ function showTileText(t) {
 }
 function onTiles(e) {
   if (e.target.closest('[data-strip]')) return;
+  const reset = e.target.closest('[data-reset]');
+  if (reset) {  // back to the standard value: 3:00 rounds, 1:00 pause
+    const key = reset.dataset.reset;
+    if (!tileOf(key).on()) return;
+    cfg[key] = homeDefaults()[key];
+    if (key === 'moveCountdownMs') cfg.moveWarnMs = warnFor(cfg.moveCountdownMs);
+    save(CFG_KEY, cfg);
+    renderSetup();
+    return;
+  }
   const lim = e.target.closest('[data-lim]');
   if (lim) {
     const [key, , min, max] = LIMITS.find(l => l[0] === lim.dataset.lim);
@@ -286,11 +297,15 @@ function onStripUp() {
   $(id).addEventListener('pointercancel', onStripUp);
 });
 
-// Icon toggles: sound (🔊 / 🔇) and Éco (battery: no sound, darker, no animations).
+// Toggles, laid out like the rulers: the drawing on the left, what it does on the right.
 const OPTIONS = [
-  ['sound', on => (on ? ICONS.sound : ICONS.mute), 'Son'],
-  ['eco', () => `${ICONS.eco}<small>Éco</small>`, 'Éco'],
-  ['readyCheck', () => '<small>Prêt ?</small>', 'Prêt ? avant chaque round d\'échecs'],
+  ['readyCheck', () => ICONS.play, 'Prêt ?', on => on
+    ? 'Attend une touche avant chaque round d\'échecs.'
+    : 'Les échecs repartent seuls après la pause.'],
+  ['sound', on => (on ? ICONS.sound : ICONS.mute), 'Son', on => on
+    ? 'Cloche, claquoir et alertes.'
+    : 'Silence : les couleurs seules.'],
+  ['eco', () => ICONS.eco, 'Éco', () => 'Écran noir, sans son ni animation.'],
 ];
 
 // Rounds: one tap picks the number (the time per player follows).
@@ -354,8 +369,10 @@ function renderSetup() {
   renderPresets();
   // Unchecking the intervals leaves a plain clock: only Éco still applies.
   // A plain clock has no illegal-move card: dimmed, so the layout stays put.
-  $('options').innerHTML = OPTIONS.map(([key, icon, label]) => `
-    <button type="button" class="opt-icon${cfg[key] ? ' on' : ''}" data-opt="${key}" aria-pressed="${!!cfg[key]}" aria-label="${label}">${icon(cfg[key])}</button>`).join('');
+  $('options').innerHTML = OPTIONS.map(([key, icon, label, note]) => `
+    <button type="button" class="ruler rl-opt${cfg[key] ? ' on' : ''}" data-opt="${key}" aria-pressed="${!!cfg[key]}">
+      <span class="rl-ico">${icon(cfg[key])}<small>${label}</small></span>
+      <span class="rl-note">${note(cfg[key])}</span></button>`).join('');
   // Clock digits: the same time shown in each style, one tap to choose.
   $('digit-pick').innerHTML = `<div class="digit-pick">${DIGIT_STYLES.map(d =>
     `<button type="button" class="digit-opt${cfg.digits === d ? ' on' : ''}" data-digits="${d}" aria-label="Chiffres ${d}"><span></span></button>`).join('')}</div>`;

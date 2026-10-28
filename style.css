@@ -825,3 +825,20 @@ body::after { content: ''; position: fixed; inset: 0; z-index: 40; pointer-event
 #chess-set.chess-set { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
 .chess-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
 .dur.off-plain { opacity: .3; pointer-events: none; }
+
+/* Prêt ? / Son / Éco: same rows as the rulers, the note says what each does */
+#options.options { display: flex; flex-direction: column; gap: 8px; margin-top: 18px; }
+.rl-opt { --c: var(--gold); width: 100%; padding: 0; border: 0; background: none; text-align: left; color: inherit; touch-action: manipulation; cursor: pointer; }
+.rl-opt .rl-ico .ic { width: 26px; height: 26px; }
+.rl-note { display: flex; align-items: center; min-height: 62px; box-sizing: border-box; padding: 8px 14px; border-radius: 10px; background: #12171b;
+  border: 1px solid var(--hair, rgba(235,229,214,.14)); font: 400 14px/1.3 var(--font-body, inherit); color: var(--text-2); }
+.rl-opt.on .rl-note { color: var(--text); border-color: color-mix(in srgb, var(--c) 45%, transparent); }
+.rl-opt:not(.on) .rl-note { opacity: .7; }
+/* Rulers a little narrower, a reset button on the right */
+.ruler { grid-template-columns: 58px minmax(0, 1fr) 40px; }
+.rl-reset { display: flex; align-items: center; justify-content: center; height: 40px; width: 40px; padding: 0; border: 0; border-radius: 50%; background: none; color: var(--text-2); touch-action: manipulation; }
+.rl-reset .ic { width: 20px; height: 20px; }
+.rl-reset.same { opacity: .25; pointer-events: none; }
+.rl-opt { grid-template-columns: 58px minmax(0, 1fr); }
+.rl-note { min-height: 52px; font-size: 13.5px; }
+.rl-reset:not(.same) { color: var(--c); }
