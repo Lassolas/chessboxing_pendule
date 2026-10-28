@@ -255,12 +255,15 @@ function renderFrieze() {
   for (let n = 1; n <= cfg.rounds; n++) {
     const chess = roundType(n) === 'chess';
     if (!chess && !cfg.boxTimer) continue;
-    if (cols.length && pauseMs) cols.push(`<span class="tl-r tl-p" style="flex-grow:${pauseMs}"><em></em><i></i></span>`);
+    // An open pause (∞, the coach restarts) gets a short dotted bar of its own.
+    if (cols.length && !cfg.breakOn) cols.push(`<span class="tl-r tl-p tl-inf" style="flex-grow:${cfg.chessRoundMs / 3}"><em>∞</em><i></i></span>`);
+    else if (cols.length && pauseMs) cols.push(`<span class="tl-r tl-p" style="flex-grow:${pauseMs}"><em></em><i></i></span>`);
     const ms = chess ? (n === lastChess ? lastMs : cfg.chessRoundMs) : cfg.boxRoundMs;
     cols.push(`<span class="tl-r ${chess ? 'tl-chess' : 'tl-box'}${n === lastChess ? ' tl-last' : ''}" style="flex-grow:${ms}"><em>${roman(roundNo(cfg, n))}</em><i></i></span>`);
   }
-  const item = (icon, t) => `<span>${icon}${t}</span>`;
-  $('frieze').innerHTML = `<div class="tl">${cols.join('')}</div><div class="tl-key">${item(ICONS.pawn, fmtValue(cfg.chessRoundMs))}${cfg.boxTimer ? item(ICONS.glove, fmtValue(cfg.boxRoundMs)) : ''}${item(ICONS.hourglass, cfg.breakOn ? fmtValue(cfg.breakMs) : '∞')}</div>`;
+  // Legend: each colour with its drawing and its time.
+  const item = (kind, icon, t) => `<span class="tl-k-${kind}"><i class="tl-sw"></i>${icon}${t}</span>`;
+  $('frieze').innerHTML = `<div class="tl">${cols.join('')}</div><div class="tl-key">${item('chess', ICONS.pawn, fmtValue(cfg.chessRoundMs))}${cfg.boxTimer ? item('box', ICONS.glove, fmtValue(cfg.boxRoundMs)) : ''}${cfg.breakOn && !pauseMs ? '' : item(cfg.breakOn ? 'pause' : 'inf', ICONS.hourglass, cfg.breakOn ? fmtValue(cfg.breakMs) : '∞')}</div>`;
   $('frieze-total').innerHTML = `Total <b>${fmtValue(totalMs(cfg))}</b>`;
 }
 // Longest fight: both chess clocks run out, plus boxing and timed pauses (an open pause counts 0).

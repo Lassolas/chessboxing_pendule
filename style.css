@@ -756,3 +756,18 @@ body::after { content: ''; position: fixed; inset: 0; z-index: 40; pointer-event
 /* The speed never runs into BLANCS / NOIRS: it keeps clear of the home bar too */
 .h-avg { bottom: max(10px, env(safe-area-inset-bottom)) !important; }
 .h-name { bottom: max(12px, env(safe-area-inset-bottom)); }
+/* COMBAT reads as a real button: rounded, a raised edge underneath, and it
+   goes down when pressed. */
+.fight-go { border-radius: 18px; margin-bottom: 24px;
+  box-shadow: 0 1px 0 rgba(255,255,255,.45) inset, 0 -3px 0 rgba(0,0,0,.08) inset, 0 7px 0 #8a6a28, 0 26px 44px -16px rgba(0,0,0,.85);
+  transition: transform .08s, box-shadow .08s; }
+.fight-go:active { transform: translateY(5px); box-shadow: 0 1px 0 rgba(255,255,255,.35) inset, 0 2px 0 #8a6a28, 0 12px 24px -12px rgba(0,0,0,.8); }
+.eco .fight-go { box-shadow: 0 5px 0 #4a3a16; }
+/* Durées: an open pause is dotted, and the legend shows each colour */
+.tl .tl-r.tl-inf i { background: repeating-linear-gradient(90deg, var(--blue) 0 3px, transparent 3px 6px); }
+.tl-inf em { color: var(--blue); font-style: normal; font-size: 15px; }
+.tl-key .tl-sw { display: block; width: 14px; height: 3px; border-radius: 2px; margin-right: 2px; background: color-mix(in srgb, var(--text) 75%, transparent); }
+.tl-key .tl-k-box .tl-sw { background: color-mix(in srgb, var(--red) 85%, transparent); }
+.tl-key .tl-k-pause .tl-sw { background: color-mix(in srgb, var(--blue) 80%, transparent); }
+.tl-key .tl-k-inf .tl-sw { background: repeating-linear-gradient(90deg, var(--blue) 0 3px, transparent 3px 6px); }
+@media (max-width: 360px) { .tl-key { gap: 12px; } }
