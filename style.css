@@ -1172,3 +1172,5 @@ html.flip #ptr { top: auto; bottom: 0; }
 .bar-tg .tg { -webkit-touch-callout: none; user-select: none; }
 .quick-box .vols { margin: 4px 0 6px; } .quick-box .vol { grid-template-columns: 26px 80px minmax(0, 1fr) 34px; }
 .q-rounds button.on::after, .digit-opt.on::after, .orient-opt.on::after { display: none !important; }
+/* Average per move: grey only, like the old Coups line */
+.h-avg, .h-avg small { color: var(--text-2) !important; }

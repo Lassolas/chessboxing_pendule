@@ -856,7 +856,7 @@ function render() {
   $('bar-btn').setAttribute('aria-label', btnText || (s.paused ? 'Reprendre' : 'Pause'));
   $('bar-btn').classList.toggle('go', untimed && s.phase === 'break' && !s.paused);
 
-  $('pause-menu').hidden = !(s.paused && s.phase !== 'over') || !$('end-menu').hidden;
+  $('pause-menu').hidden = !(s.paused && s.phase !== 'over') || !$('end-menu').hidden || !!quickKey;  // the volume panel goes over it
   $('pause-menu').classList.toggle('ready', !!s.awaitReady);
   // ⌂ in the bar only before the start and at the end; during the fight it is in the pause strip.
   $('bar-home').hidden = s.phase !== 'over';
@@ -896,9 +896,18 @@ function renderPauseMenu() {
 }
 // Counts and illegal moves switched during a fight: the clock takes them at once.
 const COUNT_KEYS = ['countdownOn', 'warnOn', 'moveWarnMs', 'moveCountdownMs', 'moveLimit', 'illegalMoves', 'countsPerRound', 'countsTotal'];
+// Long press on Son in the pause too: the volume panel.
+$('pm-tgs').addEventListener('pointerdown', e => {
+  held = false;
+  if (!e.target.closest('[data-pt="sound"]')) return;
+  holdTimer = setTimeout(() => { held = true; if (navigator.vibrate) navigator.vibrate(10); openQuick('vol'); }, 500);
+});
+['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => $('pm-tgs').addEventListener(ev, () => clearTimeout(holdTimer)));
+$('pm-tgs').addEventListener('contextmenu', e => e.preventDefault());
 $('pm-tgs').addEventListener('click', e => {
   const b = e.target.closest('[data-pt]');
   if (!b) return;
+  if (held) { held = false; return; }  // that was a long press
   const k = b.dataset.pt;
   if (k === 'set') { openSettings(false); return; }
   if (k === 'sound' || k === 'eco') { toggleSoundOrEco(k); return; }

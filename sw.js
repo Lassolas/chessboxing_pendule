@@ -2,7 +2,7 @@
 // Own prefix: the old copy under chessboxing_ranking/pendule shares this
 // origin and its 'pendule-vNN' caches.
 const PREFIX = 'chessboxing-pendule-';
-const VERSION = PREFIX + '0.2.89';
+const VERSION = PREFIX + '0.2.90';
 const FILES = ['./', 'index.html', 'style.css', 'app.js', 'clock.js', 'sound.js', 'hands.js', 'digits.js', 'icons.js', 'knight.png', 'glove.png', 'hourglass.png', 'clock.png', 'awake.mp4', 'logo.png', 'logo-wide.png', 'logo-glove.png', 'sounds/coup1.mp3', 'sounds/coup2.mp3', 'sounds/coup3.mp3', 'sounds/coup4.mp3', 'sounds/coup5.mp3', 'sounds/coup6.mp3', 'sounds/claquoir1.mp3', 'sounds/claquoir2.mp3', 'sounds/claquoir3.mp3', 'sounds/claquoir4.mp3', 'sounds/claquoir5.mp3', 'sounds/claquoir6.mp3', 'manifest.webmanifest', 'icon-192.png', 'icon-512.png', 'icon.svg', 'icon-32.png'];
 
 self.addEventListener('install', e => {
