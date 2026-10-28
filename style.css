@@ -1064,3 +1064,5 @@ button.ri-rounds { padding: 2px 7px; }
 #ptr .ic { width: 22px; height: 22px; margin: 0; }
 #ptr.go { border-color: var(--bone); }
 html.flip #ptr { top: auto; bottom: 0; }
+.set-note { margin: -4px 0 10px; color: var(--text-2); font-size: 13px; }
+#chess-set .rl-ico { pointer-events: none; }

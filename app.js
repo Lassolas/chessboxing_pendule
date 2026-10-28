@@ -153,9 +153,9 @@ const tickOf = t => t.kind === 'n' ? 18 : t.step === 1000 ? 5 : TICK_PX;  // cou
 const hidesLabel = (t, k, i) => Math.abs(k - i) * tickOf(t) < (t.kind === 'n' ? 26 : 46);
 function hideNear(t, el, i) { el.querySelectorAll('.rl-strip b').forEach(b => b.classList.toggle('hid', hidesLabel(t, +b.dataset.k, i))); }
 const RULER_TONE = { chessRoundMs: 'chess', boxRoundMs: 'box', breakMs: 'pause', moveCountdownMs: 'count', moveWarnMs: 'count', countsPerRound: 'n', countsTotal: 'n' };
-function rulerHTML(t) {
-  const on = t.on(), px = tickOf(t);
-  const dim = ((t.key === 'boxRoundMs' || t.key === 'breakMs') && !cfg.intervals) || (t.key === 'moveWarnMs' && !cfg.countdownOn);
+function rulerHTML(t, always = false) {
+  const on = always || t.on(), px = tickOf(t);
+  const dim = !always && (((t.key === 'boxRoundMs' || t.key === 'breakMs') && !cfg.intervals) || (t.key === 'moveWarnMs' && !cfg.countdownOn));
   const vals = valuesOf(t), i = Math.max(0, vals.indexOf(cfg[t.key]));
   const every = t.kind === 'n' ? 5 : t.step === 1000 ? 10000 : t.step * 6;
   const labels = vals.map((v, k) => v % every === 0 ? `<b data-k="${k}"${hidesLabel(t, k, i) ? ' class="hid"' : ''} style="left:${k * px}px">${fmtValue(v, t.kind)}</b>` : '').join('');
@@ -192,7 +192,7 @@ const onRulerDown = e => {
   const el = e.target.closest('[data-ruler]');
   if (!el) return;
   const t = tileOf(el.dataset.ruler);
-  if (!t.on()) return;
+  if (!t.on() && !el.closest('#chess-set')) return;
   const vals = valuesOf(t);
   rdrag = { t, el, vals, x: e.clientX, i0: Math.max(0, vals.indexOf(cfg[t.key])), moved: false };
   el.setPointerCapture(e.pointerId);
@@ -221,7 +221,7 @@ function onTiles(e) {
   const reset = e.target.closest('[data-reset]');
   if (reset) {  // back to the standard value: 3:00 rounds, 1:00 pause
     const key = reset.dataset.reset;
-    if (!tileOf(key).on()) return;
+    if (!tileOf(key).on() && !reset.closest('#chess-set')) return;
     if (key === 'moveCountdownMs' && cfg.moveWarnMs > warnFor(homeDefaults()[key])) cfg.moveWarnMs = warnFor(homeDefaults()[key]);
     cfg[key] = standardOf(key);
     save(CFG_KEY, cfg);
@@ -262,6 +262,9 @@ function renderSetup() {
   document.body.className = cfg.eco ? 'eco' : '';
   document.documentElement.dataset.digits = cfg.digits;
   if (clampCount(cfg)) save(CFG_KEY, cfg);
+  // Comptes: the count's times and the limits (switched on from the clock). Alerte 0:00 = none.
+  $('chess-set').innerHTML = ['moveCountdownMs', 'moveWarnMs', ...(cfg.intervals ? ['countsPerRound'] : []), 'countsTotal']
+    .map(k => rulerHTML(tileOf(k), true)).join('');
   [['vol-alerts', 'volAlerts'], ['vol-clicks', 'volClicks']].forEach(([id, k]) => {
     $(id).value = cfg[k] ?? 100;
     $(id + '-v').textContent = cfg[k] ?? 100;
@@ -435,9 +438,13 @@ function buildHalves() {
       save(CFG_KEY, cfg);
       renderSetup();
     });
+    // ✋ only switches the count on / off; its times and limits are in Réglages.
     h.querySelector('.h-cnttg').addEventListener('click', e => {
       e.stopPropagation();
-      openQuick('count', far());
+      cfg.countdownOn = !cfg.countdownOn;
+      if (cfg.countdownOn) cfg.warnOn = true;
+      save(CFG_KEY, cfg);
+      renderSetup();
     });
     // Before the start: the red flag in the corner switches illegal moves on / off.
     h.querySelector('.h-illtg').addEventListener('click', e => {
@@ -609,16 +616,6 @@ function renderQuick() {
   $('quick').hidden = !k;
   $('quick-box').classList.toggle('qflip', !!k && quickFlip);
   if (!k) return;
-  if (k === 'count') {  // the count, its warning, and the limits (also for illegal moves)
-    const c = tileOf('moveCountdownMs'), on = c.on();
-    const limits = !(on || cfg.illegalMoves) ? [] : cfg.intervals ? ['countsPerRound', 'countsTotal'] : ['countsTotal'];
-    $('quick-box').innerHTML = `<p class="q-t">Comptes</p>` + rulerHTML(c) + (on ? rulerHTML(tileOf('moveWarnMs')) : '')
-      + limits.map(l => rulerHTML(tileOf(l))).join('') + `<div class="q-act">
-    <button type="button" class="q-btn" data-tile="moveCountdownMs">${on ? 'Désactiver' : 'Activer'}</button>
-    <button type="button" class="q-btn" data-reset="moveCountdownMs"${on && cfg.moveCountdownMs !== standardOf('moveCountdownMs') ? '' : ' disabled'}>${ICONS.replay}${fmtValue(standardOf('moveCountdownMs'))}</button>
-    <button type="button" class="q-btn q-ok" data-qclose>OK</button></div>`;
-    return;
-  }
   if (k === 'rounds') {
     $('quick-box').innerHTML = `<p class="q-t">Rounds</p><div class="q-rounds">${Object.keys(PRESETS).map(r =>
       `<button type="button" class="${+r === cfg.rounds ? 'on' : ''}" data-qr="${r}"><b>${roman(+r)}</b><small>${formatClock(playerTime({ ...cfg, rounds: +r }))}</small></button>`).join('')}</div>`;
@@ -643,6 +640,10 @@ $('quick').addEventListener('click', e => {
   if (r) { cfg.rounds = +r.dataset.qr; save(CFG_KEY, cfg); renderSetup(); }
 });
 $('quick').addEventListener('click', onTiles);
+// Réglages › Comptes: drag the rulers, ↺ resets; the drawings are not switches here.
+$('chess-set').addEventListener('click', e => { if (e.target.closest('[data-reset]')) onTiles(e); });
+['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach((ev, i) =>
+  $('chess-set').addEventListener(ev, [onRulerDown, onRulerMove, endRuler, endRuler][i]));
 $('quick').addEventListener('click', onOptions);
 ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach((ev, i) =>
   $('quick').addEventListener(ev, [onRulerDown, onRulerMove, endRuler, endRuler][i]));
