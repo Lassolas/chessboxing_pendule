@@ -285,15 +285,6 @@ function renderSetup() {
   // The clock waiting to start follows the settings at once.
   if (s && s.phase === 'ready' && !$('fight').hidden) { s = newFight(fightConfig()); render(); }
   renderQuick();
-  const saved = load(FIGHT_KEY);
-  const live = saved && saved.phase !== 'ready' && saved.phase !== 'over';
-  $('resume-wrap').hidden = !live;
-  // The fight in progress at a glance: White's time, Continue, Black's time.
-  if (live) {
-    const w = saved.white ?? 0;
-    $('btn-resume-saved').innerHTML = `<span class="tw">${formatClock(saved.remaining[w])}</span>
-      <b>${ICONS.play}CONTINUER</b><span class="tb">${formatClock(saved.remaining[1 - w])}</span>`;
-  }
 }
 
 
@@ -347,8 +338,8 @@ $('opt-ready').addEventListener('click', onOptions);
   });
 });
 // ‹ Pendule: back to the clock (a fight left in progress comes back paused).
-$('btn-back').addEventListener('click', () => {
-  unlockAudio();
+$('btn-back').addEventListener('click', () => { unlockAudio(); backToClock(); });
+function backToClock() {
   const saved = load(FIGHT_KEY);
   if (saved && saved.phase !== 'ready' && saved.phase !== 'over') {
     s = saved;
@@ -356,20 +347,7 @@ $('btn-back').addEventListener('click', () => {
     s.lastTick = performance.now();
     openFight();
   } else readyClock();
-});
-// ✕ on the Continue button drops the saved fight.
-$('btn-drop-saved').addEventListener('click', () => {
-  save(FIGHT_KEY, null);
-  renderSetup();
-});
-$('btn-resume-saved').addEventListener('click', () => {
-  unlockAudio();
-  s = load(FIGHT_KEY);
-  s.paused = false;  // straight back into the fight, no pause screen
-  s.lastTick = performance.now();
-  openFight();
-  act(['resume']);
-});
+}
 
 // ↺ Standard: the club's usual fight (5 rounds, 3:00 / 3:00 / 1:00, counts off);
 // how the app looks and sounds stays as set.
@@ -1085,9 +1063,8 @@ function escapeHtml(t) {
 }
 
 renderSetup();
-{  // Opening: on the clock, ready; a fight left in progress stays on the home page with Continuer.
-  const saved = load(FIGHT_KEY);
-  if (!(saved && saved.phase !== 'ready' && saved.phase !== 'over')) readyClock();
+{  // Opening: on the clock, ready, or the fight left in progress, paused.
+  backToClock();  // a fight left in progress comes back paused
 }
 caches?.keys?.().then(keys => {
   const v = keys.find(k => k.startsWith('chessboxing-pendule-'));
