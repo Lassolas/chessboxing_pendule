@@ -269,14 +269,16 @@ const mins = ms => fmtValue(ms);
 function renderSummary() {
   const c = cfg, parts = [];
   const item = (icon, text) => `<span class="si">${icon}${text}</span>`;
+  let head = '';
   if (!c.intervals) parts.push(item(ICONS.pawn, `Pendule ${formatClock(PRESETS[c.rounds])}`));
   else {
-    parts.push(`<span class="si si-n">${roman(c.rounds)}<small>rounds</small></span>`, item(ICONS.pawn, mins(c.chessRoundMs)));
+    head = `<span class="si si-n">${roman(c.rounds)}<small>rounds</small></span>`;
+    parts.push(item(ICONS.pawn, mins(c.chessRoundMs)));
     if (c.boxTimer) parts.push(item(ICONS.glove, mins(c.boxRoundMs)));
     parts.push(item(ICONS.hourglass, c.breakOn ? (c.breakMs ? mins(c.breakMs) : '0') : '∞'));
   }
-  parts.push(`<span class="si si-total">Total ${fmtValue(totalMs(c))}</span>`);
-  $('fight-sum').innerHTML = parts.join('');
+  // One line each: rounds, the durations, then the total, always on its own line at the bottom.
+  $('fight-sum').innerHTML = `${head}<span class="sum-row">${parts.join('')}</span><span class="si si-total">Total ${fmtValue(totalMs(c))}</span>`;
 }
 
 function renderSetup() {
