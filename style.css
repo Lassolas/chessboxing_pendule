@@ -865,3 +865,9 @@ body::after { content: ''; position: fixed; inset: 0; z-index: 40; pointer-event
 .rl-strip b { transition: opacity .12s; } .rl-strip b.hid { opacity: 0; }
 .rl-cnt { --c: var(--orange); }
 .rl-cnt .rl-ico svg { width: 30px; height: 26px; }
+
+/* Boxing and breaks: the chess time kept aside, small and quiet, right by BLANCS / NOIRS */
+.phase-boxing #fight .half .h-clock, .phase-break #fight .half .h-clock {
+  position: absolute; left: 0; right: 0; bottom: 38px; text-align: center;
+  font-size: calc(var(--clock-scale) * 22px) !important; line-height: 1; color: var(--text-2); opacity: .55; }
+.phase-boxing #fight .half.top .h-clock, .phase-break #fight .half.top .h-clock { bottom: max(38px, calc(env(safe-area-inset-bottom) + 26px)); }
