@@ -4,7 +4,7 @@ import {
   countsOf, roundType, formatClock,
 } from './clock.js';
 import { unlockAudio, play, setMuted } from './sound.js';
-import { countHands } from './hands.js';
+import { countHands, REFEREE } from './hands.js';
 import { DIGIT_STYLES, setDigits } from './digits.js';
 import { ICONS, roman } from './icons.js';
 
@@ -82,82 +82,162 @@ const roundNo = (c, n) => c.boxTimer ? n : Math.ceil(n / 2);
 const fmtValue = (v, kind) => kind === 'n' ? String(v)
   : `${Math.floor(v / 60000)}:${String(Math.round((v % 60000) / 1000)).padStart(2, '0')}`;  // durations as m:ss (3:00, 0:30)
 
-// ── RÉGLAGES ──
-// One calm list: a row per setting, a switch on the right, − value + where
-// there is a value. One tap each, nothing to slide, no colour but the text.
-// The illegal-move flag, as seen in the fight.
+// Home tiles. A tap switches the tile on or off; its strip sets the value.
+// Row 1: the fight (chess rounds, pause, boxing). Row 2, under ♟ when it is
+// on: the anti-play settings. The icons are the signs seen during the fight.
+const watch = `<svg viewBox="0 0 32 32" class="ico"><circle cx="16" cy="18" r="11" fill="none" stroke="#ff9a1f" stroke-width="3"/><rect x="13" y="2" width="6" height="4" rx="1" fill="#ff9a1f"/><path d="M16 18 L16 11" stroke="#ff9a1f" stroke-width="3" stroke-linecap="round"/><path d="M25 8 l3-3" stroke="#ff9a1f" stroke-width="3" stroke-linecap="round"/></svg>`;
 const redFlag = `<svg viewBox="0 0 32 32" class="ico"><path d="M7 3 V30" stroke="#ff3b3b" stroke-width="3" stroke-linecap="round"/><path d="M8 4 H26 L21 10 L26 16 H8 Z" fill="#ff3b3b"/></svg>`;
-const warnFor = countdownMs => countdownMs - 5000;  // the warning always comes 5 s before the count
-const LIMITS = [['countsPerRound', 'Max par round', 1, 10], ['countsTotal', 'Max au total', 1, 20]];
-// key in cfg, its switch (on / flip), label, icon, − / + steps
-const ROWS = {
-  chess: { key: 'chessRoundMs', label: 'Échecs', icon: () => ICONS.pawn, step: 10000, min: 30000, max: 600000,
-    on: () => cfg.intervals, flip: () => { cfg.intervals = !cfg.intervals; } },
-  box: { key: 'boxRoundMs', label: 'Boxe', icon: () => ICONS.glove, step: 10000, min: 30000, max: 300000,
-    on: () => cfg.intervals && cfg.boxTimer, flip: () => { cfg.boxTimer = !(cfg.intervals && cfg.boxTimer); if (cfg.boxTimer) cfg.intervals = true; } },
-  pause: { key: 'breakMs', label: 'Pause', icon: () => ICONS.hourglass, step: 10000, min: 0, max: 300000, offValue: '∞',
-    on: () => cfg.intervals && cfg.breakOn, flip: () => { cfg.breakOn = !(cfg.intervals && cfg.breakOn); if (cfg.breakOn) cfg.intervals = true; } },
-  count: { key: 'moveCountdownMs', label: 'Compte', step: 5000, min: 10000, max: 180000,
-    on: () => cfg.countdownOn, flip: () => { cfg.countdownOn = !cfg.countdownOn; cfg.warnOn = cfg.countdownOn; } },  // the warning comes with the count
-  illegal: { label: 'Coups illégaux', on: () => cfg.illegalMoves, flip: () => { cfg.illegalMoves = !cfg.illegalMoves; } },
-  ready: { label: 'Prêt ?', on: () => cfg.readyCheck, flip: () => { cfg.readyCheck = !cfg.readyCheck; } },
-  sound: { label: 'Son', on: () => cfg.sound && !cfg.eco, flip: () => { cfg.sound = !(cfg.sound && !cfg.eco); if (cfg.sound) cfg.eco = false; } },
-  eco: { label: 'Éco', on: () => cfg.eco, flip: () => { cfg.eco = !cfg.eco; cfg.sound = !cfg.eco; } },  // Éco mutes; leaving it brings the sound back
-};
-const sw = (id, on) => `<button type="button" class="rg-sw${on ? ' on' : ''}" data-sw="${id}" role="switch" aria-checked="${on}" aria-label="${ROWS[id].label}"><i></i></button>`;
-const stepper = (key, v, min, max, step, text) => `<span class="rg-step">
-  <button type="button" data-step="${key}" data-d="${-step}" data-min="${min}" data-max="${max}"${v <= min ? ' disabled' : ''} aria-label="Moins">−</button>
-  <b>${text}</b>
-  <button type="button" data-step="${key}" data-d="${step}" data-min="${min}" data-max="${max}"${v >= max ? ' disabled' : ''} aria-label="Plus">+</button></span>`;
-function row(id, { dim = false } = {}) {
-  const r = ROWS[id], on = r.on();
-  const value = r.key ? (on ? stepper(r.key, cfg[r.key], r.min, r.max, r.step, fmtValue(cfg[r.key])) : `<span class="rg-off">${r.offValue || ''}</span>`) : '';
-  return `<div class="rg-row${on ? '' : ' off'}${dim ? ' dim' : ''}"><span class="rg-l">${r.icon ? r.icon() : ''}${r.label}</span>${value}${sw(id, on)}</div>`;
-}
-const seg = (name, items, cur) => `<div class="rg-seg">${items.map(([v, html, label]) =>
-  `<button type="button" data-${name}="${v}" class="${v === cur ? 'on' : ''}" aria-label="${label}">${html}</button>`).join('')}</div>`;
-const ORIENT_PICK = [
-  ['normal', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M7 8l5-5 5 5M7 16l5 5 5-5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>', 'Face à face'],
-  ['right', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h18M16 7l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>', 'Côté droit'],
-  ['left', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12H3M8 7l-5 5 5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>', 'Côté gauche'],
+// Own gradient id: the fight's hands use #skin, and an id inside the hidden
+// home screen would leave them without fill.
+const TILE_HAND = { ...REFEREE, fill: 'url(#skin-tile)', defs: REFEREE.defs.replace('id="skin"', 'id="skin-tile"') };
+// key: value in cfg, on/tap: state, icon, label, strip step/min/max, kind
+const TILES = [
+  { key: 'chessRoundMs', row: 1, icon: () => ICONS.pawn, label: 'Échecs', step: 10000, min: 30000, max: 600000,
+    on: () => cfg.intervals, tap: () => { cfg.intervals = !cfg.intervals; } },
+  { key: 'breakMs', row: 1, icon: () => ICONS.hourglass, label: 'Pause', step: 10000, min: 0, max: 300000,
+    on: () => cfg.intervals && cfg.breakOn,
+    tap: () => { cfg.breakOn = !(cfg.intervals && cfg.breakOn); if (cfg.breakOn) cfg.intervals = true; } },
+  { key: 'boxRoundMs', row: 1, icon: () => ICONS.glove, label: 'Boxe', step: 10000, min: 30000, max: 300000,
+    on: () => cfg.intervals && cfg.boxTimer,
+    tap: () => { cfg.boxTimer = !(cfg.intervals && cfg.boxTimer); if (cfg.boxTimer) cfg.intervals = true; } },
+  { key: 'moveCountdownMs', flag: 'countdownOn', row: 2, icon: () => countHands(8, TILE_HAND), label: 'Compte', step: 5000, min: 10000, max: 180000 },
+  { key: 'illegalMoves', flag: 'illegalMoves', row: 2, icon: () => redFlag, label: 'Coups illégaux', noValue: true },
+  { key: 'moveWarnMs', flag: 'warnOn', row: 2, icon: () => watch, label: 'Alerte', fixed: true },  // follows the count
 ];
-function renderSettings() {
-  cfg.moveWarnMs = warnFor(cfg.moveCountdownMs);
-  const rounds = Object.keys(PRESETS).map(r => [r, cfg.intervals ? roman(+r) : `<span class="rg-t">${formatClock(PRESETS[r])}</span>`, `${r} rounds`]);
-  const arbiter = cfg.intervals ? `<h3>Arbitre</h3>${row('count')}${row('illegal')}${cfg.countdownOn || cfg.illegalMoves
-    ? LIMITS.map(([key, label, min, max]) => `<div class="rg-row sub"><span class="rg-l">${label}</span>${stepper(key, cfg[key], min, max, 1, cfg[key])}</div>`).join('') : ''}${row('ready')}` : '';
-  $('rg').innerHTML = `
-    <button type="button" class="rg-std" data-act="std">${ICONS.replay}Standard</button>
-    <h3>Combat</h3>
-    <div class="rg-row"><span class="rg-l">Rounds</span>${seg('r', rounds, String(cfg.rounds))}</div>
-    ${row('chess')}${row('box', { dim: !cfg.intervals })}${row('pause', { dim: !cfg.intervals })}
-    ${arbiter}
-    <h3>Appareil</h3>
-    ${row('sound')}${row('eco')}
-    <div class="rg-row"><span class="rg-l">Sens</span>${seg('orient', ORIENT_PICK, cfg.orient || 'normal')}</div>
-    <div class="rg-row"><span class="rg-l">Chiffres</span>${seg('digits', DIGIT_STYLES.map(d => [d, '<span class="rg-dg"></span>', `Chiffres ${d}`]), cfg.digits)}</div>
-    <button type="button" class="rg-test" data-act="test">${ICONS.bell}Test son</button>`;
-  $('rg').querySelectorAll('[data-digits] .rg-dg').forEach(sp => setDigits(sp, '4:30', sp.parentNode.dataset.digits));
+TILES.filter(t => t.flag).forEach(t => {
+  t.on = () => !!cfg[t.flag];
+  t.tap = () => { cfg[t.flag] = !cfg[t.flag]; };
+});
+// Count limits: plain − / + lines, always on.
+const LIMITS = [['countsPerRound', '/ round', 1, 10], ['countsTotal', 'total', 1, 20]];
+const tileOf = key => TILES.find(t => t.key === key);
+// The warning always comes 5 s before the count.
+const warnFor = countdownMs => countdownMs - 5000;
+// Turning the count on brings the warning with it.
+tileOf('moveCountdownMs').tap = () => { cfg.countdownOn = !cfg.countdownOn; if (cfg.countdownOn) cfg.warnOn = true; };
+const tileValue = t => t.key === 'breakMs' && !t.on() ? '∞' : fmtValue(cfg[t.key], t.kind);
+
+// One line on what a tile does now.
+function tileText(t) {
+  const v = fmtValue(cfg[t.key], t.kind), on = t.on();
+  switch (t.key) {
+    case 'chessRoundMs': return on ? `Rounds d'échecs de ${v}.` : 'Pendule classique, sans rounds.';
+    case 'breakMs': return !on ? 'Pause libre : tu relances le round.'
+      : cfg.breakMs ? `Pauses de ${v}.` : 'Pas de pause : les rounds s\'enchaînent.';
+    case 'boxRoundMs': return on ? `Round de boxe chronométré de ${v} entre deux pauses.` : 'Pas de round de boxe.';
+    case 'moveWarnMs': return on ? `Alerte au bout de ${v} sur un coup (5 s avant le compte).` : 'Pas d\'alerte.';
+    case 'illegalMoves': return on ? 'Drapeau rouge dans ton coin : coup illégal adverse = 1 compte, il rejoue.' : 'Pas de bouton coup illégal.';
+    default: return on ? `Compte de 10 s dès ${v} sur un coup, puis perdu.` : 'Pas de compte.';
+  }
 }
-$('rg').addEventListener('click', e => {
-  const b = e.target.closest('button');
-  if (!b || b.disabled) return;
-  const d = b.dataset;
-  if (d.sw) {
-    ROWS[d.sw].flip();
-    if (d.sw === 'eco') updateMotion();
-    setMuted(!!cfg.eco || !cfg.sound);
-  } else if (d.step) {
-    cfg[d.step] = Math.min(+d.max, Math.max(+d.min, cfg[d.step] + +d.d));
-  } else if (d.r) cfg.rounds = +d.r;
-  else if (d.orient) setOrient(d.orient);
-  else if (d.digits) cfg.digits = d.digits;
-  else if (d.act === 'std') cfg = { ...homeDefaults(), readyCheck: true, names: cfg.names, eco: cfg.eco, sound: cfg.sound, digits: cfg.digits, orient: cfg.orient };
-  else if (d.act === 'test') { testSound(); return; }
+// Each tile: icon and label (tap = on/off), and on the right a strip
+// showing the value like a wheel: press and slide up or down to set it.
+const valuesOf = t => { const v = []; for (let x = t.min; x <= t.max; x += t.step) v.push(x); return v; };
+function stripHTML(t) {
+  if (!t.on() || t.fixed) return `<span class="sv"></span><span class="sv cur">${tileValue(t)}</span><span class="sv"></span>`;
+  const vals = valuesOf(t), i = Math.max(0, vals.indexOf(cfg[t.key]));
+  const at = k => vals[k] === undefined ? '' : fmtValue(vals[k], t.kind);
+  return `<span class="sv">${at(i + 1)}</span><span class="sv cur">${at(i)}</span><span class="sv">${at(i - 1)}</span>`;
+}
+function renderTiles() {
+  cfg.moveWarnMs = warnFor(cfg.moveCountdownMs);
+  const html = t => `<div class="dur${t.row === 2 ? ' small' : ''}${t.fixed ? ' linked' : ''}${t.on() ? ' on' : ''}" role="button" tabindex="0" data-tile="${t.key}">
+      <div class="dur-body"><i>${t.icon()}</i><small>${t.label}</small></div>
+      ${t.noValue ? '' : `<div class="strip" data-strip="${t.key}">${stripHTML(t)}</div>`}</div>`;
+  $('durations').innerHTML = TILES.filter(t => t.row === 1).map(html).join('');
+  $('chess-set').classList.toggle('dim', !cfg.intervals);  // dimmed, not hidden: nothing moves
+  // Under ♟: the count first; once on, the warning and the count limits.
+  const count = tileOf('moveCountdownMs'), more = count.on();
+  // Secondary setting: one small line, − value + for each limit.
+  const limits = more || cfg.illegalMoves ? `<div class="limits"><span class="lim-t">Comptes max</span>${LIMITS.map(([key, label, min, max]) => `
+    <span class="lim"><button type="button" data-lim="${key}" data-d="-1"${cfg[key] <= min ? ' disabled' : ''}>−</button><b>${cfg[key]}</b><button type="button" data-lim="${key}" data-d="1"${cfg[key] >= max ? ' disabled' : ''}>+</button><small>${label}</small></span>`).join('')}</div>` : '';
+  $('chess-set').innerHTML = html(count) + html(tileOf('illegalMoves')) + (more ? html(tileOf('moveWarnMs')) : '') + limits;
+}
+function showTileText(t) {
+  $('opt-help').hidden = false;
+  $('opt-help').textContent = tileText(t);
+}
+function onTiles(e) {
+  if (e.target.closest('[data-strip]')) return;
+  const lim = e.target.closest('[data-lim]');
+  if (lim) {
+    const [key, , min, max] = LIMITS.find(l => l[0] === lim.dataset.lim);
+    cfg[key] = Math.min(max, Math.max(min, cfg[key] + +lim.dataset.d));
+    save(CFG_KEY, cfg);
+    renderSetup();
+    return;
+  }
+  const el = e.target.closest('[data-tile]');
+  if (!el) return;
+  const t = tileOf(el.dataset.tile);
+  t.tap();
   save(CFG_KEY, cfg);
   renderSetup();
+  showTileText(t);
+}
+$('durations').addEventListener('click', onTiles);
+$('chess-set').addEventListener('click', onTiles);
+
+// Slide on a strip: one step every STEP_PX, down = more (like turning a wheel).
+const STEP_PX = 24;
+let drag = null;
+function onStripDown(e) {
+  const strip = e.target.closest('[data-strip]');
+  if (!strip) return;
+  const t = tileOf(strip.dataset.strip);
+  if (!t.on() || t.fixed) return;
+  const vals = valuesOf(t);
+  drag = { t, strip, vals, y: e.clientY, i0: Math.max(0, vals.indexOf(cfg[t.key])) };
+  strip.setPointerCapture(e.pointerId);
+  strip.classList.add('drag');
+  e.preventDefault();
+}
+function onStripMove(e) {
+  if (!drag) return;
+  const { t, strip, vals } = drag;
+  const i = Math.min(vals.length - 1, Math.max(0, drag.i0 + Math.round((e.clientY - drag.y) / STEP_PX)));
+  if (vals[i] === cfg[t.key]) return;
+  cfg[t.key] = vals[i];
+  if (t.key === 'moveCountdownMs') {
+    cfg.moveWarnMs = warnFor(cfg.moveCountdownMs);
+    const w = document.querySelector('[data-strip="moveWarnMs"]');
+    if (w) w.innerHTML = stripHTML(tileOf('moveWarnMs'));
+  }
+  strip.innerHTML = stripHTML(t);
+  strip.closest('[data-tile]').querySelector('i').innerHTML = t.icon();  // dots follow the count
+  renderPresets();
+  showTileText(t);
+  if (navigator.vibrate) navigator.vibrate(5);
+}
+function onStripUp() {
+  if (!drag) return;
+  drag.strip.classList.remove('drag');
+  drag = null;
+  save(CFG_KEY, cfg);
+  renderSetup();
+}
+['durations', 'chess-set'].forEach(id => {
+  $(id).addEventListener('pointerdown', onStripDown);
+  $(id).addEventListener('pointermove', onStripMove);
+  $(id).addEventListener('pointerup', onStripUp);
+  $(id).addEventListener('pointercancel', onStripUp);
 });
 
+// Icon toggles: sound (🔊 / 🔇) and Éco (battery: no sound, darker, no animations).
+const OPTIONS = [
+  ['sound', on => (on ? ICONS.sound : ICONS.mute), 'Son'],
+  ['eco', () => `${ICONS.eco}<small>Éco</small>`, 'Éco'],
+  ['readyCheck', () => '<small>Prêt ?</small>', 'Prêt ? avant chaque round d\'échecs'],
+];
+
+// Rounds: one tap picks the number (the time per player follows).
+function renderPresets() {
+  $('presets').innerHTML = Object.keys(PRESETS).map(r =>
+    `<button type="button" class="preset${+r === cfg.rounds ? ' on' : ''}" data-r="${r}">${cfg.intervals  // rounds: numeral + time per player; plain clock: the time alone
+      ? `<b>${roman(+r)}</b><small>${formatClock(playerTime({ ...cfg, rounds: +r }))}</small>`
+      : `<b class="dur-only">${formatClock(PRESETS[r])}</b>`}</button>`).join('');
+  renderSummary();
+}
 // The big COMBAT button says what it starts.
 const mins = ms => fmtValue(ms);
 function renderSummary() {
@@ -175,8 +255,18 @@ function renderSummary() {
 function renderSetup() {
   document.body.className = cfg.eco ? 'eco' : '';
   document.documentElement.dataset.digits = cfg.digits;
-  renderSummary();
-  renderSettings();
+  renderPresets();
+  // Unchecking the intervals leaves a plain clock: only Éco still applies.
+  // A plain clock has no illegal-move card: dimmed, so the layout stays put.
+  $('options').innerHTML = OPTIONS.map(([key, icon, label]) => `
+    <button type="button" class="opt-icon${cfg[key] ? ' on' : ''}" data-opt="${key}" aria-pressed="${!!cfg[key]}" aria-label="${label}">${icon(cfg[key])}</button>`).join('');
+  // Clock digits: the same time shown in each style, one tap to choose.
+  $('digit-pick').innerHTML = `<div class="digit-pick">${DIGIT_STYLES.map(d =>
+    `<button type="button" class="digit-opt${cfg.digits === d ? ' on' : ''}" data-digits="${d}" aria-label="Chiffres ${d}"><span></span></button>`).join('')}</div>`;
+  $('digit-pick').querySelectorAll('.digit-opt span').forEach(sp => setDigits(sp, '4:30', sp.parentNode.dataset.digits));
+  $('orient-pick').innerHTML = ORIENT_PICK.map(([o, icon, label]) =>
+    `<button type="button" class="orient-opt${(cfg.orient || 'normal') === o ? ' on' : ''}" data-orient="${o}" aria-label="${label}">${icon}<small>${label}</small></button>`).join('');
+  renderTiles();
   const saved = load(FIGHT_KEY);
   const live = saved && saved.phase !== 'ready' && saved.phase !== 'over';
   $('resume-wrap').hidden = !live;
@@ -188,11 +278,33 @@ function renderSetup() {
   }
 }
 
+
+$('presets').addEventListener('click', e => {
+  const b = e.target.closest('[data-r]');
+  if (!b) return;
+  cfg.rounds = +b.dataset.r;
+  save(CFG_KEY, cfg);
+  renderSetup();
+});
 // COMBAT: the fight as set, straight away.
 $('btn-fight').addEventListener('click', () => {
   unlockAudio();
   s = newFight(fightConfig());
   openFight();
+});
+// Orientation of the digits: face to face, or both turned to one side
+// (the phone's tilt also sets it during the fight).
+const ORIENT_PICK = [
+  ['normal', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M7 8l5-5 5 5M7 16l5 5 5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>', 'Face à face'],
+  ['right', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h18M16 7l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>', 'Côté droit'],
+  ['left', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12H3M8 7l-5 5 5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>', 'Côté gauche'],
+];
+$('orient-pick').addEventListener('click', e => {
+  const b = e.target.closest('[data-orient]');
+  if (!b) return;
+  setOrient(b.dataset.orient);
+  save(CFG_KEY, cfg);
+  renderSetup();
 });
 // A plain clock (no intervals) has no counts and no chessboxing options.
 const NEVER = 1e9;
@@ -207,6 +319,25 @@ function fightConfig() {
   c.moveLimit = c.warnOn || c.countdownOn;
   return c;
 }
+function onOptions(e) {
+  const t = e.target.closest('[data-opt]');
+  const d = e.target.closest('[data-digits]');
+  if (d) { cfg.digits = d.dataset.digits; save(CFG_KEY, cfg); }
+  if (t) {
+    cfg[t.dataset.opt] = !cfg[t.dataset.opt];
+    if (t.dataset.opt === 'eco') { cfg.sound = !cfg.eco; updateMotion(); }  // Éco mutes; leaving it brings the sound back
+    save(CFG_KEY, cfg);
+    setMuted(!!cfg.eco || !cfg.sound);
+  }
+  renderSetup();
+}
+$('options').addEventListener('click', onOptions);
+$('digit-pick').addEventListener('click', onOptions);
+$('btn-defaults').addEventListener('click', () => {
+  cfg = { ...homeDefaults(), readyCheck: true, names: cfg.names, eco: cfg.eco, sound: cfg.sound, digits: cfg.digits, orient: cfg.orient };
+  save(CFG_KEY, cfg);
+  renderSetup();
+});
 // ✕ on the Continue button drops the saved fight.
 $('btn-drop-saved').addEventListener('click', () => {
   save(FIGHT_KEY, null);
@@ -222,11 +353,11 @@ $('btn-resume-saved').addEventListener('click', () => {
 });
 
 // Sound and colour test, one after the other.
-function testSound() {
+$('btn-test-sound').addEventListener('click', () => {
   unlockAudio();
   const steps = [['press', '#2fbf71'], ['roundStart', '#f5c842'], ['phaseTen', '#4a9eff'], ['breakTen', '#4a9eff'], ['moveWarn', '#ff9a1f'], ['moveCountdown', '#ff3b3b'], ['count', '#ff3b3b'], ['roundEnd', '#f5c842'], ['over', '#ffffff']];
   steps.forEach(([ev, color], i) => setTimeout(() => { play(ev); flash(color); }, i * 1400));
-}
+});
 
 // ── FIGHT SCREEN ──
 // Colours are known once the first player has pressed.
