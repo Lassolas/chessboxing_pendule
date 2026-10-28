@@ -1216,3 +1216,13 @@ html.flip #ptr { top: auto; bottom: 0; }
   .phase-ready .h-down .h-move { font-size: 17px !important; min-height: 0; }
   .phase-ready .h-down .h-set { padding: 7px 14px !important; font-size: 11px !important; margin-top: 0; }
 } }
+/* 0.2.94: pause a little more blue */
+:root:not(.x) { --break-bg: #14304a; }
+.phase-break .bar { background: #0e2234 !important; }
+.eco { --break-bg: #000; }
+/* Prêt ?: the coming chess clocks in full view, the player to move lit; only Prêt ? in the middle */
+.paused.await .h-in > *:not(.h-card) { opacity: 1 !important; }
+.paused.await .h-in > .h-card { display: none !important; }
+#pause-menu.ready .pm-main { grid-template-columns: 1fr !important; }
+.pm-tgs[hidden] { display: none !important; }
+.await .h-clock, .await .h-name { visibility: visible !important; }

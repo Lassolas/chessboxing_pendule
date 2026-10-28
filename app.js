@@ -804,8 +804,8 @@ function render() {
     // the last 10 s of the pause (and before the first one), above the timer.
     // No round names on the clock (Val): only Boxe / Pause over their timer; the rounds are in the bar.
     phaseEl.classList.remove('soon');
-    // Pause: round just played (grey) → ⧗ → next round in its colour (chess white, boxing red).
-    setHTML(phaseEl.firstChild, s.phase === 'break' ? `<span class="pv-prev">${roman(s.round)}</span><span class="pv-arr">→</span>${ICONS.hourglass}<span class="pv-arr">→</span>${roundTag(s.nextRound)}` : '');
+    // No text over the timers (Val): the rounds are in the bar.
+    setHTML(phaseEl.firstChild, '');
     setDigits(phaseEl.lastChild, (s.phase === 'boxing' || s.phase === 'break') && !untimed ? roundClock(s.phaseRemaining) : (s.phase === 'break' ? '∞' : ''), cfg.digits);
     const move = h.querySelector('.h-move');
     if (active && cd !== null) move.innerHTML = countHands(cd);
@@ -887,6 +887,8 @@ function renderPauseMenu() {
   // Next step in fight order: → ⏸ pause, then → 🥊 boxing or → ♟ chess.
   const next = s.awaitReady ? null : nextStep(s);
   $('pm-next').hidden = next === null;
+  // Prêt ?: nothing in the middle but Prêt ? (no pause settings).
+  $('pm-tgs').hidden = $('pm-restart').hidden = !!s.awaitReady;
   setHTML($('pm-resume'), s.awaitReady ? '<i class="ready-txt">Prêt ?</i>' : `${ICONS.play}<span>GO</span>`);
   if (next) setHTML($('pm-next'), ICONS.next + (next.phase === 'break' ? ICONS.hourglass : roundTag(next.round)));
   // Switches for the rest of the fight: counts, illegal moves, sound, Éco; and Réglages.
