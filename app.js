@@ -408,6 +408,7 @@ $('bar-tg').addEventListener('click', e => {
   if (!b) return;
   if (held) { held = false; return; }  // that was a long press
   if (b.dataset.tg === 'std') { standard(); return; }
+  if (b.dataset.tg === 'orient') { cycleOrient(); return; }
   toggleSoundOrEco(b.dataset.tg);
 });
 
@@ -456,7 +457,7 @@ function buildHalves() {
       showNotice(1 - p);
     });
     // Before the start: Réglages, turned towards the player who asked for them.
-    const far = () => h.classList.contains('top') && (s.cfg.orient || 'normal') === 'normal' && matchMedia('(orientation: portrait)').matches;
+    const far = () => h.classList.contains('top') && (cfg.orient || 'normal') === 'normal' && matchMedia('(orientation: portrait)').matches;
     h.querySelector('.h-set').addEventListener('click', e => {
       e.stopPropagation();
       openSettings(far());
@@ -555,19 +556,21 @@ function onMotion(e) {
   const g = e.accelerationIncludingGravity;
   if (!g || g.x === null || $('fight').hidden) return;
   const x = g.x * MOTION_SIGN, y = g.y * MOTION_SIGN, z = g.z;
-  if (Math.abs(z) > 7) { tilt.o = null; return; }  // flat
+  if (Math.abs(z) > 7) { tilt.o = null; tilt.lock = null; return; }  // flat
   const o = Math.abs(x) > Math.abs(y) + 2 ? (x > 0 ? 'right' : 'left') : Math.abs(y) > Math.abs(x) + 2 ? 'normal' : null;
   if (!o) return;
   const now = performance.now();
-  if (o !== tilt.o) { tilt = { o, since: now }; return; }
-  if (now - tilt.since > 600 && o !== cfg.orient) { setOrient(o); save(CFG_KEY, cfg); }
+  if (o !== tilt.o) { tilt = { o, since: now, lock: tilt.lock === o ? o : null }; return; }
+  // A turn chosen with the button holds until the phone is tilted another way.
+  if (now - tilt.since > 350 && o !== cfg.orient && o !== tilt.lock) { setOrient(o); save(CFG_KEY, cfg); render(); }
 }
 let motionAsked = false;
 function askMotion() {
   if (motionAsked) return;
   motionAsked = true;
   if (typeof DeviceMotionEvent === 'undefined') return;
-  DeviceMotionEvent.requestPermission?.().catch(() => {});  // iOS: asks once, on this tap
+  // iOS asks once, on this tap; the sensor starts once allowed.
+  if (IOS && DeviceMotionEvent.requestPermission) DeviceMotionEvent.requestPermission().then(() => { motionOn = false; updateMotion(); }).catch(() => {});
   updateMotion();
 }
 // Éco switches the tilt sensor off (Réglages still turns the digits).
@@ -581,6 +584,19 @@ function updateMotion() {
 }
 document.addEventListener('click', askMotion);
 document.addEventListener('touchend', askMotion);
+// Android and others need no permission: the tilt works from the start, before any tap.
+const IOS = MOTION_SIGN === 1;
+if (!IOS) askMotion();
+// Orientation button (like lichess): each tap turns the digits to the next way.
+const ORIENTS = ['normal', 'right', 'left'];
+function cycleOrient() {
+  const o = ORIENTS[(ORIENTS.indexOf(cfg.orient || 'normal') + 1) % ORIENTS.length];
+  setOrient(o);
+  tilt.lock = tilt.o;  // the tilt only takes over again once the phone moves
+  save(CFG_KEY, cfg);
+  if (navigator.vibrate) navigator.vibrate(6);
+  render();
+}
 
 $('bar-home').addEventListener('click', () => {
   if (s.phase === 'ready' || s.phase === 'over') { closeFight(); return; }
@@ -698,10 +714,17 @@ $('chess-set').addEventListener('click', e => {
 $('quick').addEventListener('click', onOptions);
 ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach((ev, i) =>
   $('quick').addEventListener(ev, [onRulerDown, onRulerMove, endRuler, endRuler][i]));
+// The way the digits face now: ↕ face to face, → turned right, ← turned left.
+const ORIENT_ICON = {
+  normal: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4"/></svg>',
+  right: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M17 8l4 4-4 4"/></svg>',
+  left: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12H3M7 8l-4 4 4 4"/></svg>',
+};
 function renderBarToggles() {
   const sound = !cfg.eco && cfg.sound;
   $('bar-tg').innerHTML = `<button type="button" class="tg${sound ? ' on' : ''}" data-tg="sound" aria-label="Son">${sound ? ICONS.sound : ICONS.mute}</button>`
     + `<button type="button" class="tg${cfg.eco ? ' on' : ''}" data-tg="eco" aria-label="Éco">${ICONS.eco}</button>`
+    + `<button type="button" class="tg tg-orient" data-tg="orient" aria-label="Orientation">${ORIENT_ICON[cfg.orient || 'normal']}</button>`
     + `<button type="button" class="tg tg-std" data-tg="std" aria-label="Standard">${ICONS.replay}</button>`;
 }
 

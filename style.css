@@ -1226,3 +1226,4 @@ html.flip #ptr { top: auto; bottom: 0; }
 #pause-menu.ready .pm-main { grid-template-columns: 1fr !important; }
 .pm-tgs[hidden] { display: none !important; }
 .await .h-clock, .await .h-name { visibility: visible !important; }
+.phase-ready .bar { --rb: min(54px, 11.4vw); }
