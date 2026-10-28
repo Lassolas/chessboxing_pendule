@@ -959,3 +959,17 @@ button.ri-rounds { padding: 2px 7px; }
 .ri .ic { width: 13px; height: 13px; } .ri .ic.ic-hourglass { width: 19px; height: 11px; }
 .ri-n { font-size: 20px; }
 .bar-tg { gap: 4px; } .bar-tg .tg { width: 34px; height: 34px; }
+.opt-avg { font: 600 22px/1 var(--font-display); }
+/* Ready bar, bigger buttons: the fight on a full-width row, Son / Éco on the row below */
+.phase-ready .bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; row-gap: 8px; padding: 10px 10px; }
+.phase-ready .bar-info { flex: 1 1 100%; min-width: 0; }
+.phase-ready .bar-round { display: flex; gap: 8px; width: 100%; font-size: 19px; }
+.phase-ready button.ri { flex: 1 1 0; justify-content: center; height: 50px; padding: 0 6px; border-radius: 12px; gap: 5px; min-width: 0; }
+.phase-ready button.ri-rounds { flex: 0 0 52px; }
+.phase-ready .ri .ic { width: 18px; height: 18px; } .phase-ready .ri .ic.ic-hourglass { width: 26px; height: 15px; }
+.phase-ready .ri-n { font-size: 28px; }
+.phase-ready .bar-tg { flex: 1 1 100%; justify-content: center; gap: 10px; }
+.phase-ready .bar-tg .tg { width: auto; height: 40px; padding: 0 16px; gap: 8px; border-radius: 20px;
+  font: 600 11px var(--font-display); letter-spacing: .18em; text-transform: uppercase; }
+@media (orientation: landscape) { .phase-ready .bar { flex-wrap: nowrap; } .phase-ready .bar-info { flex: 1 1 auto; } .phase-ready .bar-tg { flex: none; } }
+@media (max-height: 620px) and (orientation: portrait) { .phase-ready button.ri { height: 42px; } .phase-ready .bar-tg .tg { height: 34px; } .phase-ready .bar { row-gap: 6px; padding: 6px 8px; } }

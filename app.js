@@ -29,7 +29,7 @@ const homeDefaults = () => ({
   warnOn: false, countdownOn: false,   // counts off by default
   digits: 'dgt',                      // clock digits: dgt | oxanium | saira
   moveWarnMs: 25000,                  // the warning, 5 s before the count unless moved
-  sound: true, clicks: true,          // alerts (bell, clapper...) and the clock presses
+  sound: true, clicks: true, showAvg: true,          // alerts (bell, clapper...) and the clock presses
   v: 10,
 });
 let cfg = { ...homeDefaults(), ...(load(CFG_KEY) || {}) };
@@ -346,6 +346,9 @@ const OPTIONS = [
   ['clicks', on => (on ? ICONS.sound : ICONS.mute), 'Coups', on => on
     ? 'Le bruit de la pendule à chaque appui.'
     : 'Appuis silencieux.'],
+  ['showAvg', () => '<b class="opt-avg">s</b>', 'Moyenne', on => on
+    ? 'Temps moyen par coup de chaque joueur, dans son coin.'
+    : 'Pas de temps moyen par coup.'],
   ['eco', () => ICONS.eco, 'Éco', () => 'Écran noir, sans son ni animation.'],
 ];
 
@@ -766,8 +769,8 @@ $('quick').addEventListener('click', onTiles);
   $('quick').addEventListener(ev, [onRulerDown, onRulerMove, endRuler, endRuler][i]));
 function renderBarToggles() {
   const sound = !cfg.eco && (cfg.sound || cfg.clicks);
-  $('bar-tg').innerHTML = `<button type="button" class="tg${sound ? ' on' : ''}" data-tg="sound" aria-label="Son">${sound ? ICONS.sound : ICONS.mute}</button>`
-    + `<button type="button" class="tg${cfg.eco ? ' on' : ''}" data-tg="eco" aria-label="Éco">${ICONS.eco}</button>`;
+  $('bar-tg').innerHTML = `<button type="button" class="tg${sound ? ' on' : ''}" data-tg="sound" aria-label="Son">${sound ? ICONS.sound : ICONS.mute}Son</button>`
+    + `<button type="button" class="tg${cfg.eco ? ' on' : ''}" data-tg="eco" aria-label="Éco">${ICONS.eco}Éco</button>`;
 }
 
 // Play the sounds and colour flashes of a list of events, then redraw.
@@ -891,7 +894,7 @@ function render() {
     h.querySelector('.h-name').textContent = [icon, s.cfg.names[p]].filter(Boolean).join(' · ');
     // Average per move: always shown once there is one, during play too.
     const avg = averageMove(s, p);
-    setHTML(h.querySelector('.h-avg'), s.phase !== 'ready' && avg !== null
+    setHTML(h.querySelector('.h-avg'), cfg.showAvg !== false && s.phase !== 'ready' && avg !== null
       ? `${(avg / 1000).toFixed(1)}s<small>/coup</small>` : '');
     // Counts: nothing until the first one, then one red dot each
     // (bright for this round, dim for earlier rounds).
