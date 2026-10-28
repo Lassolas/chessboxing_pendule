@@ -901,7 +901,8 @@ function render() {
     const icon = s.white === null ? '' : p === s.white ? 'BLANCS' : 'NOIRS';
     h.querySelector('.h-name').textContent = [icon, s.cfg.names[p]].filter(Boolean).join(' · ');
     // Average per move: always shown once there is one, during play too.
-    const avg = averageMove(s, p);
+    // During play only finished moves count: the figure changes when a move is played, not live.
+    const avg = averageMove(s, p, s.phase !== 'chess' || s.paused);
     setHTML(h.querySelector('.h-avg'), cfg.showAvg !== false && s.phase !== 'ready' && avg !== null
       ? `${(avg / 1000).toFixed(1)}s<small>/coup</small>` : '');
     // Counts: nothing until the first one, then one red dot each

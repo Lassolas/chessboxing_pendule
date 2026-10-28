@@ -989,3 +989,9 @@ button.ri-rounds { padding: 2px 7px; }
 .h-illtg.on svg { filter: none; opacity: 1; }
 .h-illtg[hidden] { display: none; }
 .half.top .h-illtg { top: max(12px, env(safe-area-inset-bottom)); }
+/* Bar numerals bigger (Val), still fitting XI rounds */
+.trk { gap: 10px; } .tr { font-size: 27px; } .tr.now, .tr.prev { font-size: 32px; }
+.trk.more { gap: 7px; } .trk.more .tr { font-size: min(22px, 5.6vw); } .trk.more .tr.now, .trk.more .tr.prev { font-size: min(26px, 6.6vw); }
+.trk.many { gap: 5px; } .trk.many .tr { font-size: min(18px, 4.4vw); } .trk.many .tr.now, .trk.many .tr.prev { font-size: min(21px, 5.2vw); }
+/* Played rounds: bold, same size (only the current one grows), so the row never overflows */
+.tr.prev { font-size: 27px; } .trk.more .tr.prev { font-size: min(22px, 5.6vw); } .trk.many .tr.prev { font-size: min(18px, 4.4vw); }

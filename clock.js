@@ -252,10 +252,11 @@ export function skipPhase(s, now) {
 
 // Average thinking time per move of `player` (ms), or null before their first
 // move. The move in progress counts once it takes longer than the average.
-export function averageMove(s, player) {
+// live = false: finished moves only (the figure moves once a move is played).
+export function averageMove(s, player, live = true) {
   const moves = s.moves?.[player] || 0;
   let spent = s.spent?.[player] || 0, n = moves;
-  const cur = s.turn === player ? s.curMove || 0 : 0;
+  const cur = live && s.turn === player ? s.curMove || 0 : 0;
   if (cur > 0 && (n === 0 || cur > spent / n)) { spent += cur; n += 1; }
   return n ? spent / n : null;
 }
