@@ -605,14 +605,15 @@ function openSettings(flip) {
   renderSetup();
   window.scrollTo(0, 0); $('setup').scrollTop = 0;
 }
-// Compact summary for the bar before the start: V  ♞ 3:00  🥊 3:00  ⧗ 1:00.
+// Before the start the bar holds round buttons: rounds, chess, boxing, pause.
 // Each part can be tapped to change it right there (see the quick panel).
 function readyInfoHTML(c) {
-  const item = (q, icon, text, off) => `<button type="button" class="ri ri-${q}${off ? ' off' : ''}${quickKey === q ? ' open' : ''}" data-q="${q}">${icon}${text}</button>`;
-  if (!c.intervals) return item('rounds', '', `<span class="ri-n">${roman(c.rounds)}</span>`) + item('chessRoundMs', ICONS.pawn, formatClock(PRESETS[c.rounds]));
-  return item('rounds', '', `<span class="ri-n">${roman(c.rounds)}</span>`) + item('chessRoundMs', ICONS.pawn, mins(c.chessRoundMs))
-    + item('boxRoundMs', ICONS.glove, c.boxTimer ? mins(c.boxRoundMs) : '—', !c.boxTimer)
-    + item('breakMs', ICONS.hourglass, c.breakOn ? (c.breakMs ? mins(c.breakMs) : '0:00') : '∞');
+  // Round buttons, all the same size, no durations: the rounds, then chess, boxing, pause.
+  const item = (q, icon, off, label) => `<button type="button" class="ri ri-${q}${off ? ' off' : ''}${quickKey === q ? ' open' : ''}" data-q="${q}" aria-label="${label}">${icon}</button>`;
+  const rounds = item('rounds', `<span class="ri-n">${roman(c.rounds)}</span>`, false, 'Rounds');
+  if (!c.intervals) return rounds + item('chessRoundMs', ICONS.pawn, false, 'Échecs');
+  return rounds + item('chessRoundMs', ICONS.pawn, false, 'Échecs') + item('boxRoundMs', ICONS.glove, !c.boxTimer, 'Boxe')
+    + item('breakMs', ICONS.hourglass, !c.breakOn, 'Pause');
 }
 // Quick panel over the waiting clock: the step's ruler, on / off and back to the
 // original time; for the rounds, the four numbers. Tap outside to close.
@@ -655,8 +656,8 @@ $('quick').addEventListener('click', onOptions);
   $('quick').addEventListener(ev, [onRulerDown, onRulerMove, endRuler, endRuler][i]));
 function renderBarToggles() {
   const sound = !cfg.eco && cfg.sound;
-  $('bar-tg').innerHTML = `<button type="button" class="tg${sound ? ' on' : ''}" data-tg="sound" aria-label="Son">${sound ? ICONS.sound : ICONS.mute}Son</button>`
-    + `<button type="button" class="tg${cfg.eco ? ' on' : ''}" data-tg="eco" aria-label="Éco">${ICONS.eco}Éco</button>`;
+  $('bar-tg').innerHTML = `<button type="button" class="tg${sound ? ' on' : ''}" data-tg="sound" aria-label="Son">${sound ? ICONS.sound : ICONS.mute}</button>`
+    + `<button type="button" class="tg${cfg.eco ? ' on' : ''}" data-tg="eco" aria-label="Éco">${ICONS.eco}</button>`;
 }
 
 // Play the sounds and colour flashes of a list of events, then redraw.

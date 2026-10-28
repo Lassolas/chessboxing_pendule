@@ -1071,3 +1071,16 @@ html.flip #ptr { top: auto; bottom: 0; }
 .h-cnttg.on .hc-on { display: block; }
 .h-cnttg:not(.on) { opacity: 1; border-color: rgba(235, 229, 214, .45); }
 .h-cnttg:not(.on) svg, .pt[data-pt="count"]:not(.on) svg { filter: none; opacity: .85; }
+/* 0.2.74: ready bar = one row of round buttons, all the same size, like lichess: rounds, chess, boxing, pause | sound, Éco */
+.phase-ready .bar { --rb: min(54px, 12.6vw); flex-wrap: nowrap !important; justify-content: center; gap: min(10px, 2.4vw) !important; padding: 10px 8px !important; }
+.phase-ready .bar-info { flex: none !important; width: auto; }
+.phase-ready .bar-round { width: auto !important; gap: min(10px, 2.4vw) !important; }
+.phase-ready button.ri, .phase-ready .bar-tg .tg { flex: none !important; width: var(--rb) !important; height: var(--rb) !important; padding: 0 !important;
+  border-radius: 50% !important; display: grid !important; place-items: center; gap: 0 !important; }
+.phase-ready button.ri .ic, .phase-ready .bar-tg .tg .ic, .phase-ready .bar-tg .tg svg { width: calc(var(--rb) * .44) !important; height: calc(var(--rb) * .44) !important; margin: 0; }
+.phase-ready button.ri .ic.ic-hourglass { width: calc(var(--rb) * .56) !important; height: calc(var(--rb) * .33) !important; }
+.phase-ready .ri-n { font-size: calc(var(--rb) * .5) !important; line-height: 1; }
+.phase-ready .bar-tg { flex: none !important; gap: min(10px, 2.4vw) !important; padding-left: min(10px, 2.4vw); border-left: 1px solid var(--hair); }
+.phase-ready .bar-tg .tg { border: 1px solid rgba(235, 229, 214, .2); background: none; color: var(--text-2); }
+.phase-ready .bar-tg .tg.on { border-color: rgba(235, 229, 214, .5); background: rgba(235, 229, 214, .08); color: var(--bone); }
+.phase-ready button.ri.off { border-style: dashed; }
