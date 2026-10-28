@@ -1235,3 +1235,8 @@ html.flip #ptr { top: auto; bottom: 0; }
 .bar-next:active { transform: scale(.97); }
 .bar-next[hidden] { display: none; }
 @media (max-width: 380px) { .bar-next { height: 42px; padding: 0 10px; gap: 3px; font-size: 20px; } .bar-next .ic { width: 16px; height: 16px; } }
+/* 0.2.97: chess round, timer and → next both beside ⏸. */
+.bar.next-t { grid-template-columns: auto minmax(0, 1fr) auto auto auto; }
+.bar.next-t .bar-next { grid-column: 4; }
+.bar.next-t .bar-btn { grid-column: 5; }
+@media (max-width: 380px) { .bar.next-t { gap: 6px; } .bar.next-t .bar-timer { font-size: 22px; } }

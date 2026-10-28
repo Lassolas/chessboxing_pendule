@@ -866,11 +866,13 @@ function render() {
   const byCount0 = !!flagScreen && r.method === 'réflexion';
   const replay = !!flagScreen && (r.method === 'temps' || byCounts || byCount0);
   $('bar-replay').classList.toggle('with-btn', byCount0);
-  // Timed pause: the halves already show the time; the bar offers → next round instead.
-  const skipTo = s.phase === 'break' && !untimed && !s.awaitReady ? nextStep(s) : null;
+  // Every round and timed pause: → next step beside ⏸. In boxing and pauses the halves
+  // already show the time, so it takes the timer's place; in chess the round timer stays.
+  const skipTo = ['chess', 'boxing', 'break'].includes(s.phase) && !untimed && !s.awaitReady && !s.roundOver ? nextStep(s) : null;
   $('bar-next').hidden = !skipTo;
-  if (skipTo) setHTML($('bar-next'), ICONS.next + roundTag(skipTo.round));
-  $('bar-timer').hidden = replay || !!skipTo;
+  if (skipTo) setHTML($('bar-next'), ICONS.next + (skipTo.phase === 'break' ? ICONS.hourglass : roundTag(skipTo.round)));
+  $('bar-timer').hidden = replay || (!!skipTo && s.phase !== 'chess');
+  document.querySelector('.bar').classList.toggle('next-t', !!skipTo && s.phase === 'chess');
   document.querySelector('.bar-info').hidden = replay;
   $('bar-replay').hidden = !replay;
   document.querySelector('.bar').classList.toggle('alert', s.roundOver && !s.paused && s.phase !== 'over');
