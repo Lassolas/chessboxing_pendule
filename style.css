@@ -1174,3 +1174,10 @@ html.flip #ptr { top: auto; bottom: 0; }
 .q-rounds button.on::after, .digit-opt.on::after, .orient-opt.on::after { display: none !important; }
 /* Average per move: grey only, like the old Coups line */
 .h-avg, .h-avg small { color: var(--text-2) !important; }
+/* 0.2.91: rounds dial: the other three choices small along the bottom arc */
+.ri-peek { font-size: calc(var(--rb) * .16) !important; opacity: .42; transform: translate(-50%, -50%) !important; left: auto; right: auto; }
+.ri-o0 { left: 24% !important; top: 72% !important; }
+.ri-o1 { left: 50% !important; top: 83% !important; }
+.ri-o2 { left: 76% !important; top: 72% !important; }
+.phase-ready button.ri-rounds .ri-n { transform: translateY(-16%); font-size: calc(var(--rb) * .38) !important; }
+.phase-ready button.ri-rounds .ri-n.long { font-size: calc(var(--rb) * .3) !important; }

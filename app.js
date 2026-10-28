@@ -637,9 +637,10 @@ function readyInfoHTML(c) {
   // Round buttons, all the same size: the rounds, and the clock (chess, boxing and pause times).
   const item = (q, icon, label) => `<button type="button" class="ri ri-${q}${quickKey === q ? ' open' : ''}" data-q="${q}" aria-label="${label}">${icon}</button>`;
   // The rounds like a wheel: the number set, the other choices peeking out at the edges.
-  const keys = Object.keys(PRESETS).map(Number), at = keys.indexOf(c.rounds);
-  const side = (n, cls) => n ? `<i class="ri-peek ${cls}">${roman(n)}</i>` : '';
-  return item('rounds', side(keys[at - 1], 'ri-prev') + `<span class="ri-n${roman(c.rounds).length > 2 ? ' long' : ''}">${roman(c.rounds)}</span>` + side(keys[at + 1], 'ri-next'), 'Rounds')
+  // All the choices: the one set big in the middle, the others small and dim along the bottom of the dial.
+  const others = Object.keys(PRESETS).map(Number).filter(n => n !== c.rounds);
+  const ring = others.map((n, i) => `<i class="ri-peek ri-o${i}">${roman(n)}</i>`).join('');
+  return item('rounds', `<span class="ri-n${roman(c.rounds).length > 2 ? ' long' : ''}">${roman(c.rounds)}</span>` + ring, 'Rounds')
     + item('times', ICONS.clock, 'Temps');
 }
 // Quick panel over the waiting clock: the step's ruler, on / off and back to the
