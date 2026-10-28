@@ -236,9 +236,9 @@ const endRuler = e => {
 });
 function renderTiles() {
   if (clampCount(cfg)) save(CFG_KEY, cfg);
-  // Prêt ? right under the pause: it decides how each chess round starts (rounds only).
+  // Prêt ? right under the pause: it decides how each chess round starts after a timed pause (an open pause already waits for the coach).
   $('durations').innerHTML = ['chessRoundMs', 'boxRoundMs', 'breakMs'].map(k => rulerHTML(tileOf(k))).join('')
-    + optRow(OPTIONS.find(o => o[0] === 'readyCheck')).replace('class="ruler rl-opt', `class="ruler rl-opt rl-ready${cfg.intervals ? '' : ' dim'}`);
+    + optRow(OPTIONS.find(o => o[0] === 'readyCheck')).replace('class="ruler rl-opt', `class="ruler rl-opt rl-ready${cfg.intervals && cfg.breakOn ? '' : ' dim'}`);
   // Under the rulers: the count and its warning; once on, the count limits
   // (a plain clock is one game: only the total), after the illegal-move switch.
   const more = cfg.countdownOn || cfg.illegalMoves;
