@@ -442,6 +442,7 @@ function buildHalves() {
 }
 
 halves.forEach(h => h.addEventListener('pointerdown', e => {
+  unlockAudio();  // iPhone: sound back after a call or a trip to the background
   if (e.target.closest('button')) return;
   act(press(s, +h.dataset.p, performance.now()));
 }));
@@ -811,15 +812,30 @@ function ecoKey() {
 let wakeLock = null;
 async function requestWakeLock() {
   try {
-    wakeLock = await navigator.wakeLock?.request('screen');
+    wakeLock = await navigator.wakeLock.request('screen');
     // Released by the system (battery saver…): ask again while the clock is shown.
-    wakeLock?.addEventListener('release', () => {
+    wakeLock.addEventListener('release', () => {
       if (document.visibilityState === 'visible' && !$('fight').hidden) requestWakeLock();
     });
-  } catch { /* not supported */ }
+  } catch {
+    // No screen wake lock (older iPhones, some home-screen apps): a tiny silent
+    // looping video keeps the screen on instead.
+    keepAwakeVideo();
+  }
+}
+let awake = null;
+function keepAwakeVideo() {
+  if (!awake) {
+    awake = Object.assign(document.createElement('video'), { src: 'awake.mp4', muted: true, loop: true, playsInline: true });
+    awake.setAttribute('playsinline', '');
+    awake.setAttribute('aria-hidden', 'true');
+    awake.style.cssText = 'position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;bottom:0;left:0';
+    document.body.appendChild(awake);
+  }
+  awake.play().catch(() => {});
 }
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible' && s && !$('fight').hidden) requestWakeLock();
+  if (document.visibilityState === 'visible' && s && !$('fight').hidden) { requestWakeLock(); unlockAudio(); }
 });
 
 let installEvent = null;

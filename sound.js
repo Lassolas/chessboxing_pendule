@@ -45,7 +45,10 @@ export function unlockAudio() {
     ctx = new AC();
     loadSamples();
   }
-  if (ctx.state === 'suspended') ctx.resume();
+  // iPhone: play even with the silent switch on (iOS 17+), and wake up after a
+  // call or the app going to the background ('interrupted', not only 'suspended').
+  if (navigator.audioSession) navigator.audioSession.type = 'playback';
+  if (ctx.state !== 'running') ctx.resume().catch(() => {});
 }
 
 // Every sound imitates a real object: clock lever, boxing bell, wooden
