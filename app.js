@@ -298,7 +298,7 @@ function renderPresets() {
 // Durées: the fight step by step (chess, pause, boxing),
 // each step with its time. The last chess round runs until a flag falls.
 function renderFrieze() {
-  $('frieze').hidden = $('frieze-total').hidden = !cfg.intervals;
+  $('frieze').hidden = !cfg.intervals;
   if (!cfg.intervals) return;
   // A thin time line, each step as long as it lasts: chess in bone, boxing in red,
   // pauses in blue. The last chess round runs until a flag falls: it fades out.
@@ -316,10 +316,8 @@ function renderFrieze() {
     const ms = chess ? (n === lastChess ? lastMs : cfg.chessRoundMs) : cfg.boxRoundMs;
     cols.push(`<span class="tl-r ${chess ? 'tl-chess' : 'tl-box'}${n === lastChess ? ' tl-last' : ''}" style="flex-grow:${ms}"><em>${roman(roundNo(cfg, n))}</em><i></i></span>`);
   }
-  // Legend: each colour with its drawing and its time.
-  const item = (kind, icon, t) => `<span class="tl-k-${kind}"><i class="tl-sw"></i>${icon}${t}</span>`;
-  $('frieze').innerHTML = `<div class="tl">${cols.join('')}</div><div class="tl-key">${item('chess', ICONS.pawn, fmtValue(cfg.chessRoundMs))}${cfg.boxTimer ? item('box', ICONS.glove, fmtValue(cfg.boxRoundMs)) : ''}${cfg.breakOn && !pauseMs ? '' : item(cfg.breakOn ? 'pause' : 'inf', ICONS.hourglass, cfg.breakOn ? fmtValue(cfg.breakMs) : '∞')}</div>`;
-  $('frieze-total').innerHTML = `Total <b>${fmtValue(totalMs(cfg))}</b>`;
+  // The total, small, under the last round.
+  $('frieze').innerHTML = `<div class="tl">${cols.join('')}</div><div class="tl-total">Total <b>${fmtValue(totalMs(cfg))}</b></div>`;
 }
 // Longest fight: both chess clocks run out, plus boxing and timed pauses (an open pause counts 0).
 function totalMs(c) {

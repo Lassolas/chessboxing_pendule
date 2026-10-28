@@ -818,3 +818,5 @@ body::after { content: ''; position: fixed; inset: 0; z-index: 40; pointer-event
 .eco .fg-light, .eco .fg-floor { display: none; }
 .rl-cur { padding: 0 10px 7px; }  /* hides the scale label under the needle */
 .chess-set::before { display: none; }  /* no link line to the old tiles */
+.tl-total { margin-top: 7px; text-align: right; color: var(--text-2); font: 600 11px var(--font-display); letter-spacing: .16em; text-transform: uppercase; }
+.tl-total b { margin-left: 4px; color: var(--text); font: var(--clock-weight) 13px var(--font-clock); letter-spacing: 0; }
