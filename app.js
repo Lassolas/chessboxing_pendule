@@ -106,9 +106,9 @@ const TILES = [
   { key: 'boxRoundMs', row: 1, icon: () => ICONS.glove, label: 'Boxe', step: 10000, min: 30000, max: 300000,
     on: () => cfg.intervals && cfg.boxTimer,
     tap: () => { cfg.boxTimer = !(cfg.intervals && cfg.boxTimer); if (cfg.boxTimer) cfg.intervals = true; } },
-  { key: 'moveCountdownMs', flag: 'countdownOn', row: 2, icon: () => countHands(8, TILE_HAND), label: 'Compte', step: 5000, min: 10000, max: 180000 },
+  { key: 'moveCountdownMs', flag: 'countdownOn', row: 2, icon: () => countHands(8, TILE_HAND), label: 'Compte', step: 1000, min: 1000, max: () => countMax(cfg) },
   { key: 'illegalMoves', flag: 'illegalMoves', row: 2, icon: () => redFlag, label: 'Coups illégaux', noValue: true },
-  { key: 'moveWarnMs', flag: 'warnOn', row: 2, icon: () => watch, label: 'Alerte', step: 5000, min: 5000, max: () => warnFor(cfg.moveCountdownMs) },
+  { key: 'moveWarnMs', flag: 'warnOn', row: 2, icon: () => watch, label: 'Alerte', step: 1000, min: 0, max: () => Math.max(0, cfg.moveCountdownMs - 1000) },
   // Count limits: rulers too, always on (no drawing to tap).
   { key: 'countsPerRound', kind: 'n', label: 'Max', sub: '/ round', step: 1, min: 1, max: 10, on: () => true, tap: () => {} },
   { key: 'countsTotal', kind: 'n', label: 'Max', sub: 'total', step: 1, min: 1, max: 20, on: () => true, tap: () => {} },
@@ -120,8 +120,19 @@ TILES.filter(t => t.flag).forEach(t => {
 // Count limits: plain − / + lines, always on.
 const LIMITS = [['countsPerRound', '/ round', 1, 10], ['countsTotal', 'total', 1, 20]];
 const tileOf = key => TILES.find(t => t.key === key);
+// The longest count: a third of the chess round (of each player's time in a plain clock), to the second.
+const countMax = c => Math.max(1000, Math.round((c.intervals ? c.chessRoundMs : playerTime(c)) / 3000) * 1000);
+// Keep the count and its warning inside their scales when the round changes.
+function clampCount(c) {
+  const max = countMax(c);
+  if (c.moveCountdownMs <= max) return false;
+  if (c.moveWarnMs === c.moveCountdownMs - 5000) c.moveWarnMs = Math.max(0, max - 5000);  // still 5 s before
+  c.moveCountdownMs = max;
+  c.moveWarnMs = Math.min(c.moveWarnMs, Math.max(0, max - 1000));
+  return true;
+}
 // The warning always comes 5 s before the count.
-const warnFor = countdownMs => countdownMs - 5000;
+const warnFor = countdownMs => Math.max(0, countdownMs - 5000);
 // Turning the count on brings the warning with it.
 tileOf('moveCountdownMs').tap = () => { cfg.countdownOn = !cfg.countdownOn; if (cfg.countdownOn) cfg.warnOn = true; };
 const tileValue = t => t.key === 'breakMs' && !t.on() ? '∞' : fmtValue(cfg[t.key], t.kind);
@@ -157,7 +168,7 @@ function rulerHTML(t) {
   const on = t.on(), px = tickOf(t);
   const dim = ((t.key === 'boxRoundMs' || t.key === 'breakMs') && !cfg.intervals) || (t.key === 'moveWarnMs' && !cfg.countdownOn);
   const vals = valuesOf(t), i = Math.max(0, vals.indexOf(cfg[t.key]));
-  const every = t.kind === 'n' ? 5 : t.step * 6;
+  const every = t.kind === 'n' ? 5 : t.step === 1000 ? 10000 : t.step * 6;
   const labels = vals.map((v, k) => v % every === 0 ? `<b style="left:${k * px}px">${fmtValue(v, t.kind)}</b>` : '').join('');
   const std = standardOf(t.key);
   // Count limits have no on / off: their name is a plain label, not a button.
@@ -220,6 +231,7 @@ const endRuler = e => {
   $(id).addEventListener('pointercancel', endRuler);
 });
 function renderTiles() {
+  if (clampCount(cfg)) save(CFG_KEY, cfg);
   $('durations').innerHTML = ['chessRoundMs', 'boxRoundMs', 'breakMs'].map(k => rulerHTML(tileOf(k))).join('');
   // Under the rulers: the count and its warning; once on, the count limits
   // (a plain clock is one game: only the total); then the illegal-move switch.
@@ -447,8 +459,8 @@ function fightConfig() {
   if (!c.intervals) Object.assign(c, { illegalMoves: false, boxTimer: false, countsPerRound: 999 });
   if (!c.breakOn) c.breakMs = null;
   if (!c.countdownOn) c.warnOn = false;  // the warning comes with the count
-  c.moveWarnMs = Math.min(c.moveWarnMs, warnFor(c.moveCountdownMs));
-  if (!c.warnOn) c.moveWarnMs = NEVER;
+  clampCount(c);
+  if (!c.warnOn || c.moveWarnMs <= 0) c.moveWarnMs = NEVER;  // 0:00 = no warning (counts under 5 s)
   if (!c.countdownOn) c.moveCountdownMs = NEVER;
   c.moveLimit = c.warnOn || c.countdownOn;
   return c;
