@@ -246,7 +246,7 @@ function renderFrieze() {
   $('durations-title').hidden = $('frieze').hidden = $('frieze-total').hidden = !cfg.intervals;
   if (!cfg.intervals) return;
   // A thin time line, each step as long as it lasts: chess in bone, boxing in red,
-  // pauses as gaps. The last chess round runs until a flag falls: it fades out.
+  // pauses in blue. The last chess round runs until a flag falls: it fades out.
   const chessRounds = Array.from({ length: cfg.rounds }, (_, i) => i + 1).filter(n => roundType(n) === 'chess');
   const lastChess = Math.max(...chessRounds);
   const lastMs = Math.max(cfg.chessRoundMs, 2 * playerTime(cfg) - (chessRounds.length - 1) * cfg.chessRoundMs);
@@ -255,7 +255,7 @@ function renderFrieze() {
   for (let n = 1; n <= cfg.rounds; n++) {
     const chess = roundType(n) === 'chess';
     if (!chess && !cfg.boxTimer) continue;
-    if (cols.length) cols.push(`<span class="tl-p" style="flex-grow:${pauseMs}"></span>`);
+    if (cols.length && pauseMs) cols.push(`<span class="tl-r tl-p" style="flex-grow:${pauseMs}"><em></em><i></i></span>`);
     const ms = chess ? (n === lastChess ? lastMs : cfg.chessRoundMs) : cfg.boxRoundMs;
     cols.push(`<span class="tl-r ${chess ? 'tl-chess' : 'tl-box'}${n === lastChess ? ' tl-last' : ''}" style="flex-grow:${ms}"><em>${roman(roundNo(cfg, n))}</em><i></i></span>`);
   }

@@ -697,7 +697,8 @@ body::after { content: ''; position: fixed; inset: 0; z-index: 40; pointer-event
 /* Durées: a thin, proportional time line, numerals above, the durations once below */
 .frieze { padding: 2px 0 4px; }
 .tl { display: flex; align-items: flex-end; gap: 2px; }
-.tl-p { flex-basis: 0; min-width: 0; }
+.tl-r.tl-p { min-width: 3px; }
+.tl .tl-r.tl-p i { background: color-mix(in srgb, var(--blue) 80%, transparent); }
 .tl-r { flex-basis: 0; min-width: 6px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .tl-r em { font: italic 500 13px/1 var(--font-serif); color: var(--text-2); white-space: nowrap; }
 .tl-r i { display: block; align-self: stretch; height: 3px; border-radius: 2px; background: color-mix(in srgb, var(--text) 75%, transparent); }
