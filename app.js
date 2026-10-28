@@ -242,18 +242,23 @@ function renderPresets() {
 // Durées: the fight as the bar shows it (chess ◇, pause —, boxing ●),
 // each step with its time. The last chess round runs until a flag falls.
 function renderFrieze() {
-  $('durations-title').hidden = $('frieze').hidden = !cfg.intervals;
+  $('durations-title').hidden = $('frieze').hidden = $('frieze-total').hidden = !cfg.intervals;
   if (!cfg.intervals) return;
   const steps = [], lastChess = Math.max(...Array.from({ length: cfg.rounds }, (_, i) => i + 1).filter(n => roundType(n) === 'chess'));
+  let pauses = 0, boxing = 0;
   for (let n = 1; n <= cfg.rounds; n++) {
     const chess = roundType(n) === 'chess';
     if (!chess && !cfg.boxTimer) continue;
-    if (steps.length) steps.push(['tk-dash', cfg.breakOn ? fmtValue(cfg.breakMs) : '∞']);
-    steps.push([chess ? 'tk sq' : 'tk ci', chess ? (n === lastChess ? '⚑' : fmtValue(cfg.chessRoundMs)) : fmtValue(cfg.boxRoundMs)]);
+    if (steps.length) { steps.push(['tk-dash', '', cfg.breakOn ? fmtValue(cfg.breakMs) : '∞']); pauses++; }
+    if (!chess) boxing++;
+    steps.push([chess ? 'tk sq' : 'tk ci', roman(roundNo(cfg, n)), chess ? (n === lastChess ? '⚑' : fmtValue(cfg.chessRoundMs)) : fmtValue(cfg.boxRoundMs)]);
   }
   // Val's drawings for the rounds (knight, glove), the bar's dash for the pauses.
   const mark = k => k === 'tk sq' ? ICONS.pawn : k === 'tk ci' ? ICONS.glove : `<i class="${k}"></i>`;
-  $('frieze').innerHTML = steps.map(([k, t]) => `<span class="fz${k === 'tk ci' ? ' fz-box' : ''}"><span class="fz-m">${mark(k)}</span><small>${t}</small></span>`).join('');
+  $('frieze').innerHTML = steps.map(([k, n, t]) => `<span class="fz${k === 'tk ci' ? ' fz-box' : ''}"><em>${n}</em><span class="fz-m">${mark(k)}</span><small>${t}</small></span>`).join('');
+  // Total, the chess clocks run to the end: both players' full time + boxing + pauses.
+  const total = 2 * playerTime(cfg) + boxing * cfg.boxRoundMs + (cfg.breakOn ? pauses * cfg.breakMs : 0);
+  $('frieze-total').innerHTML = `Total <b>${fmtValue(total)}</b>${cfg.breakOn ? '' : '<small> + pauses</small>'}`;
 }
 // The big COMBAT button says what it starts.
 const mins = ms => fmtValue(ms);

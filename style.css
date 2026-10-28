@@ -704,3 +704,8 @@ body::after { content: ''; position: fixed; inset: 0; z-index: 40; pointer-event
 .fz .tk-dash { width: 16px; height: 1.6px; background: var(--blue); }
 .fz small { font: var(--clock-weight) 12px var(--font-clock); color: var(--text-2); font-variant-numeric: tabular-nums; }
 .fz:has(.ic) small { color: var(--text); }
+.fz em { height: 18px; font: italic 500 17px/1 var(--font-serif); color: var(--text-2); }
+.fz-box em { color: color-mix(in srgb, var(--red) 80%, var(--text)); }
+.frieze-total { margin: 4px 0 6px; text-align: center; color: var(--text-2); font: 600 14px var(--font-display); letter-spacing: .16em; text-transform: uppercase; }
+.frieze-total b { margin-left: 6px; color: var(--text); font: var(--clock-weight) 18px var(--font-clock); letter-spacing: 0; }
+.frieze-total small { text-transform: none; letter-spacing: .02em; font-size: 13px; }
