@@ -829,8 +829,11 @@ function trackHTML() {
   const c = s.cfg, rounds = [];
   for (let n = 1; n <= c.rounds; n++) if (c.boxTimer || roundType(n) === 'chess') rounds.push(n);
   const cur = s.phase === 'break' || s.phase === 'over' ? null : s.phase === 'ready' ? 1 : s.round;
+  // In a pause: the round just played in bold grey, the next one bold and blinking.
+  const prev = s.phase === 'break' ? s.round : null, next = s.phase === 'break' ? s.nextRound : null;
+  const cls = n => n === cur ? ' now' : n === next ? ' now next' : n === prev ? ' prev' : '';
   return `<span class="trk">${rounds.map(n =>
-    `<b class="tr ${roundType(n) === 'chess' ? 'tr-chess' : 'tr-box'}${n === cur ? ' now' : ''}">${roman(roundNo(c, n))}</b>`).join('')}</span>`;
+    `<b class="tr ${roundType(n) === 'chess' ? 'tr-chess' : 'tr-box'}${cls(n)}">${roman(roundNo(c, n))}</b>`).join('')}</span>`;
 }
 
 const METHOD_SHORT = { temps: 'Temps écoulé !', 'réflexion': 'Anti-jeu', decision: 'Fin' };
