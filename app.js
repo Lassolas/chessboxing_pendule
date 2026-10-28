@@ -765,7 +765,7 @@ function render() {
     // the last 10 s of the pause (and before the first one), above the timer.
     // No round names on the clock (Val): only Boxe / Pause over their timer; the rounds are in the bar.
     phaseEl.classList.remove('soon');
-    setHTML(phaseEl.firstChild, s.phase === 'boxing' ? ICONS.glove : s.phase === 'break' ? `${ICONS.hourglass}Pause` : '');
+    setHTML(phaseEl.firstChild, s.phase === 'break' ? `${ICONS.hourglass}Pause` : '');
     setDigits(phaseEl.lastChild, (s.phase === 'boxing' || s.phase === 'break') && !untimed ? roundClock(s.phaseRemaining) : (s.phase === 'break' ? '∞' : ''), cfg.digits);
     const move = h.querySelector('.h-move');
     if (active && cd !== null) move.innerHTML = countHands(cd);
