@@ -843,3 +843,4 @@ body::after { content: ''; position: fixed; inset: 0; z-index: 40; pointer-event
 .rl-note { min-height: 52px; font-size: 13.5px; }
 .rl-reset:not(.same) { color: var(--c); }
 .ruler:not(.on) .rl-cur { min-width: 64px; text-align: center; box-sizing: border-box; }
+.rl-opt .rl-ico small { letter-spacing: .08em; }

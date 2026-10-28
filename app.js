@@ -3,7 +3,7 @@ import {
   illegalMove, removeIllegal, undoCount, averageMove, nextChessRound, goToNextChess, nextStep, goToNextStep, reopen, endFight, moveStage, moveCountdownLeft,
   countsOf, roundType, formatClock,
 } from './clock.js';
-import { unlockAudio, play, setMuted } from './sound.js';
+import { unlockAudio, play, setMuted, setSounds } from './sound.js';
 import { countHands, REFEREE } from './hands.js';
 import { DIGIT_STYLES, setDigits } from './digits.js';
 import { ICONS, roman } from './icons.js';
@@ -28,7 +28,7 @@ const homeDefaults = () => ({
   breakMs: 60000, breakOn: true,    // pause off = open pause (∞)
   warnOn: false, countdownOn: false,   // counts off by default
   digits: 'dgt',                      // clock digits: dgt | oxanium | saira
-  sound: true,
+  sound: true, clicks: true,          // alerts (bell, clapper...) and the clock presses
   v: 9,
 });
 let cfg = { ...homeDefaults(), ...(load(CFG_KEY) || {}) };
@@ -73,7 +73,7 @@ if (cfg.v < 9) {  // v9: DGT digits by default
 if (!DIGIT_STYLES.includes(cfg.digits)) cfg.digits = 'dgt';  // Teko was dropped
 cfg.moveCountdownMs = Math.max(10000, cfg.moveCountdownMs);
 let s = null;
-setMuted(!!cfg.eco || !cfg.sound);
+setMuted(!!cfg.eco); setSounds(cfg.clicks !== false, !!cfg.sound);
 
 // Round number as shown: always the real one, so chess rounds stay odd (I, III, V…).
 // Without a boxing timer the boxing round sits inside the pause and is not shown.
@@ -302,9 +302,12 @@ const OPTIONS = [
   ['readyCheck', () => ICONS.play, 'Prêt ?', on => on
     ? 'Attend une touche avant chaque round d\'échecs.'
     : 'Les échecs repartent seuls après la pause.'],
-  ['sound', on => (on ? ICONS.sound : ICONS.mute), 'Son', on => on
-    ? 'Cloche, claquoir et alertes.'
-    : 'Silence : les couleurs seules.'],
+  ['sound', () => ICONS.bell, 'Alertes', on => on
+    ? 'Cloche des rounds et claquoir des 10 s.'
+    : 'Pas d\'alerte sonore : les couleurs seules.'],
+  ['clicks', on => (on ? ICONS.sound : ICONS.mute), 'Coups', on => on
+    ? 'Le bruit de la pendule à chaque appui.'
+    : 'Appuis silencieux.'],
   ['eco', () => ICONS.eco, 'Éco', () => 'Écran noir, sans son ni animation.'],
 ];
 
@@ -442,16 +445,17 @@ function onOptions(e) {
   if (d) { cfg.digits = d.dataset.digits; save(CFG_KEY, cfg); }
   if (t) {
     cfg[t.dataset.opt] = !cfg[t.dataset.opt];
-    if (t.dataset.opt === 'eco') { cfg.sound = !cfg.eco; updateMotion(); }  // Éco mutes; leaving it brings the sound back
+    if (t.dataset.opt === 'eco') { cfg.sound = cfg.clicks = !cfg.eco; updateMotion(); }  // Éco mutes; leaving it brings the sound back
+    else if (cfg.eco && (cfg.sound || cfg.clicks)) { cfg.eco = false; updateMotion(); }  // a sound switched on leaves Éco
     save(CFG_KEY, cfg);
-    setMuted(!!cfg.eco || !cfg.sound);
+    setMuted(!!cfg.eco); setSounds(cfg.clicks !== false, !!cfg.sound);
   }
   renderSetup();
 }
 $('options').addEventListener('click', onOptions);
 $('digit-pick').addEventListener('click', onOptions);
 $('btn-defaults').addEventListener('click', () => {
-  cfg = { ...homeDefaults(), readyCheck: true, names: cfg.names, eco: cfg.eco, sound: cfg.sound, digits: cfg.digits, orient: cfg.orient };
+  cfg = { ...homeDefaults(), readyCheck: true, names: cfg.names, eco: cfg.eco, sound: cfg.sound, clicks: cfg.clicks, digits: cfg.digits, orient: cfg.orient };
   save(CFG_KEY, cfg);
   renderSetup();
 });

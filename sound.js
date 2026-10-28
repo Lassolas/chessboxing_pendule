@@ -4,6 +4,10 @@
 let ctx = null;
 let muted = false;
 export function setMuted(m) { muted = m; }
+// Two switches: the clock's own noises (each press) and the alerts (bell, clapper, knocks...).
+let clicksOn = true, alertsOn = true;
+export function setSounds(clicks, alerts) { clicksOn = clicks; alertsOn = alerts; }
+const CLICKS = new Set(['press', 'pause', 'resume', 'undo']);
 
 // Recorded sounds, a few variants each, picked at random: a punch for each
 // press, a hammer on hard wood for the 10-second clapper.
@@ -268,6 +272,6 @@ const VIBRATE = {
 };
 
 export function play(event) {
-  if (!muted) SOUNDS[event]?.();
+  if (!muted && (CLICKS.has(event) ? clicksOn : alertsOn)) SOUNDS[event]?.();
   if (VIBRATE[event] && navigator.vibrate) navigator.vibrate(VIBRATE[event]);
 }
