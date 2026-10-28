@@ -426,6 +426,9 @@ function renderSetup() {
   $('orient-pick').innerHTML = ORIENT_PICK.map(([o, icon, label]) =>
     `<button type="button" class="orient-opt${(cfg.orient || 'normal') === o ? ' on' : ''}" data-orient="${o}" aria-label="${label}">${icon}<small>${label}</small></button>`).join('');
   renderTiles();
+  // The clock waiting to start follows the settings at once.
+  if (s && s.phase === 'ready' && !$('fight').hidden) { s = newFight(fightConfig()); render(); }
+  renderQuick();
   const saved = load(FIGHT_KEY);
   const live = saved && saved.phase !== 'ready' && saved.phase !== 'over';
   $('resume-wrap').hidden = !live;
@@ -722,13 +725,45 @@ function openSettings(flip) {
   requestAnimationFrame(() => document.querySelector('.rounds-pick').scrollIntoView({ block: 'start' }));
 }
 // Compact summary for the bar before the start: V  ♞ 3:00  🥊 3:00  ⧗ 1:00.
+// Each part can be tapped to change it right there (see the quick panel).
 function readyInfoHTML(c) {
-  const item = (icon, text) => `<span class="ri">${icon}${text}</span>`;
-  if (!c.intervals) return item(ICONS.pawn, formatClock(PRESETS[c.rounds]));
-  return `<span class="ri ri-n">${roman(c.rounds)}</span>` + item(ICONS.pawn, mins(c.chessRoundMs))
-    + (c.boxTimer ? item(ICONS.glove, mins(c.boxRoundMs)) : '')
-    + item(ICONS.hourglass, c.breakOn ? (c.breakMs ? mins(c.breakMs) : '0:00') : '∞');
+  const item = (q, icon, text, off) => `<button type="button" class="ri${off ? ' off' : ''}" data-q="${q}">${icon}${text}</button>`;
+  if (!c.intervals) return item('rounds', '', `<span class="ri-n">${roman(c.rounds)}</span>`) + item('chessRoundMs', ICONS.pawn, formatClock(PRESETS[c.rounds]));
+  return item('rounds', '', `<span class="ri-n">${roman(c.rounds)}</span>`) + item('chessRoundMs', ICONS.pawn, mins(c.chessRoundMs))
+    + item('boxRoundMs', ICONS.glove, c.boxTimer ? mins(c.boxRoundMs) : '—', !c.boxTimer)
+    + item('breakMs', ICONS.hourglass, c.breakOn ? (c.breakMs ? mins(c.breakMs) : '0:00') : '∞');
 }
+// Quick panel over the waiting clock: the step's ruler, on / off and back to the
+// original time; for the rounds, the four numbers. Tap outside to close.
+let quickKey = null;
+function renderQuick() {
+  const k = quickKey;
+  $('quick').hidden = !k;
+  if (!k) return;
+  if (k === 'rounds') {
+    $('quick-box').innerHTML = `<p class="q-t">Rounds</p><div class="q-rounds">${Object.keys(PRESETS).map(r =>
+      `<button type="button" class="${+r === cfg.rounds ? 'on' : ''}" data-qr="${r}"><b>${roman(+r)}</b><small>${formatClock(playerTime({ ...cfg, rounds: +r }))}</small></button>`).join('')}</div>`;
+    return;
+  }
+  const t = tileOf(k), on = t.on();
+  $('quick-box').innerHTML = rulerHTML(t) + `<div class="q-act">
+    <button type="button" class="q-btn" data-tile="${k}">${on ? 'Désactiver' : 'Activer'}</button>
+    <button type="button" class="q-btn" data-reset="${k}"${on && cfg[k] !== standardOf(k) ? '' : ' disabled'}>${ICONS.replay}${fmtValue(standardOf(k))}</button>
+    <button type="button" class="q-btn q-ok" data-qclose>OK</button></div>`;
+}
+function openQuick(k) { quickKey = k; renderQuick(); }
+$('bar-round').addEventListener('click', e => {
+  const b = e.target.closest('[data-q]');
+  if (b && s && s.phase === 'ready') openQuick(b.dataset.q);
+});
+$('quick').addEventListener('click', e => {
+  if (e.target === $('quick') || e.target.closest('[data-qclose]')) { quickKey = null; renderQuick(); return; }
+  const r = e.target.closest('[data-qr]');
+  if (r) { cfg.rounds = +r.dataset.qr; save(CFG_KEY, cfg); renderSetup(); }
+});
+$('quick').addEventListener('click', onTiles);
+['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach((ev, i) =>
+  $('quick').addEventListener(ev, [onRulerDown, onRulerMove, endRuler, endRuler][i]));
 function renderBarToggles() {
   const sound = !cfg.eco && (cfg.sound || cfg.clicks);
   $('bar-tg').innerHTML = `<button type="button" class="tg${sound ? ' on' : ''}" data-tg="sound" aria-label="Son">${sound ? ICONS.sound : ICONS.mute}</button>`

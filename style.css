@@ -908,3 +908,30 @@ html.flip body { overflow: hidden; }
 .tr.now { font-weight: 700; font-size: 25px; }
 .tr-chess.now { color: var(--gold); }
 .tr-box.now { color: var(--red); }
+/* Bar parts before the start are buttons; the quick panel opens over the waiting clock */
+button.ri { border: 0; background: none; color: inherit; font: inherit; padding: 6px 2px; touch-action: manipulation; cursor: pointer; }
+button.ri.off { opacity: .45; }
+.quick { position: absolute; inset: 0; z-index: 30; display: flex; align-items: center; justify-content: center; padding: 16px;
+  background: rgba(6, 8, 10, .62); }
+.quick[hidden] { display: none; }
+.quick-box { width: min(420px, 100%); background: #151a1f; border: 1px solid var(--hair, rgba(235,229,214,.16)); border-radius: 16px;
+  padding: 16px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 20px 50px -10px #000; }
+.q-t { margin: 0; text-align: center; font: 600 12px var(--font-display); letter-spacing: .26em; text-transform: uppercase; color: var(--text-2); }
+.q-rounds { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.q-rounds button { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 0 10px; border-radius: 12px;
+  border: 1px solid var(--hair, rgba(235,229,214,.16)); background: none; color: var(--text); }
+.q-rounds button b { font: italic 500 30px/1 var(--font-serif); }
+.q-rounds button small { font: var(--clock-weight, 600) 13px var(--font-clock); color: var(--text-2); }
+.q-rounds button.on { border-color: var(--gold-mid, #b8913f); background: rgba(217,180,90,.1); }
+.q-rounds button.on b { color: var(--gold); }
+.q-act { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; }
+.q-btn { display: flex; align-items: center; justify-content: center; gap: 6px; height: 42px; padding: 0 14px; border-radius: 21px;
+  border: 1px solid var(--hair, rgba(235,229,214,.2)); background: none; color: var(--text);
+  font: 600 12px var(--font-display); letter-spacing: .14em; text-transform: uppercase; touch-action: manipulation; }
+.q-btn .ic { width: 16px; height: 16px; }
+.q-btn:disabled { opacity: .35; }
+.q-ok { background: var(--bone, #ebe5d6); color: #111519; border-color: transparent; }
+.quick .ruler { grid-template-columns: 64px minmax(0, 1fr); }
+.quick .rl-reset { display: none; }
+.q-act { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) minmax(0, .8fr); }
+.q-btn { padding: 0 8px; letter-spacing: .1em; min-width: 0; }
