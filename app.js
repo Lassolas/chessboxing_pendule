@@ -239,7 +239,7 @@ function renderPresets() {
   renderFrieze();
   renderSummary();
 }
-// Durées: the fight as the bar shows it (chess ◇, pause —, boxing ●),
+// Durées: the fight step by step (chess, pause, boxing),
 // each step with its time. The last chess round runs until a flag falls.
 function renderFrieze() {
   $('durations-title').hidden = $('frieze').hidden = $('frieze-total').hidden = !cfg.intervals;
@@ -251,8 +251,8 @@ function renderFrieze() {
     if (steps.length) steps.push(['tk-dash', '', cfg.breakOn ? fmtValue(cfg.breakMs) : '∞']);
     steps.push([chess ? 'tk sq' : 'tk ci', roman(roundNo(cfg, n)), chess ? (n === lastChess ? '⚑' : fmtValue(cfg.chessRoundMs)) : fmtValue(cfg.boxRoundMs)]);
   }
-  // Val's drawings for the rounds (knight, glove), the bar's dash for the pauses.
-  const mark = k => k === 'tk sq' ? ICONS.pawn : k === 'tk ci' ? ICONS.glove : `<i class="${k}"></i>`;
+  // Val's drawings for the rounds (knight, glove); a pause is just its time.
+  const mark = k => k === 'tk sq' ? ICONS.pawn : k === 'tk ci' ? ICONS.glove : '';
   $('frieze').innerHTML = steps.map(([k, n, t]) => `<span class="fz${k === 'tk ci' ? ' fz-box' : ''}"><em>${n}</em><span class="fz-m">${mark(k)}</span><small>${t}</small></span>`).join('');
   $('frieze-total').innerHTML = `Total <b>${fmtValue(totalMs(cfg))}</b>`;
 }
