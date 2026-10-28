@@ -239,11 +239,11 @@ function renderTiles() {
   $('durations').innerHTML = ['chessRoundMs', 'boxRoundMs', 'breakMs'].map(k => rulerHTML(tileOf(k))).join('');
   // Under the rulers: the count and its warning; once on, the count limits
   // (a plain clock is one game: only the total), after the illegal-move switch.
-  const more = cfg.countdownOn || (cfg.intervals && cfg.illegalMoves);
+  const more = cfg.countdownOn || cfg.illegalMoves;
   const limits = !more ? [] : cfg.intervals ? ['countsPerRound', 'countsTotal'] : ['countsTotal'];
-  const ill = tileOf('illegalMoves'), illOn = cfg.intervals && cfg.illegalMoves;
-  const illRow = `<button type="button" class="ruler rl-opt rl-ill${illOn ? ' on' : ''}${cfg.intervals ? '' : ' dim'}" data-tile="illegalMoves" aria-pressed="${illOn}">
-      <span class="rl-ico">${ill.icon()}<small>Illégal</small></span><span class="rl-note">${cfg.intervals ? tileText(ill) : 'Avec les rounds seulement.'}</span></button>`;
+  const ill = tileOf('illegalMoves'), illOn = !!cfg.illegalMoves;
+  const illRow = `<button type="button" class="ruler rl-opt rl-ill${illOn ? ' on' : ''}" data-tile="illegalMoves" aria-pressed="${illOn}">
+      <span class="rl-ico">${ill.icon()}<small>Illégal</small></span><span class="rl-note">${tileText(ill)}</span></button>`;
   // Count off: just a switch saying what it is for; on: its ruler and the warning's.
   const count = tileOf('moveCountdownMs');
   const countRow = cfg.countdownOn ? rulerHTML(count) + rulerHTML(tileOf('moveWarnMs'))
@@ -464,8 +464,8 @@ $('orient-pick').addEventListener('click', e => {
 const NEVER = 1e9;
 function fightConfig() {
   const c = structuredClone(cfg);
-  // Plain clock: no boxing, no illegal-move flag; the count stays, judged on the total only.
-  if (!c.intervals) Object.assign(c, { illegalMoves: false, boxTimer: false, countsPerRound: 999 });
+  // Plain clock: no boxing; counts and illegal moves stay, judged on the total only.
+  if (!c.intervals) Object.assign(c, { boxTimer: false, countsPerRound: 999 });
   if (!c.breakOn) c.breakMs = null;
   if (!c.countdownOn) c.warnOn = false;  // the warning comes with the count
   clampCount(c);

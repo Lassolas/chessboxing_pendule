@@ -301,6 +301,14 @@ check(formatClock(9960) === '9.9' && formatClock(10000) === '0:10', 'tenths unde
   run(s, t, t + 31000);
   check(s.phase === 'over' && s.result.loser === 0 && s.result.method.includes('total'), 'plain clock: the 4th count loses');
 }
+// Plain clock: illegal moves are counts too, judged on the total
+{
+  const s = fight({ intervals: false, illegalMoves: true, countsPerRound: 999, countsTotal: 2 });
+  press(s, 0, 2000); illegalMove(s, 0, 2000);
+  check(s.phase === 'chess' && countsOf(s, 0) === 1, 'plain clock: one illegal move is one count');
+  press(s, 0, 4000); press(s, 1, 5000); illegalMove(s, 0, 5000);
+  check(s.phase === 'over' && s.result.loser === 0 && s.result.method.includes('total'), 'plain clock: the 2nd illegal move loses on the total');
+}
 if (errors.length) {
   console.error(`pendule-clock: ${errors.length} failure(s)`);
   errors.forEach(e => console.error('  ✗ ' + e));
