@@ -1116,3 +1116,32 @@ html.flip #ptr { top: auto; bottom: 0; }
 /* Val's one-line chess clock drawing for the times button */
 .ic-clock { --m: url(clock.png); }
 .phase-ready button.ri-times .ic.ic-clock { width: calc(var(--rb) * .62) !important; height: calc(var(--rb) * .37) !important; }
+/* Rounds button as a wheel: the other choices half hidden at the edges */
+.phase-ready button.ri-rounds { position: relative; overflow: hidden; }
+.ri-peek { position: absolute; top: 50%; transform: translateY(-50%); font: italic 500 calc(var(--rb) * .4)/1 var(--font-serif);
+  color: var(--gold); opacity: .28; pointer-events: none; white-space: nowrap; }
+.ri-prev { right: calc(50% + var(--rb) * .3); }
+.ri-next { left: calc(50% + var(--rb) * .3); }
+.phase-ready button.ri-rounds .ri-n { position: relative; z-index: 1; }
+/* 0.2.83: no gold for "selected": a brighter bone outline, a light fill, a small dot under it */
+.phase-ready button.ri-rounds { --c: var(--bone); background: rgba(235, 229, 214, .07) !important; border-color: rgba(235, 229, 214, .5) !important; }
+.phase-ready button.ri-rounds .ri-n { color: var(--bone) !important; }
+.phase-ready button.ri-rounds .ri-n.long { font-size: calc(var(--rb) * .4) !important; }
+.ri-peek { color: var(--bone); opacity: .3; font-size: calc(var(--rb) * .34); }
+.ri-prev { right: auto; left: 0; transform: translate(-55%, -50%); }
+.ri-next { left: auto; right: 0; transform: translate(55%, -50%); }
+.q-rounds button.on, .digit-opt.on, .orient-opt.on { border-color: rgba(235, 229, 214, .75) !important; background: rgba(235, 229, 214, .09) !important; color: var(--bone) !important;
+  position: relative; }
+.q-rounds button.on b { color: var(--bone) !important; }
+.q-rounds button.on::after, .digit-opt.on::after, .orient-opt.on::after { content: ''; position: absolute; left: 50%; bottom: 5px; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 50%; background: var(--bone); }
+.digit-opt.on span, .orient-opt.on svg { color: var(--bone) !important; }
+#opt-ready .rl-opt { --c: var(--bone); }
+#opt-ready .rl-opt .rl-ico, #opt-ready .rl-opt small { color: var(--bone) !important; }
+/* Count limits: label, then 1 to 5 as round buttons */
+.cnt-pick { display: grid; grid-template-columns: 92px repeat(5, 1fr); align-items: center; gap: 8px; margin: 10px 0; }
+.cp-l { display: flex; flex-direction: column; align-items: center; line-height: 1.1; }
+.cp-l small { font: 600 11px var(--font-display); letter-spacing: .2em; text-transform: uppercase; color: var(--text-2); }
+.cp-l em { font: italic 500 18px var(--font-serif); color: var(--bone); }
+.cnt-pick button { aspect-ratio: 1; max-width: 48px; width: 100%; justify-self: center; border-radius: 50%; padding: 0;
+  border: 1px solid rgba(235, 229, 214, .18); background: none; color: var(--text-2); font: italic 500 22px/1 var(--font-serif); touch-action: manipulation; }
+.cnt-pick button.on { border-color: rgba(235, 229, 214, .75); background: rgba(235, 229, 214, .1); color: var(--bone); }

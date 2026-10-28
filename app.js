@@ -81,6 +81,8 @@ if (cfg.v < 11) {  // v11: one Son switch, a volume per group
   delete cfg.clicks;
   cfg.v = 11;
 }
+cfg.countsPerRound = Math.min(5, Math.max(1, cfg.countsPerRound || 3));  // limits picked from 1 to 5
+cfg.countsTotal = Math.min(5, Math.max(1, cfg.countsTotal || 4));
 if (!DIGIT_STYLES.includes(cfg.digits)) cfg.digits = 'dgt';  // Teko was dropped
 cfg.moveCountdownMs = Math.max(10000, cfg.moveCountdownMs);
 let s = null;
@@ -270,8 +272,11 @@ function renderSetup() {
   if (clampCount(cfg)) save(CFG_KEY, cfg);
   $('opt-ready').innerHTML = optRow(OPTIONS[0]);
   // Comptes: the count's times and the limits (switched on from the clock). Alerte 0:00 = none.
-  $('chess-set').innerHTML = ['moveCountdownMs', 'moveWarnMs', ...(cfg.intervals ? ['countsPerRound'] : []), 'countsTotal']
-    .map(k => rulerHTML(tileOf(k), true)).join('');
+  // The limits: five plain numbers to tap (1 to 5), no wheel.
+  const pick = (k, label, sub) => `<div class="cnt-pick"><span class="cp-l"><small>${label}</small><em>${sub}</em></span>${[1, 2, 3, 4, 5].map(n =>
+    `<button type="button" class="${cfg[k] === n ? 'on' : ''}" data-pick="${k}" data-n="${n}">${n}</button>`).join('')}</div>`;
+  $('chess-set').innerHTML = ['moveCountdownMs', 'moveWarnMs'].map(k => rulerHTML(tileOf(k), true)).join('')
+    + (cfg.intervals ? pick('countsPerRound', 'Max', '/ round') : '') + pick('countsTotal', 'Max', 'total');
   [['vol-alerts', 'volAlerts'], ['vol-clicks', 'volClicks']].forEach(([id, k]) => {
     $(id).value = cfg[k] ?? 100;
     $(id + '-v').textContent = cfg[k] ?? 100;
@@ -603,7 +608,11 @@ function openSettings(flip) {
 function readyInfoHTML(c) {
   // Round buttons, all the same size: the rounds, and the clock (chess, boxing and pause times).
   const item = (q, icon, label) => `<button type="button" class="ri ri-${q}${quickKey === q ? ' open' : ''}" data-q="${q}" aria-label="${label}">${icon}</button>`;
-  return item('rounds', `<span class="ri-n">${roman(c.rounds)}</span>`, 'Rounds') + item('times', ICONS.clock, 'Temps');
+  // The rounds like a wheel: the number set, the other choices peeking out at the edges.
+  const keys = Object.keys(PRESETS).map(Number), at = keys.indexOf(c.rounds);
+  const side = (n, cls) => n ? `<i class="ri-peek ${cls}">${roman(n)}</i>` : '';
+  return item('rounds', side(keys[at - 1], 'ri-prev') + `<span class="ri-n${roman(c.rounds).length > 2 ? ' long' : ''}">${roman(c.rounds)}</span>` + side(keys[at + 1], 'ri-next'), 'Rounds')
+    + item('times', ICONS.clock, 'Temps');
 }
 // Quick panel over the waiting clock: the step's ruler, on / off and back to the
 // original time; for the rounds, the four numbers. Tap outside to close.
@@ -642,7 +651,11 @@ $('quick').addEventListener('click', e => {
 });
 $('quick').addEventListener('click', onTiles);
 // Réglages › Comptes: drag the rulers, ↺ resets; the drawings are not switches here.
-$('chess-set').addEventListener('click', e => { if (e.target.closest('[data-reset]')) onTiles(e); });
+$('chess-set').addEventListener('click', e => {
+  const b = e.target.closest('[data-pick]');
+  if (b) { cfg[b.dataset.pick] = +b.dataset.n; save(CFG_KEY, cfg); renderSetup(); return; }
+  if (e.target.closest('[data-reset]')) onTiles(e);
+});
 ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach((ev, i) =>
   $('chess-set').addEventListener(ev, [onRulerDown, onRulerMove, endRuler, endRuler][i]));
 $('quick').addEventListener('click', onOptions);
