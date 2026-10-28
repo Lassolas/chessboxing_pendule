@@ -441,12 +441,10 @@ function buildHalves() {
     const p = +h.dataset.p;
     h.innerHTML = `<div class="h-in">
       <div class="h-name"></div>
-      <div class="h-phase"><small></small><b></b></div>
+      <div class="h-up"><div class="h-phase"><small></small><b></b></div></div>
       <div class="h-clock"></div>
-      <div class="h-move"></div>
+      <div class="h-down"><div class="h-move"></div><button type="button" class="h-set">${SET_ICON}Réglages</button><div class="h-counts"></div></div>
       <div class="h-tgs"><button type="button" class="h-tg h-avgtg" aria-label="Temps moyen par coup"><b>s</b>/coup</button><button type="button" class="h-tg h-cnttg" aria-label="Comptes"></button><button type="button" class="h-tg h-illtg" aria-label="Coups illégaux">${redFlag}<small>Illégal</small></button></div>
-      <button type="button" class="h-set">${SET_ICON}Réglages</button>
-      <div class="h-counts"></div>
       <div class="h-avg"></div>
       <div class="h-notice" hidden></div>
       <div class="h-card"><em class="hc-num"></em><span class="hc-rule"></span><b class="hc-label"></b><i class="hc-ready">Prêt ?</i></div>

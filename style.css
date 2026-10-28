@@ -1004,7 +1004,7 @@ button.ri-rounds { padding: 2px 7px; }
 .h-tgs .h-illtg { position: static; }
 /* Short halves (small phones): the round name gives way to the corner switches */
 @container (max-height: 300px) {
-  .phase-ready .h-in > .h-phase { display: none !important; }
+  .phase-ready .h-up > .h-phase { display: none !important; }
   /* and the switches move down beside Réglages, clear of the digits */
   .h-tgs { top: auto !important; bottom: 10px; inset-inline: 8px; gap: 6px; }
   .h-tg { width: 40px; height: 40px; }
@@ -1100,7 +1100,7 @@ html.flip #ptr { top: auto; bottom: 0; }
 #opt-ready .rl-opt { width: 100%; margin-bottom: 12px; }
 /* No round names on the clock: the Prêt ? card keeps only Prêt ? */
 .h-card .hc-num, .h-card .hc-label, .h-card .hc-rule { display: none !important; }
-.phase-ready .h-in > .h-phase, .h-phase.empty { display: none !important; }
+.phase-ready .h-up > .h-phase, .h-phase.empty { display: none !important; }
 /* No dashes around the Boxe / Pause sign, nothing when empty */
 .h-phase small::before, .h-phase small::after { display: none !important; }
 .h-phase small:empty { display: none !important; }
@@ -1190,3 +1190,29 @@ html.flip #ptr { top: auto; bottom: 0; }
 .rt-chess { color: var(--bone); } .rt-box { color: var(--red); }
 .pm-next .rtag { font-size: 30px; }
 .bb-next { display: inline-flex; align-items: center; gap: 4px; } .bb-next .ic { width: 18px; height: 18px; } .bb-next .rtag { font-size: 24px; }
+
+/* 0.2.93: the chess digits always at the centre of the half, whatever sits above or below */
+.h-up, .h-down { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.phase-ready .h-in, .phase-chess .h-in, .phase-over .h-in { display: grid !important; grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr); grid-template-columns: 100%; justify-items: center; }
+.phase-ready .h-up, .phase-chess .h-up, .phase-over .h-up { grid-row: 1; align-self: end; }
+.phase-ready .h-in > .h-clock, .phase-chess .h-in > .h-clock, .phase-over .h-in > .h-clock { grid-row: 2; }
+.phase-ready .h-down, .phase-chess .h-down, .phase-over .h-down { grid-row: 3; align-self: start; }
+.h-up:empty, .h-down:empty { display: none; }
+/* Short halves: the digits stay centred, so the switches go back to the top corners (free above the digits)
+   and Touche sits beside Réglages below them */
+@container (max-height: 300px) {
+  .h-tgs { top: 8px !important; bottom: auto !important; }
+  .phase-ready .h-down { flex-direction: row; gap: 14px; }
+  .phase-ready .h-down .h-set { margin-top: 0; padding: 9px 16px; font-size: 12px; }
+  .phase-ready .h-down .h-move { font-size: 20px; }
+}
+@container (max-height: 300px) {
+  .phase-ready #fight:not([data-orient="normal"]) .h-down { flex-direction: column; gap: 4px; }
+  .phase-ready #fight:not([data-orient="normal"]) .h-down .h-move { font-size: 17px; min-height: 0; }
+  .phase-ready #fight:not([data-orient="normal"]) .h-down .h-set { padding: 7px 14px; font-size: 11px; }
+}
+@media (orientation: landscape) { @container (max-height: 300px) {
+  .phase-ready .h-down { flex-direction: column !important; gap: 4px !important; }
+  .phase-ready .h-down .h-move { font-size: 17px !important; min-height: 0; }
+  .phase-ready .h-down .h-set { padding: 7px 14px !important; font-size: 11px !important; margin-top: 0; }
+} }
