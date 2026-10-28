@@ -727,7 +727,7 @@ function openSettings(flip) {
 // Compact summary for the bar before the start: V  ♞ 3:00  🥊 3:00  ⧗ 1:00.
 // Each part can be tapped to change it right there (see the quick panel).
 function readyInfoHTML(c) {
-  const item = (q, icon, text, off) => `<button type="button" class="ri${off ? ' off' : ''}" data-q="${q}">${icon}${text}</button>`;
+  const item = (q, icon, text, off) => `<button type="button" class="ri ri-${q}${off ? ' off' : ''}${quickKey === q ? ' open' : ''}" data-q="${q}">${icon}${text}</button>`;
   if (!c.intervals) return item('rounds', '', `<span class="ri-n">${roman(c.rounds)}</span>`) + item('chessRoundMs', ICONS.pawn, formatClock(PRESETS[c.rounds]));
   return item('rounds', '', `<span class="ri-n">${roman(c.rounds)}</span>`) + item('chessRoundMs', ICONS.pawn, mins(c.chessRoundMs))
     + item('boxRoundMs', ICONS.glove, c.boxTimer ? mins(c.boxRoundMs) : '—', !c.boxTimer)
@@ -751,13 +751,13 @@ function renderQuick() {
     <button type="button" class="q-btn" data-reset="${k}"${on && cfg[k] !== standardOf(k) ? '' : ' disabled'}>${ICONS.replay}${fmtValue(standardOf(k))}</button>
     <button type="button" class="q-btn q-ok" data-qclose>OK</button></div>`;
 }
-function openQuick(k) { quickKey = k; renderQuick(); }
+function openQuick(k) { quickKey = k; renderQuick(); render(); }
 $('bar-round').addEventListener('click', e => {
   const b = e.target.closest('[data-q]');
   if (b && s && s.phase === 'ready') openQuick(b.dataset.q);
 });
 $('quick').addEventListener('click', e => {
-  if (e.target === $('quick') || e.target.closest('[data-qclose]')) { quickKey = null; renderQuick(); return; }
+  if (e.target === $('quick') || e.target.closest('[data-qclose]')) { quickKey = null; renderQuick(); render(); return; }
   const r = e.target.closest('[data-qr]');
   if (r) { cfg.rounds = +r.dataset.qr; save(CFG_KEY, cfg); renderSetup(); }
 });
@@ -831,8 +831,11 @@ function trackHTML() {
   const cur = s.phase === 'break' || s.phase === 'over' ? null : s.phase === 'ready' ? 1 : s.round;
   // In a pause: the round just played in bold grey, the next one bold and blinking.
   const prev = s.phase === 'break' ? s.round : null, next = s.phase === 'break' ? s.nextRound : null;
-  const cls = n => n === cur ? ' now' : n === next ? ' now next' : n === prev ? ' prev' : '';
-  return `<span class="trk">${rounds.map(n =>
+  // Every round already played: bold grey.
+  const played = n => s.phase === 'over' || n < (cur ?? next ?? 1) || n === prev;
+  const cls = n => n === cur ? ' now' : n === next ? ' now next' : played(n) ? ' prev' : '';
+  // Many rounds: tighter type so they all fit in the bar.
+  return `<span class="trk${rounds.length > 8 ? ' many' : rounds.length > 6 ? ' more' : ''}">${rounds.map(n =>
     `<b class="tr ${roundType(n) === 'chess' ? 'tr-chess' : 'tr-box'}${cls(n)}">${roman(roundNo(c, n))}</b>`).join('')}</span>`;
 }
 

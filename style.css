@@ -939,3 +939,23 @@ button.ri.off { opacity: .45; }
 .tr.next { animation: tr-blink 1s steps(2, jump-none) infinite; }
 @keyframes tr-blink { 50% { opacity: .25; } }
 body.eco .tr.next { animation: none; }
+.trk.more { gap: 6px; } .trk.more .tr { font-size: 17px; } .trk.more .tr.now, .trk.more .tr.prev { font-size: 20px; }
+.trk.many { gap: 4px; letter-spacing: -.03em; } .trk.many .tr { font-size: 14px; } .trk.many .tr.now, .trk.many .tr.prev { font-size: 16px; }
+/* The bar parts before the start are real buttons: outlined, lit when pressed or open */
+.phase-ready .bar-round { gap: 6px; overflow: visible; }
+button.ri { --c: var(--text); padding: 5px 8px; border: 1px solid rgba(235, 229, 214, .28); border-radius: 9px; background: rgba(235, 229, 214, .04);
+  transition: background .12s, border-color .12s; }
+button.ri-boxRoundMs { --c: var(--red); } button.ri-breakMs { --c: var(--blue); } button.ri-rounds { --c: var(--gold); padding: 3px 9px; }
+button.ri:active, button.ri.open { border-color: var(--c); background: color-mix(in srgb, var(--c) 18%, transparent); color: var(--c); }
+button.ri.off { border-style: dashed; }
+/* Average per move in the app's own type (Val: the serif looked like letters) */
+.h-avg { font-family: var(--font-display) !important; font-style: normal !important; font-weight: 600 !important; letter-spacing: .02em; }
+.h-avg small { font-style: normal; }
+/* Ready bar on narrow phones: tighter buttons so everything fits */
+.phase-ready .bar-round { gap: 4px; font-size: 13px; }
+.phase-ready .bar { gap: 6px; padding-inline: 8px; }
+button.ri { padding: 5px 5px; gap: 3px; }
+button.ri-rounds { padding: 2px 7px; }
+.ri .ic { width: 13px; height: 13px; } .ri .ic.ic-hourglass { width: 19px; height: 11px; }
+.ri-n { font-size: 20px; }
+.bar-tg { gap: 4px; } .bar-tg .tg { width: 34px; height: 34px; }
