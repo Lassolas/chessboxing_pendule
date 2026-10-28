@@ -1240,3 +1240,8 @@ html.flip #ptr { top: auto; bottom: 0; }
 .bar.next-t .bar-next { grid-column: 4; }
 .bar.next-t .bar-btn { grid-column: 5; }
 @media (max-width: 380px) { .bar.next-t { gap: 6px; } .bar.next-t .bar-timer { font-size: 22px; } }
+/* 0.2.99: → next compact so the frieze keeps its size. */
+.bar-next { height: 44px; padding: 0 10px; gap: 2px; font-size: 21px; }
+.bar-next .ic { width: 14px; height: 14px; }
+.bar.next-t { gap: 8px; }
+@media (max-width: 380px) { .bar-next { height: 40px; padding: 0 7px; gap: 1px; font-size: 19px; } .bar-next .ic { width: 12px; height: 12px; } .bar.next-t { gap: 5px; } .bar.next-t .bar-timer { font-size: 24px; } }

@@ -909,6 +909,19 @@ function render() {
   });
   if (!$('pause-menu').hidden) renderPauseMenu();
   renderResult();
+  fitTrack();
+}
+// The frieze of rounds always whole on the one line: shrunk only if it does not fit.
+let fitKey = '';
+function fitTrack() {
+  const r = $('bar-round'), k = [r.dataset.html, innerWidth, innerHeight, $('bar-next').hidden, $('bar-timer').hidden, cfg.orient].join('|');
+  if (k === fitKey) return;
+  fitKey = k;
+  const t = r.querySelector('.trk');
+  if (!t) return;
+  t.style.zoom = '';
+  const over = t.scrollWidth / r.clientWidth;
+  if (over > 1) t.style.zoom = (1 / over).toFixed(3);
 }
 
 // Pause menu: big Continue, ↺ restart from zero (tap twice), ⌂ home.
