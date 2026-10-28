@@ -1156,3 +1156,8 @@ html.flip #ptr { top: auto; bottom: 0; }
 .ri-next { right: calc(var(--rb) * .06); transform: translate(0, -50%); }
 .phase-ready button.ri-rounds .ri-n { font-size: calc(var(--rb) * .42) !important; transform: translateY(-14%); }
 .phase-ready button.ri-rounds .ri-n.long { font-size: calc(var(--rb) * .34) !important; }
+/* Réglages pill: bigger, lower (towards the player's edge) */
+.h-set { margin-top: 26px; padding: 14px 28px; gap: 10px; font-size: 15px; border-color: rgba(235, 229, 214, .3); }
+.h-set svg { width: 20px; height: 20px; }
+@container (max-height: 300px) { .h-set { margin-top: 8px; padding: 11px 22px; font-size: 13px; } }
+.cnt-pick button:disabled { opacity: .2; border-style: dashed; }

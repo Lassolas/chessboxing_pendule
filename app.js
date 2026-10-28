@@ -82,7 +82,8 @@ if (cfg.v < 11) {  // v11: one Son switch, a volume per group
   cfg.v = 11;
 }
 cfg.countsPerRound = Math.min(5, Math.max(1, cfg.countsPerRound || 3));  // limits picked from 1 to 5
-cfg.countsTotal = Math.min(5, Math.max(1, cfg.countsTotal || 4));
+cfg.countsPerRound = Math.min(4, cfg.countsPerRound);
+cfg.countsTotal = Math.min(5, Math.max(cfg.countsPerRound + 1, cfg.countsTotal || 4));
 if (!DIGIT_STYLES.includes(cfg.digits)) cfg.digits = 'dgt';  // Teko was dropped
 cfg.moveCountdownMs = Math.max(10000, cfg.moveCountdownMs);
 let s = null;
@@ -273,8 +274,10 @@ function renderSetup() {
   $('opt-ready').innerHTML = optRow(OPTIONS[0]);
   // Comptes: the count's times and the limits (switched on from the clock). Alerte 0:00 = none.
   // The limits: five plain numbers to tap (1 to 5), no wheel.
+  // The total is always above the limit per round (with rounds): the others are greyed out.
+  const allowed = (k, n) => !cfg.intervals || (k === 'countsPerRound' ? n < 5 : n > cfg.countsPerRound);
   const pick = (k, label, sub) => `<div class="cnt-pick"><span class="cp-l"><small>${label}</small><em>${sub}</em></span>${[1, 2, 3, 4, 5].map(n =>
-    `<button type="button" class="${cfg[k] === n ? 'on' : ''}" data-pick="${k}" data-n="${n}">${n}</button>`).join('')}</div>`;
+    `<button type="button" class="${cfg[k] === n ? 'on' : ''}" data-pick="${k}" data-n="${n}"${allowed(k, n) ? '' : ' disabled'}>${n}</button>`).join('')}</div>`;
   $('chess-set').innerHTML = ['moveCountdownMs', 'moveWarnMs'].map(k => rulerHTML(tileOf(k), true)).join('')
     + (cfg.intervals ? pick('countsPerRound', 'Max', '/ round') : '') + pick('countsTotal', 'Max', 'total');
   [['vol-alerts', 'volAlerts'], ['vol-clicks', 'volClicks']].forEach(([id, k]) => {
@@ -653,7 +656,11 @@ $('quick').addEventListener('click', onTiles);
 // Réglages › Comptes: drag the rulers, ↺ resets; the drawings are not switches here.
 $('chess-set').addEventListener('click', e => {
   const b = e.target.closest('[data-pick]');
-  if (b) { cfg[b.dataset.pick] = +b.dataset.n; save(CFG_KEY, cfg); renderSetup(); return; }
+  if (b) {
+    cfg[b.dataset.pick] = +b.dataset.n;
+    if (cfg.countsTotal <= cfg.countsPerRound) cfg.countsTotal = cfg.countsPerRound + 1;  // the total stays above
+    save(CFG_KEY, cfg); renderSetup(); return;
+  }
   if (e.target.closest('[data-reset]')) onTiles(e);
 });
 ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach((ev, i) =>
