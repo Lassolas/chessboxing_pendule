@@ -694,46 +694,59 @@ body::after { content: ''; position: fixed; inset: 0; z-index: 40; pointer-event
 /* Sideways, the average stays at the far end of each half, so the two mirror each other across the bar. */
 #fight[data-orient="right"] .half.top .h-avg, #fight[data-orient="left"] .half.bottom .h-avg { left: auto !important; right: 14px !important; text-align: right; }
 
-/* ════ Réglages, calm version ════
-   One list, hairlines, bone text on slate. No gold, no fills: what is on
-   is simply brighter; what is off is quieter. */
-.settings { background: transparent; border: 0; border-top: 1px solid var(--border); border-radius: 0; padding: 14px 0 0; }
-.settings summary, .settings[open] summary { color: var(--text-2); font: 500 15px var(--font-display); letter-spacing: .28em; margin: 0; }
-.settings[open] summary { color: var(--text); margin-bottom: 6px; }
+/* ════ Réglages, calm and compact ════
+   Bone text on slate, hairlines, no gold, no fills: what is on is simply
+   brighter, what is off is quieter. Everything fits on one screen. */
+.settings { background: transparent; border: 0; border-top: 1px solid var(--border); border-radius: 0; padding: 12px 0 0; margin-top: 14px; }
+.settings summary, .settings[open] summary { color: var(--text-2); font: 500 14px var(--font-display); letter-spacing: .28em; margin: 0; }
+.settings[open] summary { color: var(--text); margin-bottom: 8px; }
 .settings .sum-ico { display: none; }
-.rg { display: flex; flex-direction: column; font-family: var(--font-display); color: var(--text); }
-.rg h3 { margin: 22px 0 2px; font: 500 12px var(--font-display); letter-spacing: .24em; text-transform: uppercase; color: var(--text-2); }
-.rg-row { display: flex; align-items: center; gap: 10px; min-height: 56px; border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent); }
-.rg-row.sub { min-height: 46px; padding-left: 30px; }
-.rg-row.sub .rg-l { font-size: 15px; color: var(--text-2); }
-.rg-l { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; font-size: 18px; letter-spacing: .03em; white-space: nowrap; }
-.rg-l .ic { width: 20px; height: 20px; flex: none; color: var(--text-2); }
-.rg-l .ic.ic-hourglass { height: 13px; }
-.rg-row.off .rg-l { color: var(--text-2); }
-.rg-row.dim { opacity: .45; }
-.rg-off { min-width: 40px; text-align: center; color: var(--text-2); font-size: 20px; }
-/* − value + : quiet round buttons, the value in the clock's own font */
-.rg-step { display: flex; align-items: center; gap: 2px; }
-.rg-step button { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border); background: none; color: var(--text); font: 400 20px/1 var(--font-body); padding: 0; touch-action: manipulation; }
-.rg-step button:disabled { opacity: .3; }
-.rg-step button:active { background: color-mix(in srgb, var(--text) 10%, transparent); }
-.rg-step b { min-width: 52px; text-align: center; font: var(--clock-weight) 18px var(--font-clock); font-variant-numeric: tabular-nums; }
-/* switch: off = hairline, on = bone */
-.rg-sw { flex: none; width: 46px; height: 28px; border-radius: 14px; border: 1px solid var(--border); background: none; padding: 3px; display: flex; touch-action: manipulation; transition: background .2s, border-color .2s; }
-.rg-sw i { width: 20px; height: 20px; border-radius: 50%; background: var(--text-2); transition: transform .2s, background .2s; }
-.rg-sw.on { background: color-mix(in srgb, var(--text) 85%, transparent); border-color: transparent; }
-.rg-sw.on i { transform: translateX(18px); background: var(--bg-deep); }
-/* segmented choice: plain text, the chosen one brighter with a hairline under it */
-.rg-seg { display: flex; gap: 2px; }
-.rg-seg button { min-width: 44px; height: 40px; padding: 0 8px; border: 0; border-bottom: 1px solid transparent; background: none; color: var(--text-2);
+.rg { display: flex; flex-direction: column; gap: 10px; font-family: var(--font-display); color: var(--text); }
+.rg-line { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.rg-line + .rg-line, .rg-cells + .rg-line { border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent); padding-top: 10px; }
+.rg-k { flex: 1; color: var(--text-2); font-size: 15px; letter-spacing: .04em; }
+/* chess / boxing / pause side by side */
+.rg-cells { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid color-mix(in srgb, var(--border) 70%, transparent); padding-top: 10px; }
+.rg-cell { display: flex; flex-direction: column; align-items: center; gap: 4px; min-width: 0; }
+.rg-cell + .rg-cell { border-left: 1px solid color-mix(in srgb, var(--border) 70%, transparent); }
+.rg-cell-t { display: flex; flex-direction: column; align-items: center; gap: 3px; border: 0; background: none; color: var(--text-2); padding: 4px 10px; touch-action: manipulation; }
+.rg-cell-t .ic { width: 24px; height: 24px; }
+.rg-cell-t .ic.ic-hourglass { height: 15px; margin: 4.5px 0; }
+.rg-cell-t small { font: 500 13px var(--font-display); letter-spacing: .14em; text-transform: uppercase; }
+.rg-cell.on .rg-cell-t { color: var(--text); }
+.rg-cell.dim { opacity: .4; }
+.rg-off { height: 32px; display: flex; align-items: center; color: var(--text-2); font-size: 18px; }
+/* − value + */
+.rg-step { display: flex; align-items: center; }
+.rg-step button { width: 30px; height: 32px; border: 0; background: none; color: var(--text-2); font: 300 22px/1 var(--font-body); padding: 0; touch-action: manipulation; }
+.rg-step button:disabled { opacity: .25; }
+.rg-step button:active { color: var(--text); }
+.rg-step b { min-width: 44px; text-align: center; font: var(--clock-weight) 17px var(--font-clock); font-variant-numeric: tabular-nums; }
+.rg-lim { display: flex; align-items: center; }
+.rg-lim small { color: var(--text-2); font-size: 13px; margin-left: -2px; margin-right: 6px; }
+.rg-lim .rg-step b { min-width: 22px; }
+/* words and icons that light up */
+.rg-chips { justify-content: space-between; }
+.rg-chip { height: 36px; padding: 0 12px; border: 1px solid color-mix(in srgb, var(--border) 80%, transparent); border-radius: 18px; background: none; color: var(--text-2);
+  font: 500 15px var(--font-display); letter-spacing: .04em; white-space: nowrap; touch-action: manipulation; display: inline-flex; align-items: center; justify-content: center; }
+.rg-chip.on { color: var(--text); border-color: color-mix(in srgb, var(--text) 60%, transparent); }
+.rg-chip.ic-only { width: 44px; padding: 0; }
+.rg-chip .ic { width: 20px; height: 20px; }
+.rg-sp { flex: 1; }
+/* one choice among a few: plain, the chosen one brighter with a hairline under it */
+.rg-seg { display: flex; flex: 1; justify-content: space-between; }
+.rg-dev .rg-seg { flex: 0 1 auto; gap: 4px; }
+.rg-seg button { min-width: 40px; height: 38px; padding: 0 6px; border: 0; border-bottom: 1px solid transparent; background: none; color: var(--text-2);
   font: italic 500 22px/1 var(--font-serif); touch-action: manipulation; display: flex; align-items: center; justify-content: center; }
 .rg-seg button.on { color: var(--text); border-bottom-color: var(--text); }
 .rg-seg svg { width: 20px; height: 20px; }
 .rg-seg .rg-t { font: var(--clock-weight) 16px var(--font-clock); font-style: normal; }
 .rg-dg { font: var(--clock-weight) 17px var(--font-clock); font-style: normal; }
-.rg .rg-dg svg.seg { height: 18px !important; width: auto; }
-.rg-std, .rg-test { align-self: center; display: inline-flex; align-items: center; gap: 8px; margin: 6px 0; padding: 10px 18px; border: 1px solid var(--border); border-radius: 22px;
-  background: none; color: var(--text); font: 500 15px var(--font-display); letter-spacing: .18em; text-transform: uppercase; touch-action: manipulation; }
-.rg-std .ic, .rg-test .ic { width: 16px; height: 16px; }
-.rg-test { margin-top: 22px; color: var(--text-2); }
-@media (max-width: 360px) { .rg-l { font-size: 16px; gap: 8px; } .rg-step b { min-width: 46px; } .rg-step button { width: 32px; height: 32px; } .rg-seg button { min-width: 36px; padding: 0 5px; } }
+.rg .rg-dg svg.seg { height: 17px !important; width: auto; }
+.rg-std, .rg-test { flex: none; width: 40px; height: 38px; border: 0; background: none; color: var(--text-2); padding: 0; display: flex; align-items: center; justify-content: center; touch-action: manipulation; }
+.rg-std .ic, .rg-test .ic { width: 20px; height: 20px; }
+.rg-std { width: auto; gap: 6px; padding: 0 12px; margin-left: 6px; border: 1px solid color-mix(in srgb, var(--text) 45%, transparent); border-radius: 19px; color: var(--text); }
+.rg-std small { font: 500 13px var(--font-display); letter-spacing: .16em; text-transform: uppercase; }
+.rg-std .ic { width: 16px; height: 16px; }
+.rg-test { margin-left: 4px; border-left: 1px solid color-mix(in srgb, var(--border) 70%, transparent); width: 46px; }
+@media (max-width: 360px) { .rg-step button { width: 24px; } .rg-step b { min-width: 40px; font-size: 15px; } .rg-chip { padding: 0 9px; font-size: 14px; } .rg-seg button { min-width: 34px; padding: 0 4px; } }

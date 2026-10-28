@@ -88,7 +88,7 @@ const fmtValue = (v, kind) => kind === 'n' ? String(v)
 // The illegal-move flag, as seen in the fight.
 const redFlag = `<svg viewBox="0 0 32 32" class="ico"><path d="M7 3 V30" stroke="#ff3b3b" stroke-width="3" stroke-linecap="round"/><path d="M8 4 H26 L21 10 L26 16 H8 Z" fill="#ff3b3b"/></svg>`;
 const warnFor = countdownMs => countdownMs - 5000;  // the warning always comes 5 s before the count
-const LIMITS = [['countsPerRound', 'Max par round', 1, 10], ['countsTotal', 'Max au total', 1, 20]];
+const LIMITS = [['countsPerRound', '/ round', 1, 10], ['countsTotal', 'total', 1, 20]];
 // key in cfg, its switch (on / flip), label, icon, − / + steps
 const ROWS = {
   chess: { key: 'chessRoundMs', label: 'Échecs', icon: () => ICONS.pawn, step: 10000, min: 30000, max: 600000,
@@ -104,16 +104,20 @@ const ROWS = {
   sound: { label: 'Son', on: () => cfg.sound && !cfg.eco, flip: () => { cfg.sound = !(cfg.sound && !cfg.eco); if (cfg.sound) cfg.eco = false; } },
   eco: { label: 'Éco', on: () => cfg.eco, flip: () => { cfg.eco = !cfg.eco; cfg.sound = !cfg.eco; } },  // Éco mutes; leaving it brings the sound back
 };
-const sw = (id, on) => `<button type="button" class="rg-sw${on ? ' on' : ''}" data-sw="${id}" role="switch" aria-checked="${on}" aria-label="${ROWS[id].label}"><i></i></button>`;
 const stepper = (key, v, min, max, step, text) => `<span class="rg-step">
   <button type="button" data-step="${key}" data-d="${-step}" data-min="${min}" data-max="${max}"${v <= min ? ' disabled' : ''} aria-label="Moins">−</button>
   <b>${text}</b>
   <button type="button" data-step="${key}" data-d="${step}" data-min="${min}" data-max="${max}"${v >= max ? ' disabled' : ''} aria-label="Plus">+</button></span>`;
-function row(id, { dim = false } = {}) {
-  const r = ROWS[id], on = r.on();
-  const value = r.key ? (on ? stepper(r.key, cfg[r.key], r.min, r.max, r.step, fmtValue(cfg[r.key])) : `<span class="rg-off">${r.offValue || ''}</span>`) : '';
-  return `<div class="rg-row${on ? '' : ' off'}${dim ? ' dim' : ''}"><span class="rg-l">${r.icon ? r.icon() : ''}${r.label}</span>${value}${sw(id, on)}</div>`;
+// Chess, boxing, pause side by side: tap the icon = on / off, − value + below.
+function cell(id) {
+  const r = ROWS[id], on = r.on(), dim = id !== 'chess' && !cfg.intervals;
+  return `<div class="rg-cell${on ? ' on' : ''}${dim ? ' dim' : ''}">
+    <button type="button" class="rg-cell-t" data-sw="${id}" aria-pressed="${on}">${r.icon()}<small>${r.label}</small></button>
+    ${on ? stepper(r.key, cfg[r.key], r.min, r.max, r.step, fmtValue(cfg[r.key])) : `<span class="rg-off">${r.offValue || '—'}</span>`}</div>`;
 }
+// A word that lights up when on.
+const chip = id => `<button type="button" class="rg-chip${ROWS[id].on() ? ' on' : ''}" data-sw="${id}" aria-pressed="${ROWS[id].on()}">${ROWS[id].label}</button>`;
+const iconChip = (id, html) => `<button type="button" class="rg-chip ic-only${ROWS[id].on() ? ' on' : ''}" data-sw="${id}" aria-pressed="${ROWS[id].on()}" aria-label="${ROWS[id].label}">${html}</button>`;
 const seg = (name, items, cur) => `<div class="rg-seg">${items.map(([v, html, label]) =>
   `<button type="button" data-${name}="${v}" class="${v === cur ? 'on' : ''}" aria-label="${label}">${html}</button>`).join('')}</div>`;
 const ORIENT_PICK = [
@@ -124,19 +128,16 @@ const ORIENT_PICK = [
 function renderSettings() {
   cfg.moveWarnMs = warnFor(cfg.moveCountdownMs);
   const rounds = Object.keys(PRESETS).map(r => [r, cfg.intervals ? roman(+r) : `<span class="rg-t">${formatClock(PRESETS[r])}</span>`, `${r} rounds`]);
-  const arbiter = cfg.intervals ? `<h3>Arbitre</h3>${row('count')}${row('illegal')}${cfg.countdownOn || cfg.illegalMoves
-    ? LIMITS.map(([key, label, min, max]) => `<div class="rg-row sub"><span class="rg-l">${label}</span>${stepper(key, cfg[key], min, max, 1, cfg[key])}</div>`).join('') : ''}${row('ready')}` : '';
+  const counts = cfg.countdownOn || cfg.illegalMoves;
+  const arbiter = cfg.intervals ? `<div class="rg-line rg-chips">${chip('count')}${chip('illegal')}${chip('ready')}</div>
+    ${cfg.countdownOn ? `<div class="rg-line"><span class="rg-k">Compte dès</span>${stepper('moveCountdownMs', cfg.moveCountdownMs, ROWS.count.min, ROWS.count.max, ROWS.count.step, fmtValue(cfg.moveCountdownMs))}</div>` : ''}
+    ${counts ? `<div class="rg-line"><span class="rg-k">Max</span>${LIMITS.map(([key, label, min, max]) => `<span class="rg-lim">${stepper(key, cfg[key], min, max, 1, cfg[key])}<small>${label}</small></span>`).join('')}</div>` : ''}` : '';
   $('rg').innerHTML = `
-    <button type="button" class="rg-std" data-act="std">${ICONS.replay}Standard</button>
-    <h3>Combat</h3>
-    <div class="rg-row"><span class="rg-l">Rounds</span>${seg('r', rounds, String(cfg.rounds))}</div>
-    ${row('chess')}${row('box', { dim: !cfg.intervals })}${row('pause', { dim: !cfg.intervals })}
+    <div class="rg-line">${seg('r', rounds, String(cfg.rounds))}<button type="button" class="rg-std" data-act="std">${ICONS.replay}<small>Standard</small></button></div>
+    <div class="rg-cells">${cell('chess')}${cell('box')}${cell('pause')}</div>
     ${arbiter}
-    <h3>Appareil</h3>
-    ${row('sound')}${row('eco')}
-    <div class="rg-row"><span class="rg-l">Sens</span>${seg('orient', ORIENT_PICK, cfg.orient || 'normal')}</div>
-    <div class="rg-row"><span class="rg-l">Chiffres</span>${seg('digits', DIGIT_STYLES.map(d => [d, '<span class="rg-dg"></span>', `Chiffres ${d}`]), cfg.digits)}</div>
-    <button type="button" class="rg-test" data-act="test">${ICONS.bell}Test son</button>`;
+    <div class="rg-line rg-dev">${iconChip('sound', cfg.sound && !cfg.eco ? ICONS.sound : ICONS.mute)}${iconChip('eco', ICONS.eco)}<span class="rg-sp"></span>${seg('orient', ORIENT_PICK, cfg.orient || 'normal')}</div>
+    <div class="rg-line">${seg('digits', DIGIT_STYLES.map(d => [d, '<span class="rg-dg"></span>', `Chiffres ${d}`]), cfg.digits)}<button type="button" class="rg-test" data-act="test" aria-label="Test son">${ICONS.bell}</button></div>`;
   $('rg').querySelectorAll('[data-digits] .rg-dg').forEach(sp => setDigits(sp, '4:30', sp.parentNode.dataset.digits));
 }
 $('rg').addEventListener('click', e => {
