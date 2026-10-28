@@ -213,7 +213,7 @@ const onRulerDown = e => {
 };
 const onRulerMove = e => {
   if (!rdrag) return;
-  const dx = e.clientX - rdrag.x;
+  const dx = (e.clientX - rdrag.x) * (document.documentElement.classList.contains('flip') ? -1 : 1);
   if (Math.abs(dx) > 4) rdrag.moved = true;
   if (rdrag.moved) setRuler(rdrag.t, rdrag.el, rdrag.i0 - Math.round(dx / tickOf(rdrag.t)), rdrag.vals);  // drag left = more
 };
@@ -223,7 +223,8 @@ const endRuler = e => {
   rdrag = null;
   if (!moved && e.type === 'pointerup') {  // a tap: one step towards that side
     const r = el.getBoundingClientRect();
-    setRuler(t, el, i0 + (e.clientX > r.left + r.width / 2 ? 1 : -1), vals);
+    const right = (e.clientX > r.left + r.width / 2) !== document.documentElement.classList.contains('flip');
+    setRuler(t, el, i0 + (right ? 1 : -1), vals);
   }
   save(CFG_KEY, cfg);
   renderSetup();
@@ -447,8 +448,8 @@ $('presets').addEventListener('click', e => {
 // COMBAT: the fight as set, straight away.
 $('btn-fight').addEventListener('click', () => {
   unlockAudio();
-  s = newFight(fightConfig());
-  openFight();
+  document.documentElement.classList.remove('flip');
+  readyClock();
 });
 // Orientation of the digits: face to face, or both turned to one side
 // (the phone's tilt also sets it during the fight).
@@ -514,6 +515,20 @@ $('btn-resume-saved').addEventListener('click', () => {
   act(['resume']);
 });
 
+// Son: all sounds on or off; Éco: dark, silent. Both apply to the waiting clock at once.
+$('bar-tg').addEventListener('click', e => {
+  const b = e.target.closest('[data-tg]');
+  if (!b) return;
+  unlockAudio();
+  if (b.dataset.tg === 'eco') { cfg.eco = !cfg.eco; cfg.sound = cfg.clicks = !cfg.eco; updateMotion(); }
+  else { const on = !(!cfg.eco && (cfg.sound || cfg.clicks)); cfg.sound = cfg.clicks = on; if (on) { cfg.eco = false; updateMotion(); } }
+  save(CFG_KEY, cfg);
+  setMuted(!!cfg.eco); setSounds(cfg.clicks !== false, !!cfg.sound);
+  s.cfg.eco = cfg.eco;
+  document.body.classList.toggle('eco', !!cfg.eco);
+  render();
+});
+
 // Sound and colour test, one after the other.
 $('btn-test-sound').addEventListener('click', () => {
   unlockAudio();
@@ -546,6 +561,7 @@ function buildHalves() {
       <div class="h-phase"><small></small><b></b></div>
       <div class="h-clock"></div>
       <div class="h-move"></div>
+      <button type="button" class="h-set"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="7" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="17" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/></svg>Réglages</button>
       <div class="h-counts"></div>
       <div class="h-avg"></div>
       <div class="h-notice" hidden></div>
@@ -556,6 +572,11 @@ function buildHalves() {
       e.stopPropagation();
       act(illegalMove(s, 1 - p, performance.now()));
       showNotice(1 - p);
+    });
+    // Before the start: Réglages, turned towards the player who asked for them.
+    h.querySelector('.h-set').addEventListener('click', e => {
+      e.stopPropagation();
+      openSettings(h.classList.contains('top') && (s.cfg.orient || 'normal') === 'normal' && matchMedia('(orientation: portrait)').matches);
     });
     h.querySelector('.over-undo').addEventListener('pointerdown', e => {
       e.stopPropagation();
@@ -653,6 +674,7 @@ $('bar-home').addEventListener('click', () => {
 });
 
 function openFight() {
+  document.documentElement.classList.remove('flip');
   $('setup').hidden = true;
   $('fight').hidden = false;
   buildHalves();
@@ -662,12 +684,41 @@ function openFight() {
   render();
 }
 
+// The end of a fight (⌂): straight back to a fresh clock, ready to go.
 function closeFight() {
+  save(FIGHT_KEY, null);
+  ['pause-menu', 'end-menu', 'result'].forEach(id => { $(id).hidden = true; });
+  readyClock();
+}
+// The app opens on the clock, ready: the fight as set, waiting for the first press.
+function readyClock() {
+  s = newFight(fightConfig());
+  openFight();
+}
+// Réglages from the clock; from the far half, the page turns to face that player.
+function openSettings(flip) {
   save(FIGHT_KEY, null);
   s = null;
   ['fight', 'pause-menu', 'end-menu', 'result'].forEach(id => { $(id).hidden = true; });
+  document.documentElement.classList.toggle('flip', !!flip);
   $('setup').hidden = false;
+  $('settings').open = true;
   renderSetup();
+  // Straight to the settings, the rounds pick just above them.
+  requestAnimationFrame(() => document.querySelector('.rounds-pick').scrollIntoView({ block: 'start' }));
+}
+// Compact summary for the bar before the start: V  ♞ 3:00  🥊 3:00  ⧗ 1:00.
+function readyInfoHTML(c) {
+  const item = (icon, text) => `<span class="ri">${icon}${text}</span>`;
+  if (!c.intervals) return item(ICONS.pawn, formatClock(PRESETS[c.rounds]));
+  return `<span class="ri ri-n">${roman(c.rounds)}</span>` + item(ICONS.pawn, mins(c.chessRoundMs))
+    + (c.boxTimer ? item(ICONS.glove, mins(c.boxRoundMs)) : '')
+    + item(ICONS.hourglass, c.breakOn ? (c.breakMs ? mins(c.breakMs) : '0:00') : '∞');
+}
+function renderBarToggles() {
+  const sound = !cfg.eco && (cfg.sound || cfg.clicks);
+  $('bar-tg').innerHTML = `<button type="button" class="tg${sound ? ' on' : ''}" data-tg="sound" aria-label="Son">${sound ? ICONS.sound : ICONS.mute}</button>`
+    + `<button type="button" class="tg${cfg.eco ? ' on' : ''}" data-tg="eco" aria-label="Éco">${ICONS.eco}</button>`;
 }
 
 // Play the sounds and colour flashes of a list of events, then redraw.
@@ -801,8 +852,8 @@ function render() {
 
   // The fight as a frieze: one mark per round (square = chess, round =
   // boxing), a short dash for each pause; done, current (gold), to come.
-  setHTML($('bar-round'), s.cfg.intervals ? trackHTML() : '');
-  $('bar-phase').textContent = s.phase === 'ready' ? '1er = Noirs' : flagScreen ? methodShort(r.method)
+  setHTML($('bar-round'), s.phase === 'ready' ? readyInfoHTML(s.cfg) : s.cfg.intervals ? trackHTML() : '');
+  $('bar-phase').textContent = s.phase === 'ready' ? '' : flagScreen ? methodShort(r.method)
     : s.roundOver ? 'Temps !' : '';
   setDigits($('bar-timer'), s.phase === 'ready' || s.phase === 'over' || untimed ? '' : roundClock(s.phaseRemaining), cfg.digits);
   // Lost on time or on counts: ↺ Rejouer in the middle of the bar.
@@ -829,7 +880,11 @@ function render() {
   $('pause-menu').hidden = !(s.paused && s.phase !== 'over') || !$('end-menu').hidden;
   $('pause-menu').classList.toggle('ready', !!s.awaitReady);
   // ⌂ in the bar only before the start and at the end; during the fight it is in the pause strip.
-  $('bar-home').hidden = !(s.phase === 'ready' || s.phase === 'over');
+  $('bar-home').hidden = s.phase !== 'over';
+  // Before the start: Son and Éco in the bar, Réglages in each half.
+  $('bar-tg').hidden = s.phase !== 'ready';
+  if (s.phase === 'ready') renderBarToggles();
+  halves.forEach(h => { h.querySelector('.h-set').hidden = s.phase !== 'ready'; });
   if (!$('pause-menu').hidden) renderPauseMenu();
   renderResult();
 }
@@ -993,6 +1048,10 @@ function escapeHtml(t) {
 }
 
 renderSetup();
+{  // Opening: on the clock, ready; a fight left in progress stays on the home page with Continuer.
+  const saved = load(FIGHT_KEY);
+  if (!(saved && saved.phase !== 'ready' && saved.phase !== 'over')) readyClock();
+}
 caches?.keys?.().then(keys => {
   const v = keys.find(k => k.startsWith('chessboxing-pendule-'));
   if (v) $('version').textContent = '· ' + v.replace('chessboxing-pendule-', '');
