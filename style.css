@@ -1161,3 +1161,11 @@ html.flip #ptr { top: auto; bottom: 0; }
 .h-set svg { width: 20px; height: 20px; }
 @container (max-height: 300px) { .h-set { margin-top: 8px; padding: 11px 22px; font-size: 13px; } }
 .cnt-pick button:disabled { opacity: .2; border-style: dashed; }
+/* 0.2.87: in play, the illegal move button is just a red flag, top right of each half; its − to the left; Annuler sits over it */
+#fight .illegal-wrap { left: auto !important; right: 12px !important; top: 12px; flex-direction: row-reverse !important; gap: 8px; }
+.illegal-btn { width: 48px; height: 48px; padding: 0 !important; justify-content: center; border-radius: 12px;
+  background: rgba(10, 12, 14, .55); border: 1px solid color-mix(in srgb, var(--red) 70%, transparent); box-shadow: none; }
+.illegal-btn span { display: none; }
+.illegal-btn .ico { width: 26px !important; height: 26px !important; }
+.illegal-minus { width: 34px; height: 34px; border-width: 1px; }
+#fight .notice-undo { left: auto !important; right: 12px !important; }
