@@ -379,9 +379,34 @@ function toggleSoundOrEco(which) {
   document.body.classList.toggle('eco', !!cfg.eco);
   render();
 }
+// Long press on Son: the volume panel (a tap still switches the sound).
+let holdTimer = null, held = false;
+$('bar-tg').addEventListener('pointerdown', e => {
+  held = false;
+  if (!e.target.closest('[data-tg="sound"]')) return;
+  holdTimer = setTimeout(() => { held = true; if (navigator.vibrate) navigator.vibrate(10); openQuick('vol'); }, 500);
+});
+['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => $('bar-tg').addEventListener(ev, () => clearTimeout(holdTimer)));
+$('bar-tg').addEventListener('contextmenu', e => e.preventDefault());
+$('quick-box').addEventListener('input', e => {
+  const r = e.target.closest('[data-vol]');
+  if (!r) return;
+  cfg[r.dataset.vol] = +r.value;
+  r.nextElementSibling.textContent = r.value;
+  applySound();
+});
+$('quick-box').addEventListener('change', e => {
+  const r = e.target.closest('[data-vol]');
+  if (!r) return;
+  unlockAudio();
+  if (!cfg.sound || cfg.eco) { cfg.sound = true; cfg.eco = false; applySound(); updateMotion(); render(); }  // moving a volume turns the sound on
+  save(CFG_KEY, cfg);
+  play(r.dataset.vol === 'volAlerts' ? 'roundStart' : 'press');
+});
 $('bar-tg').addEventListener('click', e => {
   const b = e.target.closest('[data-tg]');
   if (!b) return;
+  if (held) { held = false; return; }  // that was a long press
   if (b.dataset.tg === 'std') { standard(); return; }
   toggleSoundOrEco(b.dataset.tg);
 });
@@ -628,6 +653,12 @@ function renderQuick() {
   if (k === 'rounds') {
     $('quick-box').innerHTML = `<p class="q-t">Rounds</p><div class="q-rounds">${Object.keys(PRESETS).map(r =>
       `<button type="button" class="${+r === cfg.rounds ? 'on' : ''}" data-qr="${r}"><b>${roman(+r)}</b><small>${formatClock(playerTime({ ...cfg, rounds: +r }))}</small></button>`).join('')}</div>`;
+    return;
+  }
+  if (k === 'vol') {  // long press on Son: the two volumes
+    const row = (k2, icon, label, sub) => `<label class="vol"><span class="vol-ico">${icon}</span><span class="vol-l">${label}<small>${sub}</small></span><input type="range" min="0" max="100" step="5" data-vol="${k2}" value="${cfg[k2] ?? 100}"><b>${cfg[k2] ?? 100}</b></label>`;
+    $('quick-box').innerHTML = `<p class="q-t">Son</p><div class="vols">` + row('volAlerts', ICONS.bell, 'Alertes', 'cloche, claquoir') + row('volClicks', ICONS.sound, 'Coups', 'appuis')
+      + `</div><div class="q-act q-act-one"><button type="button" class="q-btn q-ok" data-qclose>OK</button></div>`;
     return;
   }
   if (k === 'times') {  // the three wheels; tap a drawing to switch that step on / off

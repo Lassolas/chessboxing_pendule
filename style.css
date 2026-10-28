@@ -1169,3 +1169,5 @@ html.flip #ptr { top: auto; bottom: 0; }
 .illegal-btn .ico { width: 26px !important; height: 26px !important; }
 .illegal-minus { width: 34px; height: 34px; border-width: 1px; }
 #fight .notice-undo { left: auto !important; right: 12px !important; }
+.bar-tg .tg { -webkit-touch-callout: none; user-select: none; }
+.quick-box .vols { margin: 4px 0 6px; } .quick-box .vol { grid-template-columns: 26px 80px minmax(0, 1fr) 34px; }
