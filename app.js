@@ -140,12 +140,67 @@ function stripHTML(t) {
   const at = k => vals[k] === undefined ? '' : fmtValue(vals[k], t.kind);
   return `<span class="sv">${at(i + 1)}</span><span class="sv cur">${at(i)}</span><span class="sv">${at(i - 1)}</span>`;
 }
+// Durées: one ruler per step, like a radio dial. Slide the scale under the
+// needle (or tap either side for one step); tap the drawing to switch the step on / off.
+const TICK_PX = 10;  // one step (10 s) of the scale
+const RULER_TONE = { chessRoundMs: 'chess', boxRoundMs: 'box', breakMs: 'pause' };
+function rulerHTML(t) {
+  const on = t.on(), dim = t.key !== 'chessRoundMs' && !cfg.intervals;
+  const vals = valuesOf(t), i = Math.max(0, vals.indexOf(cfg[t.key]));
+  const labels = vals.map((v, k) => v % 60000 === 0 ? `<b style="left:${k * TICK_PX}px">${fmtValue(v)}</b>` : '').join('');
+  return `<div class="ruler rl-${RULER_TONE[t.key]}${on ? ' on' : ''}${dim ? ' dim' : ''}">
+    <button type="button" class="rl-ico" data-tile="${t.key}" aria-pressed="${on}">${t.icon()}<small>${on || t.key !== 'breakMs' ? t.label : '∞'}</small></button>
+    <div class="rl-scale" data-ruler="${t.key}">
+      <div class="rl-strip" style="width:${(vals.length - 1) * TICK_PX}px;transform:translateX(${-i * TICK_PX}px)">${labels}</div>
+      <i class="rl-needle"></i><span class="rl-cur">${on ? fmtValue(cfg[t.key]) : t.key === 'breakMs' ? 'libre' : '—'}</span>
+    </div></div>`;
+}
+let rdrag = null;
+function setRuler(t, el, i, vals) {
+  i = Math.min(vals.length - 1, Math.max(0, i));
+  if (vals[i] === cfg[t.key]) return false;
+  cfg[t.key] = vals[i];
+  el.querySelector('.rl-strip').style.transform = `translateX(${-i * TICK_PX}px)`;
+  el.querySelector('.rl-cur').textContent = fmtValue(vals[i]);
+  renderPresets();
+  if (navigator.vibrate) navigator.vibrate(4);
+  return true;
+}
+$('durations').addEventListener('pointerdown', e => {
+  const el = e.target.closest('[data-ruler]');
+  if (!el) return;
+  const t = tileOf(el.dataset.ruler);
+  if (!t.on()) return;
+  const vals = valuesOf(t);
+  rdrag = { t, el, vals, x: e.clientX, i0: Math.max(0, vals.indexOf(cfg[t.key])), moved: false };
+  el.setPointerCapture(e.pointerId);
+  e.preventDefault();
+});
+$('durations').addEventListener('pointermove', e => {
+  if (!rdrag) return;
+  const dx = e.clientX - rdrag.x;
+  if (Math.abs(dx) > 4) rdrag.moved = true;
+  if (rdrag.moved) setRuler(rdrag.t, rdrag.el, rdrag.i0 - Math.round(dx / TICK_PX), rdrag.vals);  // drag left = more
+});
+const endRuler = e => {
+  if (!rdrag) return;
+  const { t, el, vals, i0, moved } = rdrag;
+  rdrag = null;
+  if (!moved && e.type === 'pointerup') {  // a tap: one step towards that side
+    const r = el.getBoundingClientRect();
+    setRuler(t, el, i0 + (e.clientX > r.left + r.width / 2 ? 1 : -1), vals);
+  }
+  save(CFG_KEY, cfg);
+  renderSetup();
+};
+$('durations').addEventListener('pointerup', endRuler);
+$('durations').addEventListener('pointercancel', endRuler);
 function renderTiles() {
   cfg.moveWarnMs = warnFor(cfg.moveCountdownMs);
   const html = t => `<div class="dur${t.row === 2 ? ' small' : ''}${t.fixed ? ' linked' : ''}${t.on() ? ' on' : ''}" role="button" tabindex="0" data-tile="${t.key}">
       <div class="dur-body"><i>${t.icon()}</i><small>${t.label}</small></div>
       ${t.noValue ? '' : `<div class="strip" data-strip="${t.key}">${stripHTML(t)}</div>`}</div>`;
-  $('durations').innerHTML = TILES.filter(t => t.row === 1).map(html).join('');
+  $('durations').innerHTML = ['chessRoundMs', 'boxRoundMs', 'breakMs'].map(k => rulerHTML(tileOf(k))).join('');
   $('chess-set').classList.toggle('dim', !cfg.intervals);  // dimmed, not hidden: nothing moves
   // Under ♟: the count first; once on, the warning and the count limits.
   const count = tileOf('moveCountdownMs'), more = count.on();
@@ -243,7 +298,7 @@ function renderPresets() {
 // Durées: the fight step by step (chess, pause, boxing),
 // each step with its time. The last chess round runs until a flag falls.
 function renderFrieze() {
-  $('durations-title').hidden = $('frieze').hidden = $('frieze-total').hidden = !cfg.intervals;
+  $('frieze').hidden = $('frieze-total').hidden = !cfg.intervals;
   if (!cfg.intervals) return;
   // A thin time line, each step as long as it lasts: chess in bone, boxing in red,
   // pauses in blue. The last chess round runs until a flag falls: it fades out.
