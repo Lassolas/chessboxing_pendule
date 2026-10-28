@@ -28,8 +28,9 @@ const homeDefaults = () => ({
   breakMs: 60000, breakOn: true,    // pause off = open pause (∞)
   warnOn: false, countdownOn: false,   // counts off by default
   digits: 'dgt',                      // clock digits: dgt | oxanium | saira
+  moveWarnMs: 25000,                  // the warning, 5 s before the count unless moved
   sound: true, clicks: true,          // alerts (bell, clapper...) and the clock presses
-  v: 9,
+  v: 10,
 });
 let cfg = { ...homeDefaults(), ...(load(CFG_KEY) || {}) };
 cfg.names = ['', ''];  // no player names: BLANCS / NOIRS only
@@ -70,6 +71,10 @@ if (cfg.v < 9) {  // v9: DGT digits by default
   cfg.digits = 'dgt';
   cfg.v = 9;
 }
+if (cfg.v < 10) {  // v10: the warning has its own ruler, starting 5 s before the count
+  cfg.moveWarnMs = cfg.moveCountdownMs - 5000;
+  cfg.v = 10;
+}
 if (!DIGIT_STYLES.includes(cfg.digits)) cfg.digits = 'dgt';  // Teko was dropped
 cfg.moveCountdownMs = Math.max(10000, cfg.moveCountdownMs);
 let s = null;
@@ -103,10 +108,13 @@ const TILES = [
     tap: () => { cfg.boxTimer = !(cfg.intervals && cfg.boxTimer); if (cfg.boxTimer) cfg.intervals = true; } },
   { key: 'moveCountdownMs', flag: 'countdownOn', row: 2, icon: () => countHands(8, TILE_HAND), label: 'Compte', step: 5000, min: 10000, max: 180000 },
   { key: 'illegalMoves', flag: 'illegalMoves', row: 2, icon: () => redFlag, label: 'Coups illégaux', noValue: true },
-  { key: 'moveWarnMs', flag: 'warnOn', row: 2, icon: () => watch, label: 'Alerte', fixed: true },  // follows the count
+  { key: 'moveWarnMs', flag: 'warnOn', row: 2, icon: () => watch, label: 'Alerte', step: 5000, min: 5000, max: () => warnFor(cfg.moveCountdownMs) },
+  // Count limits: rulers too, always on (no drawing to tap).
+  { key: 'countsPerRound', kind: 'n', label: 'Max', sub: '/ round', step: 1, min: 1, max: 10, on: () => true, tap: () => {} },
+  { key: 'countsTotal', kind: 'n', label: 'Max', sub: 'total', step: 1, min: 1, max: 20, on: () => true, tap: () => {} },
 ];
 TILES.filter(t => t.flag).forEach(t => {
-  t.on = () => !!cfg[t.flag];
+  t.on = t.key === 'moveWarnMs' ? () => cfg.countdownOn && cfg.warnOn : () => !!cfg[t.flag];
   t.tap = () => { cfg[t.flag] = !cfg[t.flag]; };
 });
 // Count limits: plain − / + lines, always on.
@@ -126,14 +134,14 @@ function tileText(t) {
     case 'breakMs': return !on ? 'Pause libre : tu relances le round.'
       : cfg.breakMs ? `Pauses de ${v}.` : 'Pas de pause : les rounds s\'enchaînent.';
     case 'boxRoundMs': return on ? `Round de boxe chronométré de ${v} entre deux pauses.` : 'Pas de round de boxe.';
-    case 'moveWarnMs': return on ? `Alerte au bout de ${v} sur un coup (5 s avant le compte).` : 'Pas d\'alerte.';
-    case 'illegalMoves': return on ? 'Drapeau rouge dans ton coin : coup illégal adverse = 1 compte, il rejoue.' : 'Pas de bouton coup illégal.';
+    case 'moveWarnMs': return on ? `Alerte au bout de ${v} sur un coup.` : 'Pas d\'alerte.';
+    case 'illegalMoves': return on ? 'Drapeau rouge : coup illégal adverse = 1 compte, il rejoue.' : 'Pas de bouton coup illégal.';
     default: return on ? `Compte de 10 s dès ${v} sur un coup, puis perdu.` : 'Pas de compte.';
   }
 }
 // Each tile: icon and label (tap = on/off), and on the right a strip
 // showing the value like a wheel: press and slide up or down to set it.
-const valuesOf = t => { const v = []; for (let x = t.min; x <= t.max; x += t.step) v.push(x); return v; };
+const valuesOf = t => { const v = [], max = typeof t.max === 'function' ? t.max() : t.max; for (let x = t.min; x <= max; x += t.step) v.push(x); return v; };
 function stripHTML(t) {
   if (!t.on() || t.fixed) return `<span class="sv"></span><span class="sv cur">${tileValue(t)}</span><span class="sv"></span>`;
   const vals = valuesOf(t), i = Math.max(0, vals.indexOf(cfg[t.key]));
@@ -143,27 +151,37 @@ function stripHTML(t) {
 // Durées: one ruler per step, like a radio dial. Slide the scale under the
 // needle (or tap either side for one step); tap the drawing to switch the step on / off.
 const TICK_PX = 10;  // one step (10 s) of the scale
-const RULER_TONE = { chessRoundMs: 'chess', boxRoundMs: 'box', breakMs: 'pause', moveCountdownMs: 'count' };
+const tickOf = t => t.kind === 'n' ? 18 : TICK_PX;  // counts: wider steps
+const RULER_TONE = { chessRoundMs: 'chess', boxRoundMs: 'box', breakMs: 'pause', moveCountdownMs: 'count', moveWarnMs: 'count', countsPerRound: 'n', countsTotal: 'n' };
 function rulerHTML(t) {
-  const on = t.on(), dim = (t.key === 'boxRoundMs' || t.key === 'breakMs') && !cfg.intervals;
+  const on = t.on(), px = tickOf(t);
+  const dim = ((t.key === 'boxRoundMs' || t.key === 'breakMs') && !cfg.intervals) || (t.key === 'moveWarnMs' && !cfg.countdownOn);
   const vals = valuesOf(t), i = Math.max(0, vals.indexOf(cfg[t.key]));
-  const labels = vals.map((v, k) => v % (t.step * 6) === 0 ? `<b style="left:${k * TICK_PX}px">${fmtValue(v)}</b>` : '').join('');
-  return `<div class="ruler rl-${RULER_TONE[t.key]}${on ? ' on' : ''}${dim ? ' dim' : ''}">
-    <button type="button" class="rl-ico" data-tile="${t.key}" aria-pressed="${on}">${t.icon()}<small>${on || t.key !== 'breakMs' ? t.label : '∞'}</small></button>
+  const every = t.kind === 'n' ? 5 : t.step * 6;
+  const labels = vals.map((v, k) => v % every === 0 ? `<b style="left:${k * px}px">${fmtValue(v, t.kind)}</b>` : '').join('');
+  const std = standardOf(t.key);
+  // Count limits have no on / off: their name is a plain label, not a button.
+  const ico = t.kind === 'n'
+    ? `<span class="rl-ico rl-lbl"><small>${t.label}</small><em>${t.sub}</em></span>`
+    : `<button type="button" class="rl-ico" data-tile="${t.key}" aria-pressed="${on}">${t.icon()}<small>${on || t.key !== 'breakMs' ? t.label : '∞'}</small></button>`;
+  return `<div class="ruler rl-${RULER_TONE[t.key]}${on ? ' on' : ''}${dim ? ' dim' : ''}">${ico}
     <div class="rl-scale" data-ruler="${t.key}">
-      <div class="rl-strip" style="width:${(vals.length - 1) * TICK_PX}px;transform:translateX(${-i * TICK_PX}px)">${labels}</div>
-      <i class="rl-needle"></i><span class="rl-cur">${on ? fmtValue(cfg[t.key]) : t.key === 'breakMs' ? 'libre' : '—'}</span>
+      <div class="rl-strip" style="width:${(vals.length - 1) * px}px;transform:translateX(${-i * px}px)">${labels}</div>
+      <i class="rl-needle"></i><span class="rl-cur">${on ? fmtValue(cfg[t.key], t.kind) : t.key === 'breakMs' ? 'libre' : '—'}</span>
     </div>
-    <button type="button" class="rl-reset${on && cfg[t.key] !== homeDefaults()[t.key] ? '' : ' same'}" data-reset="${t.key}" aria-label="${t.label} : valeur standard">${ICONS.replay}</button></div>`;
+    <button type="button" class="rl-reset${on && cfg[t.key] !== std ? '' : ' same'}" data-reset="${t.key}" aria-label="${t.label} : valeur standard">${ICONS.replay}</button></div>`;
 }
+// The ↺ value: 3:00 rounds, 1:00 pause, the warning 5 s before the count, 3 / 4 counts.
+const standardOf = key => key === 'moveWarnMs' ? warnFor(cfg.moveCountdownMs) : homeDefaults()[key];
 let rdrag = null;
 function setRuler(t, el, i, vals) {
   i = Math.min(vals.length - 1, Math.max(0, i));
   if (vals[i] === cfg[t.key]) return false;
+  // The warning keeps up with the count: still 5 s before it, never after it.
+  if (t.key === 'moveCountdownMs' && (cfg.moveWarnMs === warnFor(cfg.moveCountdownMs) || cfg.moveWarnMs > warnFor(vals[i]))) cfg.moveWarnMs = warnFor(vals[i]);
   cfg[t.key] = vals[i];
-  if (t.key === 'moveCountdownMs') cfg.moveWarnMs = warnFor(cfg.moveCountdownMs);
-  el.querySelector('.rl-strip').style.transform = `translateX(${-i * TICK_PX}px)`;
-  el.querySelector('.rl-cur').textContent = fmtValue(vals[i]);
+  el.querySelector('.rl-strip').style.transform = `translateX(${-i * tickOf(t)}px)`;
+  el.querySelector('.rl-cur').textContent = fmtValue(vals[i], t.kind);
   renderPresets();
   if (navigator.vibrate) navigator.vibrate(4);
   return true;
@@ -182,7 +200,7 @@ const onRulerMove = e => {
   if (!rdrag) return;
   const dx = e.clientX - rdrag.x;
   if (Math.abs(dx) > 4) rdrag.moved = true;
-  if (rdrag.moved) setRuler(rdrag.t, rdrag.el, rdrag.i0 - Math.round(dx / TICK_PX), rdrag.vals);  // drag left = more
+  if (rdrag.moved) setRuler(rdrag.t, rdrag.el, rdrag.i0 - Math.round(dx / tickOf(rdrag.t)), rdrag.vals);  // drag left = more
 };
 const endRuler = e => {
   if (!rdrag) return;
@@ -202,20 +220,15 @@ const endRuler = e => {
   $(id).addEventListener('pointercancel', endRuler);
 });
 function renderTiles() {
-  cfg.moveWarnMs = warnFor(cfg.moveCountdownMs);
-  const html = t => `<div class="dur${t.row === 2 ? ' small' : ''}${t.fixed ? ' linked' : ''}${t.on() ? ' on' : ''}" role="button" tabindex="0" data-tile="${t.key}">
-      <div class="dur-body"><i>${t.icon()}</i><small>${t.label}</small></div>
-      ${t.noValue ? '' : `<div class="strip" data-strip="${t.key}">${stripHTML(t)}</div>`}</div>`;
   $('durations').innerHTML = ['chessRoundMs', 'boxRoundMs', 'breakMs'].map(k => rulerHTML(tileOf(k))).join('');
-  // The count works in a plain clock too; only the illegal-move flag needs rounds.
-  // Under the rulers: the count's own ruler; once on, the warning and the count limits.
-  const count = tileOf('moveCountdownMs'), more = count.on(), illegal = cfg.intervals && cfg.illegalMoves;
-  // Plain clock: one game, so only the total limit.
-  const limitsShown = cfg.intervals ? LIMITS : LIMITS.filter(l => l[0] === 'countsTotal');
-  // Secondary setting: one small line, − value + for each limit.
-  const limits = more || illegal ? `<div class="limits"><span class="lim-t">Comptes max</span>${limitsShown.map(([key, label, min, max]) => `
-    <span class="lim"><button type="button" data-lim="${key}" data-d="-1"${cfg[key] <= min ? ' disabled' : ''}>−</button><b>${cfg[key]}</b><button type="button" data-lim="${key}" data-d="1"${cfg[key] >= max ? ' disabled' : ''}>+</button><small>${label}</small></span>`).join('')}</div>` : '';
-  $('chess-set').innerHTML = rulerHTML(count) + `<div class="chess-tiles">${html(tileOf('illegalMoves')).replace('class="dur', `class="dur${cfg.intervals ? '' : ' off-plain'}`)}${more ? html(tileOf('moveWarnMs')) : ''}</div>` + limits;
+  // Under the rulers: the count and its warning; once on, the count limits
+  // (a plain clock is one game: only the total); then the illegal-move switch.
+  const more = cfg.countdownOn || (cfg.intervals && cfg.illegalMoves);
+  const limits = !more ? [] : cfg.intervals ? ['countsPerRound', 'countsTotal'] : ['countsTotal'];
+  const ill = tileOf('illegalMoves'), illOn = cfg.intervals && cfg.illegalMoves;
+  const illRow = `<button type="button" class="ruler rl-opt rl-ill${illOn ? ' on' : ''}${cfg.intervals ? '' : ' dim'}" data-tile="illegalMoves" aria-pressed="${illOn}">
+      <span class="rl-ico">${ill.icon()}<small>Illégal</small></span><span class="rl-note">${cfg.intervals ? tileText(ill) : 'Avec les rounds seulement.'}</span></button>`;
+  $('chess-set').innerHTML = ['moveCountdownMs', 'moveWarnMs', ...limits].map(k => rulerHTML(tileOf(k))).join('') + illRow;
 }
 function showTileText(t) {
   $('opt-help').hidden = false;
@@ -227,8 +240,8 @@ function onTiles(e) {
   if (reset) {  // back to the standard value: 3:00 rounds, 1:00 pause
     const key = reset.dataset.reset;
     if (!tileOf(key).on()) return;
-    cfg[key] = homeDefaults()[key];
-    if (key === 'moveCountdownMs') cfg.moveWarnMs = warnFor(cfg.moveCountdownMs);
+    if (key === 'moveCountdownMs' && cfg.moveWarnMs > warnFor(homeDefaults()[key])) cfg.moveWarnMs = warnFor(homeDefaults()[key]);
+    cfg[key] = standardOf(key);
     save(CFG_KEY, cfg);
     renderSetup();
     return;
@@ -244,10 +257,11 @@ function onTiles(e) {
   const el = e.target.closest('[data-tile]');
   if (!el) return;
   const t = tileOf(el.dataset.tile);
+  if (t.key === 'moveWarnMs' && !cfg.countdownOn) return;  // the warning comes with the count
   t.tap();
   save(CFG_KEY, cfg);
   renderSetup();
-  showTileText(t);
+  if (t.key !== 'illegalMoves') showTileText(t);  // its row already says it
 }
 $('durations').addEventListener('click', onTiles);
 $('chess-set').addEventListener('click', onTiles);
@@ -433,7 +447,7 @@ function fightConfig() {
   if (!c.intervals) Object.assign(c, { illegalMoves: false, boxTimer: false, countsPerRound: 999 });
   if (!c.breakOn) c.breakMs = null;
   if (!c.countdownOn) c.warnOn = false;  // the warning comes with the count
-  c.moveWarnMs = warnFor(c.moveCountdownMs);
+  c.moveWarnMs = Math.min(c.moveWarnMs, warnFor(c.moveCountdownMs));
   if (!c.warnOn) c.moveWarnMs = NEVER;
   if (!c.countdownOn) c.moveCountdownMs = NEVER;
   c.moveLimit = c.warnOn || c.countdownOn;

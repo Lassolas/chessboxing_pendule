@@ -851,3 +851,14 @@ body::after { content: ''; position: fixed; inset: 0; z-index: 40; pointer-event
 .ruler:not(.rl-opt) .rl-ico:active { transform: scale(.96); }
 .ruler { grid-template-columns: 64px minmax(0, 1fr) 40px; }
 .ruler:not(.on) .rl-cur { height: 38px; line-height: 30px; }
+/* Alerte, count limits and the illegal-move switch, in the ruler style */
+.rl-n { --c: var(--text); }
+.rl-n .rl-cur { font: italic 500 26px/1 var(--font-serif); padding-top: 0; }
+.rl-n .rl-strip b { font: italic 500 13px var(--font-serif); }
+.rl-lbl { align-self: stretch; justify-content: center; color: var(--text-2) !important; opacity: 1 !important; }
+.rl-lbl em { font: italic 500 17px/1 var(--font-serif); color: var(--text); }
+.rl-ill { --c: var(--red); grid-template-columns: 64px minmax(0, 1fr) !important; }
+.rl-ill.dim { opacity: .4; pointer-events: none; }
+.rl-ill .rl-ico svg { width: 26px; height: 24px; }
+.rl-opt { grid-template-columns: 64px minmax(0, 1fr); }
+.ruler .rl-ico.rl-lbl { border: 0; background: none; }
