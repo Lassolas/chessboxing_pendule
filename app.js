@@ -236,7 +236,22 @@ function renderPresets() {
     `<button type="button" class="preset${+r === cfg.rounds ? ' on' : ''}" data-r="${r}">${cfg.intervals  // rounds: numeral + time per player; plain clock: the time alone
       ? `<b>${roman(+r)}</b><small>${formatClock(playerTime({ ...cfg, rounds: +r }))}</small>`
       : `<b class="dur-only">${formatClock(PRESETS[r])}</b>`}</button>`).join('');
+  renderFrieze();
   renderSummary();
+}
+// Durées: the fight as the bar shows it (chess ◇, pause —, boxing ●),
+// each step with its time. The last chess round runs until a flag falls.
+function renderFrieze() {
+  $('durations-title').hidden = $('frieze').hidden = !cfg.intervals;
+  if (!cfg.intervals) return;
+  const steps = [], lastChess = Math.max(...Array.from({ length: cfg.rounds }, (_, i) => i + 1).filter(n => roundType(n) === 'chess'));
+  for (let n = 1; n <= cfg.rounds; n++) {
+    const chess = roundType(n) === 'chess';
+    if (!chess && !cfg.boxTimer) continue;
+    if (steps.length) steps.push(['tk-dash', cfg.breakOn ? fmtValue(cfg.breakMs) : '∞']);
+    steps.push([chess ? 'tk sq' : 'tk ci', chess ? (n === lastChess ? '⚑' : fmtValue(cfg.chessRoundMs)) : fmtValue(cfg.boxRoundMs)]);
+  }
+  $('frieze').innerHTML = steps.map(([k, t]) => `<span class="fz"><span class="fz-m"><i class="${k}"></i></span><small>${t}</small></span>`).join('');
 }
 // The big COMBAT button says what it starts.
 const mins = ms => fmtValue(ms);

@@ -693,3 +693,12 @@ body::after { content: ''; position: fixed; inset: 0; z-index: 40; pointer-event
 .h-avg small { font-size: .7em; color: var(--text-2); }
 /* Sideways, the average stays at the far end of each half, so the two mirror each other across the bar. */
 #fight[data-orient="right"] .half.top .h-avg, #fight[data-orient="left"] .half.bottom .h-avg { left: auto !important; right: 14px !important; text-align: right; }
+/* Durées in Réglages: the bar's frieze, each step with its time under it */
+.frieze { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; row-gap: 12px; padding: 4px 0 6px; }
+.fz { display: flex; flex-direction: column; align-items: center; gap: 7px; min-width: 30px; }
+.fz-m { height: 14px; display: flex; align-items: center; justify-content: center; }
+.fz .tk { width: 11px; height: 11px; }
+.fz .tk.ci { background: var(--red); border-color: var(--red); }
+.fz .tk-dash { width: 16px; height: 1.6px; background: var(--blue); }
+.fz small { font: var(--clock-weight) 12px var(--font-clock); color: var(--text-2); font-variant-numeric: tabular-nums; }
+.fz:has(.tk) small { color: var(--text); }
