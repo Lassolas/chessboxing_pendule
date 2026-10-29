@@ -1268,3 +1268,12 @@ html.flip #ptr { top: auto; bottom: 0; }
 .ri-ring.no-box { --cb: rgba(217, 72, 59, .28); }
 .ri-ring.no-pause { --cp: rgba(134, 188, 210, .28); }
 #btn-feedback { text-decoration: none; display: flex; align-items: center; justify-content: center; margin-top: 14px; }
+/* 0.2.106: the referee count looks the same in every orientation: small clock in the
+   middle, the hands right beside it, sized to the half so they never leave it. */
+.h-move .hand { width: min(130px, 26vw, 26cqh); }
+#fight:not([data-orient="normal"]) .half.countdown .h-clock { font-size: clamp(40px, 12vw, 72px); }
+#fight:not([data-orient="normal"]) .h-move .hand { width: min(130px, 26cqw); }
+#fight:not([data-orient="normal"]) .half.countdown .h-in { grid-template-rows: minmax(0, 1fr) auto auto minmax(0, 1fr); }
+#fight:not([data-orient="normal"]) .half.countdown .h-up { grid-row: 1; align-self: end; }
+#fight:not([data-orient="normal"]) .half.countdown .h-clock { grid-row: 2; }
+#fight:not([data-orient="normal"]) .half.countdown .h-down { grid-row: 3; }
