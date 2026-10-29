@@ -1174,10 +1174,18 @@ renderSetup();
 {  // Opening: on the clock, ready, or the fight left in progress, paused.
   backToClock();  // a fight left in progress comes back paused
 }
-caches?.keys?.().then(keys => {
-  const v = keys.find(k => k.startsWith('chessboxing-pendule-'));
-  if (v) $('version').textContent = '· ' + v.replace('chessboxing-pendule-', '');
-  // Feedback by email: the subject is filled in, with the version.
-  const ver = v ? ' ' + v.replace('chessboxing-pendule-', '') : '';
-  $('btn-feedback').href = 'mailto:chessboxingparis@gmail.com?subject=' + encodeURIComponent(`[Pendule${ver}] Retour appli`);
-}).catch(() => {});
+// Version shown in Réglages (and in the feedback subject): the newest cache, read again
+// when a new version takes over, so it never lags one version behind.
+const vNum = k => k.replace('chessboxing-pendule-', '').split('.').map(Number);
+const newer = (a, b) => { const x = vNum(a), y = vNum(b); for (let i = 0; i < 3; i++) if (x[i] !== y[i]) return (y[i] || 0) - (x[i] || 0); return 0; };
+function showVersion() {
+  caches?.keys?.().then(keys => {
+    const v = keys.filter(k => k.startsWith('chessboxing-pendule-')).sort(newer)[0];
+    if (v) $('version').textContent = '· ' + v.replace('chessboxing-pendule-', '');
+    // Feedback by email: the subject is filled in, with the version.
+    const ver = v ? ' ' + v.replace('chessboxing-pendule-', '') : '';
+    $('btn-feedback').href = 'mailto:chessboxingparis@gmail.com?subject=' + encodeURIComponent(`[Pendule${ver}] Retour appli`);
+  }).catch(() => {});
+}
+showVersion();
+navigator.serviceWorker?.addEventListener('controllerchange', () => setTimeout(showVersion, 500));
