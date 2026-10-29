@@ -1255,3 +1255,6 @@ html.flip #ptr { top: auto; bottom: 0; }
 .ri-marks .off { opacity: .3; }
 .phase-ready button.ri-times { position: relative; }
 .ri-marks { gap: 5px; } .ri-marks i { width: 6px; height: 6px; } .ri-marks .rm-pause { width: 9px; height: 2px; }
+/* 0.2.101: side views, the flag of each half sits by the middle bar (symmetric). */
+#fight[data-orient="right"] .half.top .illegal-wrap,
+#fight[data-orient="left"] .half.bottom .illegal-wrap { right: auto !important; left: 12px !important; flex-direction: row !important; }
