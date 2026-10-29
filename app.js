@@ -657,9 +657,9 @@ function readyInfoHTML(c) {
   return item('rounds', `<span class="ri-n${roman(c.rounds).length > 2 ? ' long' : ''}">${roman(c.rounds)}</span>` + ring, 'Rounds')
     + item('times', ICONS.clock + timesMarks(c), 'Temps');
 }
-// Under the clock drawing, the three settings behind it in their colours, like the frieze:
-// chess (bone square), boxing (red circle), pause (blue dash); dim when switched off.
-const timesMarks = c => `<span class="ri-marks"><i class="rm-chess"></i><i class="rm-box${c.intervals && c.boxTimer ? '' : ' off'}"></i><i class="rm-pause${c.intervals && c.breakOn ? '' : ' off'}"></i></span>`;
+// Around the clock drawing, a ring in three arcs for the settings behind it:
+// chess (bone), boxing (red), pause (blue); an arc fades when its step is off.
+const timesMarks = c => `<span class="ri-ring${c.intervals && c.boxTimer ? '' : ' no-box'}${c.intervals && c.breakOn ? '' : ' no-pause'}"></span>`;
 // Quick panel over the waiting clock: the step's ruler, on / off and back to the
 // original time; for the rounds, the four numbers. Tap outside to close.
 let quickKey = null, quickFlip = false;

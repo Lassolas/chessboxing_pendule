@@ -1258,3 +1258,12 @@ html.flip #ptr { top: auto; bottom: 0; }
 /* 0.2.101: side views, the flag of each half sits by the middle bar (symmetric). */
 #fight[data-orient="right"] .half.top .illegal-wrap,
 #fight[data-orient="left"] .half.bottom .illegal-wrap { right: auto !important; left: 12px !important; flex-direction: row !important; }
+/* 0.2.102: clock button = thick ring in three arcs (bone chess, red boxing, blue pause), bigger clock. */
+.ri-marks { display: none; }
+.phase-ready button.ri-times { border-color: transparent !important; }
+.phase-ready button.ri-times .ic { transform: none; width: calc(var(--rb) * .6) !important; height: calc(var(--rb) * .6) !important; position: relative; z-index: 1; }
+.ri-ring { --cb: var(--red); --cp: var(--blue); position: absolute; inset: -1px; border-radius: 50%; pointer-events: none;
+  background: conic-gradient(from -60deg, var(--bone) 0 112deg, transparent 112deg 120deg, var(--cb) 120deg 232deg, transparent 232deg 240deg, var(--cp) 240deg 352deg, transparent 352deg);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4.5px)); mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4.5px)); }
+.ri-ring.no-box { --cb: rgba(217, 72, 59, .28); }
+.ri-ring.no-pause { --cp: rgba(134, 188, 210, .28); }
