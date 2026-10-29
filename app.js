@@ -1177,4 +1177,7 @@ renderSetup();
 caches?.keys?.().then(keys => {
   const v = keys.find(k => k.startsWith('chessboxing-pendule-'));
   if (v) $('version').textContent = '· ' + v.replace('chessboxing-pendule-', '');
+  // Feedback by email: the subject is filled in, with the version.
+  const ver = v ? ' ' + v.replace('chessboxing-pendule-', '') : '';
+  $('btn-feedback').href = 'mailto:chessboxingparis@gmail.com?subject=' + encodeURIComponent('Retour appli Pendule' + ver);
 }).catch(() => {});

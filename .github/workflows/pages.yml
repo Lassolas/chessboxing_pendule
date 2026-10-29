@@ -28,7 +28,7 @@ jobs:
       - name: Test the clock logic
         run: npm test
       - name: Collect the site files
-        run: mkdir _site && cp *.html *.css *.js *.png *.webmanifest _site/ && cp -r sounds _site/
+        run: mkdir _site && cp *.html *.css *.js *.png *.svg *.mp4 *.webmanifest _site/ && cp -r sounds _site/
       - uses: actions/configure-pages@v5
         with:
           enablement: true

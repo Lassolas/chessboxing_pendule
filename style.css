@@ -1267,3 +1267,4 @@ html.flip #ptr { top: auto; bottom: 0; }
   -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4.5px)); mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4.5px)); }
 .ri-ring.no-box { --cb: rgba(217, 72, 59, .28); }
 .ri-ring.no-pause { --cp: rgba(134, 188, 210, .28); }
+#btn-feedback { text-decoration: none; display: flex; align-items: center; justify-content: center; margin-top: 14px; }

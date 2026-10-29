@@ -21,6 +21,7 @@ export const ICONS = {
   mute: svg('<path d="M4 9.5h3.4L12 5.6v12.8l-4.6-3.9H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/>'),
   eco: svg('<rect x="3" y="7.5" width="16" height="9" rx="2"/><path d="M21.2 10.6v2.8"/><path d="M6.4 13.6c.4-2.7 2.6-3.6 5.4-3.4-.2 2.8-2.2 4-5.4 3.4zM6.4 13.6l2.7-1.8"/>'),
   bell: svg('<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 2h-15z"/><path d="M10 20.6a2 2 0 0 0 4 0"/>'),
+  mail: svg('<rect x="3.5" y="6" width="17" height="12" rx="1.5"/><path d="M4 7l8 6 8-6"/>'),
   close: svg('<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>'),
 };
 
