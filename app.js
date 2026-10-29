@@ -1179,5 +1179,5 @@ caches?.keys?.().then(keys => {
   if (v) $('version').textContent = '· ' + v.replace('chessboxing-pendule-', '');
   // Feedback by email: the subject is filled in, with the version.
   const ver = v ? ' ' + v.replace('chessboxing-pendule-', '') : '';
-  $('btn-feedback').href = 'mailto:chessboxingparis@gmail.com?subject=' + encodeURIComponent('Retour appli Pendule' + ver);
+  $('btn-feedback').href = 'mailto:chessboxingparis@gmail.com?subject=' + encodeURIComponent(`[Pendule${ver}] Retour appli`);
 }).catch(() => {});
