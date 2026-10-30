@@ -1,3 +1,4 @@
+import { count } from './stats.js';
 import {
   PRESETS, playerTime, defaultConfig, newFight, tick, start, press, togglePause, skipPhase,
   illegalMove, removeIllegal, undoCount, averageMove, nextChessRound, goToNextChess, nextStep, goToNextStep, reopen, endFight, moveStage, moveCountdownLeft,
@@ -737,6 +738,14 @@ const FLASH = {
   moveWarn: '#ff9a1f', moveCountdown: '#ff3b3b', count: '#ff3b3b', over: '#ffffff',
   phaseTen: '#4a9eff', breakTen: '#4a9eff', undo: '#a3a3b8',
 };
+// Fights counted (anonymous): one when the first press starts it, one when it ends.
+let seenPhase = null;
+function countFight() {
+  if (seenPhase === 'ready' && s.phase !== 'ready') count('combat-debut', true);
+  if (seenPhase && seenPhase !== 'over' && s.phase === 'over') count('combat-fin', true);
+  seenPhase = s.phase;
+}
+
 function act(events) {
   if (!events) return;
   for (const ev of events) {
@@ -803,6 +812,7 @@ const methodShort = m => METHOD_SHORT[m] || m.replace(/ dans le round| au total/
 function render() {
   if (s) lastEcoKey = ecoKey();
   if (!s) return;
+  countFight();
   const body = document.body;
   const r = s.result;
   const flagScreen = r && r.method !== 'decision';
@@ -1103,10 +1113,15 @@ window.addEventListener('beforeinstallprompt', e => {
   $('install-box').hidden = false;
   $('btn-install').hidden = false;
 });
+// Visits: '/' in the browser, '/app' when opened from the installed app (the one way to count iPhones).
+count(standalone ? '/app' : '/');
+window.addEventListener('appinstalled', () => count('installee', true));
 $('btn-install').addEventListener('click', async () => {
   if (!installEvent) return;
+  count('installer-tap', true);
   installEvent.prompt();
-  await installEvent.userChoice;
+  const choice = await installEvent.userChoice;
+  count(choice && choice.outcome === 'accepted' ? 'installer-oui' : 'installer-non', true);
   installEvent = null;
   $('install-box').hidden = true;
 });
