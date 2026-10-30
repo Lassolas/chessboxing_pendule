@@ -1,14 +1,23 @@
 // Anonymous counts on GoatCounter (no cookies, nothing personal): visits, installs, fights.
-// Nothing is sent until CODE is set to the club's GoatCounter code, nor from a test copy.
-const CODE = 'lassolas';
-const live = CODE && /chessboxingparis\.com$|github\.io$/.test(location.hostname);
+// Through GoatCounter's own script, loaded only on the real site (never from a test copy).
+const URL_COUNT = 'https://lassolas.goatcounter.com/count';
+const live = /chessboxingparis\.com$|github\.io$/.test(location.hostname);
+const queue = [];
+if (live) {
+  window.goatcounter = { no_onload: true };  // we say what to count
+  const sc = document.createElement('script');
+  sc.async = true;
+  sc.src = 'https://gc.zgo.at/count.js';
+  sc.dataset.goatcounter = URL_COUNT;
+  sc.onload = () => { while (queue.length) send(queue.shift()); };
+  document.head.appendChild(sc);
+}
+function send(v) { try { window.goatcounter.count(v); } catch {} }
 
 // path: what is counted ('/' a visit, 'combat-debut' an event); event: true for actions.
 export function count(path, event = false) {
   if (!live) return;
-  const q = new URLSearchParams({ p: path, e: event ? 'true' : 'false', t: event ? path : document.title,
-    s: `${screen.width},${screen.height},${devicePixelRatio || 1}`, rnd: Math.random().toString(36).slice(2) });
-  const url = `https://${CODE}.goatcounter.com/count?${q}`;
-  try { if (navigator.sendBeacon && navigator.sendBeacon(url)) return; } catch {}
-  new Image().src = url;
+  const v = { path, title: event ? path : document.title, event };
+  if (typeof window.goatcounter?.count === 'function') send(v);
+  else queue.push(v);
 }
