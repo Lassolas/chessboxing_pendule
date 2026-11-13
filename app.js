@@ -29,11 +29,11 @@ const homeDefaults = () => ({
   breakMs: 60000, breakOn: true,    // pause off = open pause (∞)
   warnOn: false, countdownOn: false,   // counts off by default
   digits: 'dgt',                      // clock digits: dgt | oxanium | saira
-  moveWarnMs: 25000,                  // the warning, 5 s before the count unless moved
+  moveWarnMs: 20000,                  // the warning, 10 s before the count unless moved (Val)
   sound: true, showAvg: true,         // Son (all sounds on / off), average per move
   volAlerts: 100, volClicks: 100,     // volumes: alerts (bell, clapper...) and the clock presses
   plainMs: 5 * 60000, incrementMs: 2000,  // classic clock (no rounds): time per player + increment
-  v: 13,
+  v: 14,
 });
 let cfg = { ...homeDefaults(), ...(load(CFG_KEY) || {}) };
 cfg.incrementMs = Math.min(30000, cfg.incrementMs);  // the increment goes up to 30 s
@@ -92,6 +92,10 @@ if (cfg.v < 12) {  // v12: classic clock 5:00 + 0:02 by default
 if (cfg.v < 13) {  // v13: Prêt ? on for everyone (Val: by default the chess round waits for Prêt ?)
   cfg.readyCheck = true;
   cfg.v = 13;
+}
+if (cfg.v < 14) {  // v14: the warning 10 s before the count by default
+  cfg.moveWarnMs = Math.max(0, cfg.moveCountdownMs - 10000);
+  cfg.v = 14;
 }
 cfg.countsPerRound = Math.min(5, Math.max(1, cfg.countsPerRound || 3));  // limits picked from 1 to 5
 cfg.countsPerRound = Math.min(4, cfg.countsPerRound);
@@ -155,16 +159,16 @@ const tileOf = key => TILES.find(t => t.key === key);
 // The longest count: a third of the chess round (of each player's time in a plain clock), to the second.
 const countMax = c => Math.max(1000, Math.round((c.intervals ? c.chessRoundMs : playerTime(c)) / 3000) * 1000);
 // Keep the count and its warning inside their scales when the round changes.
+const warnFor = countdownMs => Math.max(0, countdownMs - 10000);  // 10 s before the count (Val)
 function clampCount(c) {
   const max = countMax(c);
   if (c.moveCountdownMs <= max) return false;
-  if (c.moveWarnMs === c.moveCountdownMs - 5000) c.moveWarnMs = Math.max(0, max - 5000);  // still 5 s before
+  if (c.moveWarnMs === warnFor(c.moveCountdownMs)) c.moveWarnMs = warnFor(max);  // still 10 s before
   c.moveCountdownMs = max;
   c.moveWarnMs = Math.min(c.moveWarnMs, Math.max(0, max - 1000));
   return true;
 }
 // The warning always comes 5 s before the count.
-const warnFor = countdownMs => Math.max(0, countdownMs - 5000);
 // Turning the count on brings the warning with it.
 tileOf('moveCountdownMs').tap = () => { cfg.countdownOn = !cfg.countdownOn; if (cfg.countdownOn) cfg.warnOn = true; };
 
