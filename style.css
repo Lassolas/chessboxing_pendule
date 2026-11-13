@@ -1330,3 +1330,22 @@ html.flip #ptr { top: auto; bottom: 0; }
 #opt-ref { display: grid; gap: 8px; margin-bottom: 8px; }
 #opt-avg { margin-top: 10px; }
 #count-note[hidden] { display: none; }
+/* 0.2.114 (Val): Rounds = a rounded square, apart from the timers;
+   the three times = round, with a stopwatch's crown and side button and four hour marks. */
+.rb-rounds .rb-c { border-radius: 12px; }
+.rb:not(.rb-rounds) .rb-c { position: relative; }
+.rb:not(.rb-rounds) .rb-c::before { content: ''; position: absolute; left: 50%; top: -6px; width: 8px; height: 5px; margin-left: -4px;
+  border-radius: 2px 2px 0 0; background: color-mix(in srgb, var(--c) 60%, transparent); }
+.rb:not(.rb-rounds) .rb-c::after { content: ''; position: absolute; inset: 3px; border-radius: 50%; pointer-events: none;
+  background:
+    linear-gradient(var(--tick), var(--tick)) 50% 0 / 1px 4px no-repeat,
+    linear-gradient(var(--tick), var(--tick)) 50% 100% / 1px 4px no-repeat,
+    linear-gradient(var(--tick), var(--tick)) 0 50% / 4px 1px no-repeat,
+    linear-gradient(var(--tick), var(--tick)) 100% 50% / 4px 1px no-repeat; }
+.rb:not(.rb-rounds) { --tick: color-mix(in srgb, var(--c) 55%, transparent); }
+.rb:not(.rb-rounds) .rb-c { border-width: 1.5px; }
+/* the side button, at 2 o'clock */
+.rb:not(.rb-rounds) .rb-c > .rb-t::before { content: ''; position: absolute; right: calc(var(--rb) * .1); top: calc(var(--rb) * .02); width: 6px; height: 4px;
+  border-radius: 1.5px; background: color-mix(in srgb, var(--c) 50%, transparent); transform: rotate(45deg); }
+.rb.off .rb-c::before, .rb.off .rb-c::after { opacity: .5; }
+.phase-ready .bar-round { padding-top: 4px; }
