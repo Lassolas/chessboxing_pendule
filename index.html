@@ -27,27 +27,36 @@
 
   <button type="button" id="btn-back" class="set-back" data-icon="next">Pendule</button>
 
-  <p class="set-title">Orientation</p>
-  <div class="orient-pick" id="orient-pick"></div>
-
-  <p class="set-title">Arbitre</p>
-  <div id="opt-ref"></div>
-  <p class="set-note" id="count-note">Alerte 0:00 = pas d'alerte.</p>
-  <div class="chess-set" id="chess-set"></div>
-
-  <p class="set-title">Pauses</p>
-  <div id="opt-ready"></div>
-
-  <p class="set-title">Son</p>
-  <div class="vols" id="vols">
-    <label class="vol"><span class="vol-ico" data-icon="bell"></span><span class="vol-l">Alertes<small>cloche, claquoir</small></span><input type="range" min="0" max="100" step="5" id="vol-alerts"><b id="vol-alerts-v"></b></label>
-    <label class="vol"><span class="vol-ico" data-icon="sound"></span><span class="vol-l">Coups<small>appuis</small></span><input type="range" min="0" max="100" step="5" id="vol-clicks"><b id="vol-clicks-v"></b></label>
+  <!-- Réglages grouped by use: each card = numeral, title, what it is for, then its settings. -->
+  <div class="sc">
+    <header class="sc-h"><i>I</i><div><h2>Arbitre</h2><p>Ce que la pendule surveille pendant les échecs.</p></div></header>
+    <div id="opt-ref"></div>
+    <div class="chess-set sc-sub" id="chess-set"></div>
+    <div id="opt-ill"></div>
   </div>
-  <button type="button" id="btn-test-sound" class="btn btn-ghost wide" data-icon="bell">Test son</button>
 
-  <p class="set-title">Style de la pendule</p>
-  <div class="options" id="digit-pick"></div>
-  <div id="opt-avg"></div>
+  <div class="sc">
+    <header class="sc-h"><i>II</i><div><h2>Entre les rounds</h2><p>Comment repart le round d'échecs après la pause.</p></div></header>
+    <div id="opt-ready"></div>
+  </div>
+
+  <div class="sc">
+    <header class="sc-h"><i>III</i><div><h2>Écran</h2><p>Comment la pendule s'affiche.</p></div></header>
+    <p class="sc-l">Sens</p>
+    <div class="orient-pick" id="orient-pick"></div>
+    <p class="sc-l">Chiffres</p>
+    <div class="options" id="digit-pick"></div>
+    <div id="opt-avg"></div>
+  </div>
+
+  <div class="sc">
+    <header class="sc-h"><i>IV</i><div><h2>Son</h2><p>Le volume des alertes et des appuis.</p></div></header>
+    <div class="vols" id="vols">
+      <label class="vol"><span class="vol-ico" data-icon="bell"></span><span class="vol-l">Alertes<small>cloche, claquoir</small></span><input type="range" min="0" max="100" step="5" id="vol-alerts"><b id="vol-alerts-v"></b></label>
+      <label class="vol"><span class="vol-ico" data-icon="sound"></span><span class="vol-l">Appuis<small>sur la pendule</small></span><input type="range" min="0" max="100" step="5" id="vol-clicks"><b id="vol-clicks-v"></b></label>
+    </div>
+    <button type="button" id="btn-test-sound" class="btn btn-ghost wide" data-icon="bell">Test son</button>
+  </div>
 
   <p class="set-title">À propos</p>
   <div class="about">

@@ -1374,3 +1374,44 @@ html.flip #ptr { top: auto; bottom: 0; }
 .nx-pause .ic { width: 20px !important; height: 12px !important; color: var(--blue); }
 #bar-btn .nx { display: flex; flex-direction: column; align-items: center; gap: 3px; }
 @media (max-width: 380px) { .bar-next { padding: 4px 9px !important; } .nx-k { font-size: 8px; letter-spacing: .14em; } .nx-v i { font-size: 18px; } .nx-v b { font-size: 11.5px; letter-spacing: .12em; } }
+
+/* 0.2.121 (Val): Réglages grouped by use. One card per use: numeral, title, one line saying what it is for.
+   Switches look like switches; the count's details sit under its switch, only when it is on. */
+.sc { margin: 14px 0; padding: 14px 14px 16px; border: 1px solid var(--hair); border-radius: 16px; background: rgba(13, 17, 20, .55); }
+.sc-h { display: flex; align-items: center; gap: 14px; margin-bottom: 12px; }
+.sc-h > i { flex: none; width: 40px; text-align: center; font: italic 500 30px/1 var(--font-serif); color: var(--gold); }
+.sc-h h2 { margin: 0; font: 700 17px/1.1 var(--font-display); letter-spacing: .14em; text-transform: uppercase; color: var(--bone); }
+.sc-h p { margin: 3px 0 0; font-size: 13px; line-height: 1.35; color: var(--text-2); }
+.sc-l { margin: 14px 0 8px; font: 600 11px var(--font-display); letter-spacing: .2em; text-transform: uppercase; color: var(--text-2); }
+.sc .sc-l:first-of-type { margin-top: 2px; }
+.sc .orient-pick, .sc .options { margin-bottom: 0; }
+.sc .vols { margin-bottom: 10px; }
+/* a switch line */
+.sw { width: 100%; display: grid; grid-template-columns: 40px minmax(0, 1fr) 46px; align-items: center; gap: 12px; padding: 10px 2px; margin: 0;
+  border: 0; border-top: 1px solid var(--hair); background: none; color: var(--bone); text-align: left; font: inherit; cursor: pointer; touch-action: manipulation; }
+.sc-h + div > .sw, .sc-h + div > .sw:first-child { border-top: 0; }
+#opt-avg .sw { margin-top: 12px; }
+.sw-ico { display: grid; place-items: center; width: 40px; height: 40px; color: var(--bone); }
+.sw-ico svg, .sw-ico .ic { width: 28px; height: 28px; }
+.sw:not(.on) .sw-ico { opacity: .55; }
+.sw-t { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.sw-t b { font: 700 15px/1.1 var(--font-display); letter-spacing: .1em; text-transform: uppercase; }
+.sw-t small { font-size: 12.5px; line-height: 1.3; color: var(--text-2); }
+.sw-k { position: relative; width: 46px; height: 28px; border-radius: 14px; background: rgba(235, 229, 214, .12); border: 1px solid rgba(235, 229, 214, .25); transition: background .2s, border-color .2s; }
+.sw-k::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--text-2); transition: transform .2s, background .2s; }
+.sw.on .sw-k { background: color-mix(in srgb, var(--green) 30%, transparent); border-color: var(--green); }
+.sw.on .sw-k::after { transform: translateX(18px); background: var(--bone); }
+/* count details: indented under the switch */
+.sc-sub { margin: 0 0 6px 14px !important; padding: 4px 0 6px 14px; border-left: 2px solid color-mix(in srgb, #ff9a1f 45%, transparent); }
+.sc-sub[hidden] { display: none !important; }
+.sc-cap { margin: 8px 0 4px; font-size: 13px; color: var(--bone); }
+.sc-cap span { color: var(--text-2); }
+.sc-sub .cnt-pick { margin: 4px 0; grid-template-columns: 80px repeat(5, 1fr); }
+.sc-sub .ruler { grid-template-columns: 0 minmax(0, 1fr) 36px; gap: 6px; }
+.sc-sub .ruler .rl-ico { display: none !important; }
+.eco .sc { background: none; }
+.sc-sub .ruler { grid-template-columns: minmax(0, 1fr) 36px !important; }
+
+.sw-ico > svg { width: 40px !important; height: 30px !important; }
+.sw-ico > svg.ico { width: 26px !important; height: 26px !important; }
+.sw-ico .hands { display: flex; gap: 1px; } .sw-ico .hands svg { width: 18px !important; height: 26px !important; }

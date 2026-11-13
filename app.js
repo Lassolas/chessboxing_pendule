@@ -267,25 +267,19 @@ function onTiles(e) {
 
 // Toggles, laid out like the rulers: the drawing on the left, what it does on the right.
 const OPTIONS = [
-  ['readyCheck', () => ICONS.play, 'Prêt ?', on => on
-    ? 'Attend une touche avant chaque round d\'échecs.'
-    : 'Les échecs repartent seuls après la pause.'],
-  ['countdownOn', on => countIcon(on, SET_HAND), 'Comptes', on => on
-    ? 'L\'arbitre compte quand un joueur réfléchit trop.'
-    : 'Pas de compte.'],
-  ['illegalMoves', () => redFlag, 'Illégaux', on => on
-    ? 'Un drapeau sur la pendule pour les signaler.'
-    : 'Pas de bouton coup illégal.'],
-  ['showAvg', () => '<b class="avg-ico">s<small>/coup</small></b>', 'Par coup', on => on
-    ? 'Temps moyen par coup, aux pauses et à la fin.'
-    : 'Pas de temps moyen.'],
+  ['readyCheck', () => ICONS.play, 'Prêt ?', () => 'Les échecs attendent une touche au lieu de repartir seuls.'],
+  ['countdownOn', on => countIcon(on, SET_HAND), 'Comptes', () => 'Compte de 10 s quand un joueur réfléchit trop.'],
+  ['illegalMoves', () => redFlag, 'Coups illégaux', () => 'Un drapeau pour signaler un coup illégal.'],
+  ['showAvg', () => '<b class="avg-ico">s<small>/coup</small></b>', 'Temps par coup', () => 'La moyenne de chaque joueur, aux pauses.'],
 ];
 const optOn = key => key === 'showAvg' ? cfg.showAvg !== false : !!cfg[key];
 
+// One switch per line: drawing, name and what it does, the switch on the right.
 const optRow = ([key, icon, label, note]) => `
-    <button type="button" class="ruler rl-opt${optOn(key) ? ' on' : ''}" data-opt="${key}" aria-pressed="${optOn(key)}">
-      <span class="rl-ico">${icon(optOn(key))}<small>${label}</small></span>
-      <span class="rl-note">${note(optOn(key))}</span></button>`;
+    <button type="button" class="sw${optOn(key) ? ' on' : ''}" data-opt="${key}" role="switch" aria-checked="${optOn(key)}">
+      <span class="sw-ico">${icon(optOn(key))}</span>
+      <span class="sw-t"><b>${label}</b><small>${note(optOn(key))}</small></span>
+      <i class="sw-k"></i></button>`;
 const optOf = key => OPTIONS.find(o => o[0] === key);
 
 const mins = ms => fmtValue(ms);
@@ -294,7 +288,9 @@ function renderSetup() {
   document.documentElement.dataset.digits = cfg.digits;
   if (clampCount(cfg)) save(CFG_KEY, cfg);
   $('opt-ready').innerHTML = optRow(optOf('readyCheck'));
-  $('opt-ref').innerHTML = optRow(optOf('countdownOn')) + optRow(optOf('illegalMoves'));
+  // The count's details sit right under its switch, only when it is on.
+  $('opt-ref').innerHTML = optRow(optOf('countdownOn'));
+  $('opt-ill').innerHTML = optRow(optOf('illegalMoves'));
   $('opt-avg').innerHTML = optRow(optOf('showAvg'));
   // Comptes: the count's times and the limits (switched on from the clock). Alerte 0:00 = none.
   // The limits: five plain numbers to tap (1 to 5), no wheel.
@@ -302,10 +298,14 @@ function renderSetup() {
   const allowed = (k, n) => !cfg.intervals || (k === 'countsPerRound' ? n < 5 : n > cfg.countsPerRound);
   const pick = (k, label, sub) => `<div class="cnt-pick"><span class="cp-l"><small>${label}</small><em>${sub}</em></span>${[1, 2, 3, 4, 5].map(n =>
     `<button type="button" class="${cfg[k] === n ? 'on' : ''}" data-pick="${k}" data-n="${n}"${allowed(k, n) ? '' : ' disabled'}>${n}</button>`).join('')}</div>`;
-  // The count's times only when the count is on; the limits when counts or illegal moves are.
-  $('chess-set').innerHTML = (cfg.countdownOn ? ['moveCountdownMs', 'moveWarnMs'].map(k => rulerHTML(tileOf(k), true)).join('') : '')
-    + (cfg.countdownOn || cfg.illegalMoves ? (cfg.intervals ? pick('countsPerRound', 'Max', '/ round') : '') + pick('countsTotal', 'Max', 'total') : '');
-  $('count-note').hidden = !cfg.countdownOn;
+  // Count on: when it starts, its warning, and how many counts lose the fight.
+  const cap = t => `<p class="sc-cap">${t}</p>`;
+  $('chess-set').hidden = !cfg.countdownOn;
+  $('chess-set').innerHTML = cfg.countdownOn
+    ? cap('Le compte démarre après') + rulerHTML(tileOf('moveCountdownMs'), true)
+      + cap('Alerte avant le compte <span>(0:00 = sans)</span>') + rulerHTML(tileOf('moveWarnMs'), true)
+      + cap('Perdu à') + (cfg.intervals ? pick('countsPerRound', 'comptes', '/ round') : '') + pick('countsTotal', 'comptes', 'au total')
+    : '';
   [['vol-alerts', 'volAlerts'], ['vol-clicks', 'volClicks']].forEach(([id, k]) => {
     $(id).value = cfg[k] ?? 100;
     $(id + '-v').textContent = cfg[k] ?? 100;
@@ -366,6 +366,7 @@ function onOptions(e) {
 $('digit-pick').addEventListener('click', onOptions);
 $('opt-ready').addEventListener('click', onOptions);
 $('opt-ref').addEventListener('click', onOptions);
+$('opt-ill').addEventListener('click', onOptions);
 $('opt-avg').addEventListener('click', onOptions);
 // Volume sliders: heard at once on the next sound; a short sample when let go.
 [['vol-alerts', 'volAlerts', 'roundStart'], ['vol-clicks', 'volClicks', 'press']].forEach(([id, k, ev]) => {
