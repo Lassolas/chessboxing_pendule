@@ -27,7 +27,7 @@ const CARDS = [
   { t: 'Régler le combat', s: 'Nombre de rounds, durées, installer', l: lives(['setup']), b: `
     <ul class="gd-steps">
       <li><b>Rounds</b> : touche le carré pour choisir 5, 7, 9 ou 11 rounds, ou la <b>pendule classique</b> (sans rounds, temps et incrément réglables).</li>
-      <li><b>Échecs, Boxe, Transition</b> (la case Pause) : touche une durée, puis fais glisser la règle qui s'ouvre.</li>
+      <li><b>Échecs, Boxe, Transition</b> : touche une durée, puis fais glisser la règle qui s'ouvre.</li>
       <li>${ic('replay')} remet le combat classique : 5 rounds, 3:00 / 3:00 / 1:00.</li>
       <li>${ic('install')} <b>Installer</b> : met la pendule sur l'écran d'accueil du téléphone ; elle marche ensuite sans réseau.</li></ul>
     <p class="gd-note">Boxe à <em>0:00</em> : pas de boxe, seulement des rounds d'échecs avec des transitions.</p>` },

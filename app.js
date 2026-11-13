@@ -140,7 +140,7 @@ const SET_HAND = { ...REFEREE, fill: 'url(#skin-set)', defs: REFEREE.defs.replac
 const TILES = [
   { key: 'chessRoundMs', row: 1, title: "Durée du round d'échecs", icon: () => ICONS.pawn, label: 'Échecs', step: 10000, min: 30000, max: 600000,
     on: () => cfg.intervals, tap: () => { cfg.intervals = !cfg.intervals; } },
-  { key: 'breakMs', row: 1, title: "Durée de la pause", icon: () => ICONS.hourglass, label: 'Pause', step: 10000, min: 0, max: 300000,
+  { key: 'breakMs', row: 1, title: "Durée de la transition", icon: () => ICONS.hourglass, label: 'Transition', step: 10000, min: 0, max: 300000,
     on: () => cfg.intervals && cfg.breakOn,
     tap: () => { cfg.breakOn = !(cfg.intervals && cfg.breakOn); if (cfg.breakOn) cfg.intervals = true; } },
   { key: 'boxRoundMs', row: 1, title: "Durée du round de boxe", icon: () => ICONS.glove, label: 'Boxe', step: 10000, min: 30000, max: 300000, zero: true,  // 0:00 = no boxing round (Val)
@@ -287,7 +287,7 @@ const OPTIONS = [
   ['readyCheck', () => ICONS.play, 'Prêt ?', () => 'Les échecs attendent une touche au lieu de repartir seuls.'],
   ['countdownOn', on => countIcon(on, SET_HAND), 'Comptes', () => 'Compte de 10 s quand un joueur réfléchit trop.'],
   ['illegalMoves', () => redFlag, 'Coups illégaux', () => 'Un drapeau pour signaler un coup illégal.'],
-  ['showAvg', () => '<b class="avg-ico">s<small>/coup</small></b>', 'Temps par coup', () => 'La moyenne de chaque joueur, aux pauses.'],
+  ['showAvg', () => '<b class="avg-ico">s<small>/coup</small></b>', 'Temps par coup', () => 'La moyenne de chaque joueur, aux transitions.'],
 ];
 const optOn = key => key === 'showAvg' ? cfg.showAvg !== false : !!cfg[key];
 
@@ -722,7 +722,7 @@ function readyInfoHTML(c) {
   return item('rounds', `<span class="ri-n">${roman(c.rounds)}</span>`, 'Rounds')
     + item('chessRoundMs', t('chessRoundMs', c.intervals, '—'), 'Échecs', !c.intervals)
     + item('boxRoundMs', t('boxRoundMs', c.intervals && c.boxTimer && c.boxRoundMs > 0, '—'), 'Boxe', !(c.intervals && c.boxTimer && c.boxRoundMs > 0))
-    + item('breakMs', t('breakMs', c.intervals && c.breakOn, '∞'), 'Pause', !(c.intervals && c.breakOn));
+    + item('breakMs', t('breakMs', c.intervals && c.breakOn, '∞'), 'Transition', !(c.intervals && c.breakOn));
 }
 // Quick panel over the waiting clock: the step's ruler, on / off and back to the
 // original time; for the rounds, the four numbers. Tap outside to close.
@@ -920,7 +920,7 @@ function render() {
     // No round names on the clock (Val): only Boxe / Pause over their timer; the rounds are in the bar.
     phaseEl.classList.remove('soon');
     // Boxe / Pause written big over their timer (Val); never Échecs, that is obvious.
-    setHTML(phaseEl.firstChild, s.phase === 'boxing' ? 'Boxe' : s.phase === 'break' ? 'Pause' : '');
+    setHTML(phaseEl.firstChild, s.phase === 'boxing' ? 'Boxe' : s.phase === 'break' ? 'Transition' : '');
     setDigits(phaseEl.lastChild, (s.phase === 'boxing' || s.phase === 'break') && !untimed ? roundClock(s.phaseRemaining) : (s.phase === 'break' ? '∞' : ''), cfg.digits);
     // Chess round: its timer, small, at the top of each player's half (the far edge, facing them).
     const rt = s.phase === 'chess' && s.phaseRemaining !== null && !s.awaitReady;
@@ -971,7 +971,7 @@ function render() {
   // What comes next, centred on two lines: "Round suivant" over the round's numeral and kind
   // (Échecs bone, Boxe red), or "Suivant" over Pause (blue). No arrow (Val).
   const nextHTML = t => {
-    if (t.phase === 'break') return `<small class="nx-k">Suivant</small><span class="nx-v nx-pause">${ICONS.hourglass}<b>Pause</b></span>`;
+    if (t.phase === 'break') return `<small class="nx-k">Suivant</small><span class="nx-v nx-pause">${ICONS.hourglass}<b>Transition</b></span>`;
     const chess = roundType(t.round) === 'chess';
     return `<small class="nx-k">Round suivant</small><span class="nx-v ${chess ? 'nx-chess' : 'nx-box'}"><i>${roman(t.round)}</i><b>${chess ? 'Échecs' : 'Boxe'}</b></span>`;
   };
