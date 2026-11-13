@@ -1660,3 +1660,10 @@ body.eco .tr.next, body.eco .bar-next .nx-v { -webkit-animation: none; animation
 .q-pmb:active { background: rgba(235, 229, 214, .2); }
 .q-pmb:disabled { opacity: .3; }
 .q-t { text-wrap: balance; }
+/* 0.2.154 (Val): in the pause, Réglages sits under each player's time like on the home screen
+   (out of the middle strip); the logo makes room for it. */
+.paused .h-in > .h-down { opacity: 1 !important; }
+.paused:not(.await) .h-down .h-set { position: absolute; left: 50%; bottom: 48px; transform: translateX(-50%); margin: 0; z-index: 3; }
+.paused:not(.await) .h-logo { display: none; }
+@media (orientation: landscape) and (max-height: 560px) { .paused:not(.await) .h-down .h-set { bottom: 40px; padding: 8px 16px; font-size: 12px; } }
+@container (max-height: 320px) { .paused:not(.await) .h-down .h-set { bottom: 40px; padding: 6px 14px !important; font-size: 11px !important; gap: 6px; } .paused:not(.await) .h-down .h-set svg { width: 14px; height: 14px; } }

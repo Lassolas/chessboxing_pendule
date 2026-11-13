@@ -192,7 +192,8 @@ function rulerHTML(t, always = false) {
   const ico = t.kind === 'n'
     ? `<span class="rl-ico rl-lbl"><small>${t.label}</small><em>${t.sub}</em></span>`
     : `<button type="button" class="rl-ico" data-tile="${t.key}" aria-pressed="${on}">${t.icon()}<small>${on || t.key !== 'breakMs' ? t.label : '∞'}</small></button>`;
-  return `<div class="ruler rl-${RULER_TONE[t.key]}${on ? ' on' : ''}${dim ? ' dim' : ''}">${ico}
+  const lit = on && !(t.zero && cfg[t.key] === 0);  // Boxe at 0:00 looks switched off (Val)
+  return `<div class="ruler rl-${RULER_TONE[t.key]}${lit ? ' on' : ''}${dim ? ' dim' : ''}">${ico}
     <div class="rl-scale" data-ruler="${t.key}">
       <div class="rl-strip" style="width:${(vals.length - 1) * px}px;transform:translateX(${-i * px}px)">${labels}</div>
       <i class="rl-needle"></i><span class="rl-cur">${on ? fmtValue(cfg[t.key], t.kind) : t.key === 'breakMs' ? 'libre' : '—'}</span>
@@ -210,6 +211,7 @@ function setRuler(t, el, i, vals) {
   // The warning keeps up with the count: still 5 s before it, never after it.
   if (t.key === 'moveCountdownMs' && (cfg.moveWarnMs === warnFor(cfg.moveCountdownMs) || cfg.moveWarnMs > warnFor(vals[i]))) cfg.moveWarnMs = warnFor(vals[i]);
   cfg[t.key] = vals[i];
+  if (t.zero) el.closest('.ruler').classList.toggle('on', vals[i] !== 0);
   el.querySelector('.rl-strip').style.transform = `translateX(${-i * tickOf(t)}px)`;
   el.querySelector('.rl-cur').textContent = fmtValue(vals[i], t.kind);
   hideNear(t, el, i);
@@ -973,7 +975,8 @@ function render() {
   $('bar-tg').hidden = s.phase !== 'ready';
   if (s.phase === 'ready') renderBarToggles();
   halves.forEach(h => {
-    h.querySelector('.h-set').hidden = s.phase !== 'ready';
+    // Réglages under the time before the start, and in the pause too (Val), never while the clock runs.
+    h.querySelector('.h-set').hidden = !(s.phase === 'ready' || (s.paused && !s.awaitReady && s.phase !== 'over'));
   });
   if (!$('pause-menu').hidden) renderPauseMenu();
   renderResult();
@@ -997,7 +1000,8 @@ function renderPauseMenu() {
   // Prêt ?: nothing in the middle but Prêt ? (no pause settings).
   // Only Réglages, Accueil, Round and GO (Val): counts and illegal moves are switched in Réglages.
   $('pm-tgs').hidden = true;
-  $('pm-set').hidden = $('pm-restart').hidden = !!s.awaitReady;
+  $('pm-set').hidden = true;  // Réglages sits under each player's time (Val)
+  $('pm-restart').hidden = !!s.awaitReady;
   setHTML($('pm-set'), `${SET_ICON}<small>Réglages</small>`);
   // Two ways back: this round from its start, or the whole fight.
   $('pm-round').hidden = !!s.awaitReady || !s.snap || (s.phase !== 'chess' && s.phase !== 'boxing');
@@ -1041,7 +1045,13 @@ $('bar-next').addEventListener('click', () => { unlockAudio(); act(goToNextStep(
 
 $('pm-resume').addEventListener('click', () => act(togglePause(s, performance.now())));
 // A tap anywhere outside the buttons resumes too.
-$('pause-menu').addEventListener('click', e => { if (!e.target.closest('button')) $('pm-resume').click(); });
+$('pause-menu').addEventListener('click', e => {
+  if (e.target.closest('button')) return;
+  // Réglages under a player's time shows through the pause layer: a tap there opens it.
+  const set = document.elementsFromPoint(e.clientX, e.clientY).find(el => el.classList.contains('h-set') && !el.hidden);
+  if (set) { set.click(); return; }
+  $('pm-resume').click();
+});
 function restart() {
   s = newFight(structuredClone(s.cfg));
   buildHalves();
