@@ -1572,3 +1572,6 @@ body::after { opacity: .035 !important; }
 .h-logo { bottom: 32px; }
 .h-logo img { height: clamp(16px, calc(28cqh - 40px), 42px) !important; max-width: 84%; object-fit: contain; opacity: .5 !important; }
 @media (orientation: landscape) and (max-height: 560px) { .h-logo { bottom: 62px; } .h-logo img { height: 28px !important; } }
+/* 0.2.140 (Val): each rounds choice says what its time is: "Pendule" above 4:30 / 6:00 (time per player). */
+.q-rounds button small { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.q-rounds .q-k { font: 600 9px/1 var(--font-ui, 'Barlow Condensed', sans-serif); font-style: normal; letter-spacing: .18em; text-transform: uppercase; color: var(--text-2); opacity: .8; }

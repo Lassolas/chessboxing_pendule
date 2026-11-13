@@ -693,9 +693,9 @@ function renderQuick() {
   $('quick-box').classList.toggle('qflip', !!k && quickFlip);
   if (!k) return;
   if (k === 'rounds') {
-    $('quick-box').innerHTML = `<p class="q-t">Rounds</p><div class="q-rounds">${Object.keys(PRESETS).map(r =>
-      `<button type="button" class="${cfg.intervals && +r === cfg.rounds ? 'on' : ''}" data-qr="${r}"><b>${roman(+r)}</b><small>${formatClock(playerTime({ ...cfg, intervals: true, rounds: +r }))}</small></button>`).join('')}`
-      + `<button type="button" class="q-classic${cfg.intervals ? '' : ' on'}" data-qr="0"><b>${NO_ROUNDS}</b><small>Classique</small></button></div>`;
+    $('quick-box').innerHTML = `<p class="q-t">Nombre de rounds</p><div class="q-rounds">${Object.keys(PRESETS).map(r =>
+      `<button type="button" class="${cfg.intervals && +r === cfg.rounds ? 'on' : ''}" data-qr="${r}"><b>${roman(+r)}</b><small><i class="q-k">Pendule</i>${formatClock(playerTime({ ...cfg, intervals: true, rounds: +r }))}</small></button>`).join('')}`
+      + `<button type="button" class="q-classic${cfg.intervals ? '' : ' on'}" data-qr="0"><b>${NO_ROUNDS}</b><small><i class="q-k">Pendule</i>Classique</small></button></div>`;
     return;
   }
   if (k === 'vol') {  // long press on Son: the two volumes
