@@ -8,6 +8,7 @@ import { unlockAudio, play, setMuted, setVolumes } from './sound.js';
 import { countHands, REFEREE } from './hands.js';
 import { DIGIT_STYLES, setDigits } from './digits.js';
 import { ICONS, roman } from './icons.js';
+import { openGuide } from './guide.js';
 
 const $ = id => document.getElementById(id);
 // Static buttons name their icon; it is drawn in front of their text.
@@ -471,6 +472,7 @@ $('bar-tg').addEventListener('click', e => {
   const b = e.target.closest('[data-tg]');
   if (!b) return;
   if (held) { held = false; return; }  // that was a long press
+  if (b.dataset.tg === 'guide') { openGuide(); return; }
   if (b.dataset.tg === 'std') { standard(); return; }
   if (b.dataset.tg === 'orient') { cycleOrient(); return; }
   if (b.dataset.tg === 'install') { install(); return; }
@@ -788,9 +790,12 @@ $('chess-set').addEventListener('click', e => {
 $('quick').addEventListener('click', onOptions);
 ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach((ev, i) =>
   $('quick').addEventListener(ev, [onRulerDown, onRulerMove, endRuler, endRuler][i]));
+// Mode d'emploi: an open book.
+const BOOK_ICON = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5zM12 6.5v13"/></svg>';
 function renderBarToggles() {
   // Son, Éco and Sens live only at the top of Réglages (Val).
-  $('bar-tg').innerHTML = `<button type="button" class="tg tg-std" data-tg="std" aria-label="Standard">${ICONS.replay}</button>`
+  $('bar-tg').innerHTML = `<button type="button" class="tg tg-guide" data-tg="guide" aria-label="Mode d'emploi">${BOOK_ICON}</button>`
+    + `<button type="button" class="tg tg-std" data-tg="std" aria-label="Standard">${ICONS.replay}</button>`
     + (inBrowser() ? `<button type="button" class="tg tg-install" data-tg="install" aria-label="Installer">${ICONS.install}</button>` : '');
 }
 
