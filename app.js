@@ -314,7 +314,12 @@ function renderSetup() {
   $('chess-set').innerHTML = cfg.countdownOn
     ? cap('Le compte démarre après') + rulerHTML(tileOf('moveCountdownMs'), true)
       + cap('Alerte avant le compte <span>(0:00 = sans)</span>') + rulerHTML(tileOf('moveWarnMs'), true)
-      + cap('Perdu à') + (cfg.intervals ? pick('countsPerRound', 'comptes', '/ round') : '') + pick('countsTotal', 'comptes', 'au total')
+    : '';
+  // The limits count both the counts and the illegal moves (Val): under the two switches, when either is on.
+  const lim = cfg.countdownOn || cfg.illegalMoves;
+  $('lim-set').hidden = !lim;
+  $('lim-set').innerHTML = lim
+    ? cap('Perdu à <span>(comptes et coups illégaux)</span>') + (cfg.intervals ? pick('countsPerRound', 'comptes', '/ round') : '') + pick('countsTotal', 'comptes', 'au total')
     : '';
   [['vol-alerts', 'volAlerts'], ['vol-clicks', 'volClicks']].forEach(([id, k]) => {
     $(id).value = cfg[k] ?? 100;
@@ -762,6 +767,13 @@ $('quick').addEventListener('click', e => {
 });
 $('quick').addEventListener('click', onTiles);
 // Réglages › Comptes: drag the rulers, ↺ resets; the drawings are not switches here.
+$('lim-set').addEventListener('click', e => {
+  const b = e.target.closest('[data-pick]');
+  if (!b) return;
+  cfg[b.dataset.pick] = +b.dataset.n;
+  if (cfg.countsTotal <= cfg.countsPerRound) cfg.countsTotal = cfg.countsPerRound + 1;  // the total stays above
+  save(CFG_KEY, cfg); renderSetup();
+});
 $('chess-set').addEventListener('click', e => {
   const b = e.target.closest('[data-pick]');
   if (b) {

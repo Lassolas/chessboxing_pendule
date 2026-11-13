@@ -833,7 +833,7 @@ body::after { content: ''; position: fixed; inset: 0; z-index: 40; pointer-event
 .tl-total b { margin-left: 4px; color: var(--text); font: var(--clock-weight) 13px var(--font-clock); letter-spacing: 0; }
 .rl-count { --c: var(--orange); }
 .rl-ico svg { width: 30px; height: 26px; }
-#chess-set.chess-set { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+:is(#chess-set, #lim-set).chess-set { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
 .chess-tiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
 .dur.off-plain { opacity: .3; pointer-events: none; }
 
@@ -1076,7 +1076,7 @@ button.ri-rounds { padding: 2px 7px; }
 #ptr.go { border-color: var(--bone); }
 html.flip #ptr { top: auto; bottom: 0; }
 .set-note { margin: -4px 0 10px; color: var(--text-2); font-size: 13px; }
-#chess-set .rl-ico { pointer-events: none; }
+:is(#chess-set, #lim-set) .rl-ico { pointer-events: none; }
 /* ✋ off: bone outline hands, fully visible; on: skin hands in an orange frame */
 .h-cnttg:not(.on) { opacity: 1; border-color: rgba(235, 229, 214, .45); }
 .h-cnttg:not(.on) svg, .pt[data-pt="count"]:not(.on) svg { filter: none; opacity: .85; }
@@ -1674,3 +1674,4 @@ body.eco .tr.next, body.eco .bar-next .nx-v { -webkit-animation: none; animation
 .sc.sc-screen { background: linear-gradient(160deg, #24272b, #1a1d20) !important; border-color: rgba(235, 229, 214, .22) !important; border-left-color: var(--bone) !important; }
 .sc.sc-sound { background: linear-gradient(160deg, #15291f, #111d17) !important; border-color: rgba(98, 179, 148, .3) !important; border-left-color: var(--green) !important; }
 .sc.sc-ref h2 { color: #f0b46a; } .sc.sc-between h2 { color: var(--blue); } .sc.sc-sound h2 { color: #7fc9a8; }
+.lim-set { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--hair); } .lim-set[hidden] { display: none !important; }
