@@ -1553,3 +1553,17 @@ body::after { opacity: .035 !important; }
   .phase-ready #fight .half.bottom::before { bottom: 10px; right: 10px; border-bottom-width: 3px; border-right-width: 3px; border-radius: 0 0 7px 0; }
   .phase-ready #fight .half.bottom::after { top: 10px; right: 10px; border-top-width: 3px; border-right-width: 3px; border-radius: 0 7px 0 0; }
 }
+/* 0.2.137 (Val: "C plein" for the fight): the half whose move it is fills with green, white digits; the
+   other half is near black with dim digits. No lever, no slate light. */
+#fight .half { background: #0b0e10; }
+.phase-chess #fight .half.active:not(.warn):not(.countdown) { background: linear-gradient(0deg, #1f6b52, #174d3c) !important; }
+.phase-chess #fight .half.top.active:not(.warn):not(.countdown) { background: linear-gradient(180deg, #1f6b52, #174d3c) !important; }
+.phase-chess .half.active .h-clock { color: #fff !important; }
+.phase-chess .half:not(.active) .h-clock { color: rgba(235, 229, 214, .38) !important; }
+.phase-chess .half.active .h-name { color: #d9f2e7 !important; }
+.phase-chess #fight .half.active::after, .h-lever { display: none !important; }
+.eco.phase-chess #fight .half.active:not(.warn):not(.countdown) { background: #0f3327 !important; }
+@media (orientation: landscape) and (max-height: 560px) {
+  .phase-chess #fight .half.top.active:not(.warn):not(.countdown) { background: linear-gradient(90deg, #1f6b52, #174d3c) !important; }
+  .phase-chess #fight .half.bottom.active:not(.warn):not(.countdown) { background: linear-gradient(270deg, #1f6b52, #174d3c) !important; }
+}
