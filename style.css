@@ -1832,3 +1832,14 @@ body.eco .tr.next, body.eco .bar-next .nx-v { -webkit-animation: none; animation
 .gl-frame iframe { position: absolute; left: 0; top: 0; width: 390px; height: 844px; border: 0; transform-origin: 0 0; pointer-events: none; }
 .gd-live figcaption { font: 600 11px/1.2 var(--font-display); letter-spacing: .1em; text-transform: uppercase; color: var(--text-2); text-align: center; }
 .gd-note { font-size: .9em; color: var(--text-2); margin-top: 10px; }
+/* 0.2.174 (Val): whole real screens again, as little films: a finger taps, the explanation follows each step. */
+.gd-live { width: min(100%, 300px, calc((100dvh - 250px) * 390 / 844 + 0px)); min-width: 200px; }
+.gl-frame { aspect-ratio: 390 / 844; border-radius: 22px; border: 3px solid #2c3338; }
+.gl-cap { min-height: 3.9em; font: 500 15px/1.3 var(--font-body) !important; letter-spacing: 0 !important; text-transform: none !important; color: var(--bone) !important; text-align: center; padding: 0 4px; }
+.gl-cap.new { animation: gl-cap .35s ease-out; }
+@keyframes gl-cap { from { opacity: 0; transform: translateY(4px); } }
+#demo-finger { position: fixed; z-index: 9999; left: 50%; top: 110%; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%;
+  background: rgba(255,255,255,.3); border: 3px solid rgba(255,255,255,.95); box-shadow: 0 3px 14px rgba(0,0,0,.55);
+  opacity: 0; pointer-events: none; transition: left .55s ease, top .55s ease, opacity .25s, transform .15s, background .15s; }
+#demo-finger.on { opacity: 1; }
+#demo-finger.down { transform: scale(.72); background: rgba(255,255,255,.65); }

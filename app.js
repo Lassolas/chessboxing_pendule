@@ -1336,36 +1336,99 @@ else {  // Opening: on the clock, ready, or the fight left in progress, paused.
   backToClock();  // a fight left in progress comes back paused
 }
 // The demo scenes of the Mode d'emploi: each one sets the real clock in one situation and plays it.
+// Little films for the Mode d'emploi: a finger taps the real app, step by step, and each step
+// sends its explanation to the guide around the frame. Nothing is saved; the film loops.
 function runDemo(kind) {
   setMuted(true);
   const now = () => performance.now();
-  if (kind === 'count' || kind === 'illegal') Object.assign(cfg, { countdownOn: true, warnOn: true, illegalMoves: true });
-  if (kind === 'classic') cfg.intervals = false;
-  if (kind === 'settings') { openSettings(false); return; }
-  readyClock();
-  if (kind === 'home' || kind === 'classic') return;
-  if (kind === 'rounds') { openQuick('rounds'); return; }
-  act(start(s, now(), 1));
-  if (kind === 'chess') {  // the players take turns: the green half follows the move
-    setInterval(() => { if (s.phase === 'chess') act(press(s, s.turn, now())); }, 2400);
-    return;
+  const finger = document.createElement('div');
+  finger.id = 'demo-finger'; document.body.append(finger);
+  const cap = t => { try { parent.postMessage({ demoCap: t }, location.origin); } catch { /* alone */ } };
+  const sleep = ms => new Promise(ok => setTimeout(ok, ms));
+  const el = q => typeof q === 'string' ? document.querySelector(q) : q;
+  async function tap(q, fx = .5, fy = .5) {
+    const e = el(q); if (!e) return;
+    const r = e.getBoundingClientRect(), x = r.left + r.width * fx, y = r.top + r.height * fy;
+    finger.style.left = x + 'px'; finger.style.top = y + 'px'; finger.className = 'on';
+    await sleep(650);
+    finger.className = 'on down';
+    const o = { bubbles: true, clientX: x, clientY: y, pointerId: 7, pointerType: 'touch', isPrimary: true };
+    if (e.closest('#fight .half') && !e.closest('button')) {
+      e.dispatchEvent(new PointerEvent('pointerdown', o)); e.dispatchEvent(new PointerEvent('pointerup', o));
+    } else if (e.matches('.illegal-btn')) e.dispatchEvent(new PointerEvent('pointerdown', o));
+    else e.click();
+    await sleep(350); finger.className = 'on';
   }
-  if (kind === 'break' || kind === 'boxing') {
-    act(goToNextStep(s, now()));
-    if (kind === 'boxing') act(goToNextStep(s, now()));
-    return;
-  }
-  if (kind === 'pause') { setTimeout(() => act(togglePause(s, now())), 600); return; }
-  if (kind === 'count') {  // a player who thinks too long: the warning, then the count
-    s.moveElapsed = s.cfg.moveWarnMs + 1500;
-    setTimeout(() => { s.moveElapsed = s.cfg.moveCountdownMs + 2000; render(); }, 2500);
-    setInterval(() => { s.moveElapsed = s.cfg.moveWarnMs + 500; s.counts = []; setTimeout(() => { s.moveElapsed = s.cfg.moveCountdownMs + 1000; }, 2500); }, 6000);
-    return;
-  }
-  if (kind === 'illegal') {
-    const claim = () => { s.counts = []; const pl = s.turn; act(illegalMove(s, pl, now())); showNotice(pl); };
-    setTimeout(claim, 700); setInterval(claim, 4500);
-  }
+  const lift = () => { finger.className = ''; };
+  const scenes = {
+    async setup() {
+      readyClock();
+      cap("L'accueil : le nombre de rounds et les trois durées."); await sleep(2200);
+      cap('Touche le carré pour choisir le nombre de rounds.'); await tap('.rb-rounds'); lift(); await sleep(1400);
+      cap('7 rounds : chaque pendule passe à 6:00.'); await tap('[data-qr="7"]'); await sleep(1600);
+      await tap('#quick', .5, .82); lift(); await sleep(900);
+      cap('Touche une durée pour la changer, ici la boxe.'); await tap('.rb-boxRoundMs'); lift(); await sleep(1200);
+      cap('Fais glisser la règle : 2:00 de boxe.');
+      const ru = document.querySelector('[data-ruler="boxRoundMs"]');
+      if (ru) { const r = ru.getBoundingClientRect(); finger.style.left = r.left + r.width * .7 + 'px'; finger.style.top = r.top + r.height / 2 + 'px'; finger.className = 'on down';
+        await sleep(400); finger.style.left = r.left + r.width * .3 + 'px'; await sleep(500);
+        const t = tileOf('boxRoundMs'), vals = valuesOf(t); setRuler(t, ru, vals.indexOf(cfg.boxRoundMs) - 2, vals); renderSetup(); finger.className = 'on'; }
+      await sleep(1400); await tap('[data-qclose]'); lift(); await sleep(1600);
+      cap('Ce bouton remet le combat classique.'); await tap('.tg-std'); lift(); await sleep(2200);
+    },
+    async chess() {
+      readyClock();
+      cap('Avant le début, les deux pendules attendent.'); await sleep(2000);
+      cap('Les Noirs touchent leur moitié : la pendule des Blancs démarre.'); await tap('.half.top', .5, .55); lift(); await sleep(2200);
+      cap('Vert = à toi de jouer. Les Blancs jouent, puis touchent leur moitié.'); await tap('.half.bottom', .5, .5); lift(); await sleep(2200);
+      cap("C'est aux Noirs : leur moitié devient verte."); await tap('.half.top', .5, .55); lift(); await sleep(2000);
+      cap('En haut de chaque moitié : le temps qui reste au round.'); await sleep(2600);
+    },
+    async flow() {
+      readyClock(); act(start(s, now(), 1)); act(press(s, s.turn, now()));
+      cap("Un round d'échecs se joue…"); await sleep(2000);
+      act(goToNextStep(s, now()));
+      cap('Fin du round : la cloche, puis la pause, en bleu.'); await sleep(2600);
+      cap('Le grand chrono est celui de la pause. Le prochain round clignote dans la barre.'); await sleep(3000);
+      act(goToNextStep(s, now()));
+      cap('Rouge = boxe. La pendule de chacun reste en petit, en haut.'); await sleep(3000);
+      cap('10 s avant la fin, le claquoir. Ce bouton passe tout de suite à la suite.'); await tap('#bar-next'); lift(); await sleep(1800);
+      cap('Dernières secondes de la pause…'); s.phaseRemaining = 2200; await sleep(2600);
+      cap('Prêt ? La pendule attend que les gants soient enlevés : touche l\'écran.'); await sleep(2400);
+      await tap('#pm-resume'); lift();
+      cap("La cloche : le round d'échecs repart."); await sleep(2600);
+    },
+    async pause() {
+      readyClock(); act(start(s, now(), 1)); act(press(s, s.turn, now()));
+      cap('Le combat tourne.'); await sleep(1600);
+      cap('Ce bouton, au bout de la barre, arrête tout.'); await tap('#bar-btn'); lift(); await sleep(2000);
+      cap('Round : refait le round depuis son début.'); await tap('#pm-round'); lift(); await sleep(1800);
+      cap('GO, ou toucher ailleurs : on reprend.'); await tap('#pm-resume'); lift(); await sleep(2000);
+      cap('Après un mat ou un K.-O. : arrête, puis Accueil.'); await tap('#bar-btn'); await sleep(500); await tap('#pm-restart'); lift(); await sleep(1400);
+      cap('Accueil : une pendule neuve, prête pour le combat suivant.'); await sleep(2200);
+    },
+    async referee() {
+      Object.assign(cfg, { countdownOn: true, warnOn: true, illegalMoves: true });
+      readyClock(); act(start(s, now(), 1));
+      cap('Les Blancs réfléchissent…'); await sleep(1500);
+      s.moveElapsed = s.cfg.moveWarnMs + 100; cap("Trop long : un toc d'alerte, la moitié devient orange."); await sleep(2600);
+      s.moveElapsed = s.cfg.moveCountdownMs + 300; cap("Puis la pendule compte 10 s, comme un arbitre. À 0, combat perdu."); await sleep(3200);
+      cap('Il joue à temps : le compte est noté (point rouge).'); await tap('.half.bottom', .5, .45); lift(); await sleep(2400);
+      cap('Les Noirs jouent un coup illégal : les Blancs touchent le drapeau de leur moitié.'); await tap('.half.bottom .illegal-btn'); lift(); await sleep(2800);
+      cap('Les Noirs rejouent et prennent un compte. 3 dans un round ou 4 au total : perdu.'); await sleep(2800);
+    },
+    async settings() {
+      readyClock();
+      cap('Réglages : le bouton sous le temps de chaque joueur.'); await tap('.half.bottom .h-set'); lift(); await sleep(1600);
+      cap('Son : coupe ou remet tous les sons.'); await tap('#set-quick .sq:nth-child(1)'); await sleep(900); await tap('#set-quick .sq:nth-child(1)'); lift(); await sleep(900);
+      cap('Éco : écran noir, pour garder la batterie.'); await tap('#set-quick .sq:nth-child(2)'); lift(); await sleep(1600); await tap('#set-quick .sq:nth-child(2)'); lift(); await sleep(700);
+      cap('Sens : face à face, ou les deux chiffres du même côté.'); await tap('#set-quick .sq:nth-child(3)'); lift(); await sleep(1800);
+      cap("Plus bas : l'arbitre, la pause Prêt ?, les chiffres, les volumes.");
+      $('digit-pick').scrollIntoView({ behavior: 'smooth', block: 'center' }); await sleep(2600);
+    },
+  };
+  const go = scenes[kind] || scenes.chess;
+  go().then(() => sleep(1200)).then(() => location.reload());
 }
 // Version shown in Réglages (and in the feedback subject): the newest cache, read again
 // when a new version takes over, so it never lags one version behind.

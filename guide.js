@@ -3,11 +3,8 @@
 import { ICONS } from './icons.js';
 
 // The real clock, live and small: the app itself in a demo scene (see runDemo in app.js).
-// crop = the part of the 390 x 844 screen to show, zoomed to the frame's width: [x, y, w, h].
-const CROP = { full: [0, 0, 390, 844], top: [0, 0, 390, 400], bottom: [0, 444, 390, 400], bar: [0, 380, 390, 84],
-  mid: [0, 300, 390, 300], low: [0, 560, 390, 284] };
-const live = (kind, cap = '', crop = 'full') => { const c = CROP[crop] || crop;
-  return `<figure class="gd-live${c[3] / c[2] > 1.4 ? ' tall' : ''}"><div class="gl-frame" data-demo="${kind}" data-crop="${c.join(',')}" style="aspect-ratio:${c[2]}/${c[3]}"></div>${cap ? `<figcaption>${cap}</figcaption>` : ''}</figure>`; };
+// A little film of the real app (see runDemo in app.js); its explanation comes in step by step.
+const live = kind => `<figure class="gd-live"><div class="gl-frame" data-demo="${kind}"></div><figcaption class="gl-cap" aria-live="polite"></figcaption></figure>`;
 const lives = (...xs) => `<div class="gd-lives">${xs.map(x => live(...x)).join('')}</div>`;
 const ic = k => `<span class="gd-ic">${ICONS[k] || ''}</span>`;
 // A tiny clock: two halves and the bar, coloured like the real one.
@@ -27,38 +24,38 @@ const CARDS = [
     <p class="gd-lead">Le combat classique fait <b>5 rounds</b> : 3 d'échecs, 2 de boxe, une pause entre chaque.</p>
     <p>Il y a <b>deux chronos</b> : le <b>round</b>, le même pour les deux, et la <b>pendule</b> de chaque joueur, qui ne tourne que pendant ses coups (<b>4:30</b> pour 5 rounds, <b>6:00</b> pour 7…).</p>
     <p>Le dernier round d'échecs n'a pas de limite : il continue jusqu'à ce qu'une pendule tombe à 0.</p>` },
-  { t: 'Régler le combat', s: 'Nombre de rounds, durées, installer', l: lives(['home', 'Les rounds et les trois durées', [0, 368, 390, 110]], ['rounds', 'Touche le carré des rounds', [0, 245, 390, 345]]), b: `
+  { t: 'Régler le combat', s: 'Nombre de rounds, durées, installer', l: lives(['setup']), b: `
     <ul class="gd-steps">
       <li><b>Rounds</b> : touche le carré pour choisir 5, 7, 9 ou 11 rounds, ou la <b>pendule classique</b> (sans rounds, temps et incrément réglables).</li>
       <li><b>Échecs, Boxe, Pause</b> : touche une durée, puis fais glisser la règle qui s'ouvre.</li>
       <li>${ic('replay')} remet le combat classique : 5 rounds, 3:00 / 3:00 / 1:00.</li>
       <li>${ic('install')} <b>Installer</b> : met la pendule sur l'écran d'accueil du téléphone ; elle marche ensuite sans réseau.</li></ul>
     <p class="gd-note">Boxe à <em>0:00</em> : pas de boxe, seulement des rounds d'échecs avec des pauses.</p>` },
-  { t: 'Jouer aux échecs', s: 'Qui a les Blancs, taper sa moitié, le vert', l: lives(['chess', 'Vert = à toi de jouer', [0, 300, 390, 544]]), b: `
+  { t: 'Jouer aux échecs', s: 'Qui a les Blancs, taper sa moitié, le vert', l: lives(['chess']), b: `
     <ul class="gd-steps">
       <li>Le premier qui touche sa moitié prend les <b>Noirs</b> : la pendule des Blancs démarre.</li>
       <li>Après ton coup, <b>touche ta moitié</b> : ta pendule s'arrête, celle de l'autre repart.</li>
       <li>La moitié <b class="g-green">verte</b> est celle du joueur qui doit jouer.</li>
       <li>En haut, <b>ROUND 2:58</b> : le temps qui reste au round. À 0, la cloche sonne.</li></ul>` },
-  { t: 'Pause et boxe', s: 'Bleu = pause, rouge = boxe, cloche, Prêt ?', l: lives(['break', 'Pause', [0, 456, 390, 290]], ['boxing', 'Boxe', [0, 456, 390, 290]]), b: `
+  { t: 'Pause et boxe', s: 'Bleu = pause, rouge = boxe, cloche, Prêt ?', l: lives(['flow']), b: `
     <ul class="gd-steps">
       <li><b class="g-blue">Bleu</b> = pause, <b class="g-red">rouge</b> = boxe. Le grand chrono est celui du round ; la pendule de chacun reste en petit, en haut.</li>
       <li>Le claquoir (toc toc toc) sonne 10 s avant la fin, puis la cloche.</li>
       <li>Pendant la pause, le <b>prochain round clignote</b> dans la barre du milieu.</li>
       <li><b>Prêt ?</b> : avant chaque round d'échecs, la pendule attend qu'on touche l'écran, le temps d'enlever les gants.</li></ul>` },
-  { t: 'Arrêter ou refaire', s: 'Mettre en pause, refaire le round, nouveau combat', l: lives(['pause', 'Le combat est arrêté', [0, 250, 390, 330]]), b: `
+  { t: 'Arrêter ou refaire', s: 'Mettre en pause, refaire le round, nouveau combat', l: lives(['pause']), b: `
     <p class="gd-lead">Le bouton ${ic('pause')} au bout de la barre du milieu arrête tout.</p>
     <ul class="gd-steps">
       <li>${ic('play')} <b>GO</b> : on reprend. Toucher l'écran ailleurs reprend aussi.</li>
       <li>${ic('replay')} <b>Round</b> : refait le round en cours depuis son début.</li>
       <li>${ic('home')} <b>Accueil</b> : arrête le combat et remet une pendule neuve. C'est aussi ce qu'on fait après un mat, un K.-O. ou un abandon.</li></ul>` },
-  { t: "Pour l'arbitre", s: 'Joueur trop lent, coup illégal, défaite', l: lives(['count', 'Le compte : il réfléchit trop', [0, 456, 390, 388]], ['illegal', 'Coup illégal signalé', [0, 456, 390, 388]]), b: `
+  { t: "Pour l'arbitre", s: 'Joueur trop lent, coup illégal, défaite', l: lives(['referee']), b: `
     <p class="gd-lead">Deux aides, à allumer dans les réglages, carte <b>Arbitre</b>.</p>
     <ul class="gd-steps">
       <li><b>Comptes</b> (rien à voir avec le compte en boxe) : si un joueur réfléchit trop longtemps, un toc d'alerte, puis la pendule compte 10 s, avec des mains comme un arbitre. Chaque compte commencé est noté. <b>À 0, le combat est perdu.</b></li>
       <li><b>Coups illégaux</b> : chacun a un drapeau dans sa moitié. Tu le touches quand l'autre a joué un coup illégal : il rejoue, et ça lui fait un compte.</li>
       <li><b>3 comptes dans un round, ou 4 au total</b> : combat perdu (réglable).</li></ul>` },
-  { t: 'Réglages', s: 'Son, batterie, sens de l’écran, chiffres', l: lives(['settings', 'Le haut des réglages', [0, 0, 390, 250]]), b: `
+  { t: 'Réglages', s: 'Son, batterie, sens de l’écran, chiffres', l: lives(['settings']), b: `
     <p class="gd-lead">Le bouton <b>Réglages</b> est sous le temps de chaque joueur.</p>
     <ul class="gd-steps">
       <li><b>Son</b> : coupe ou remet tous les sons. Plus bas, le volume des alertes et celui des appuis se règlent à part.</li>
@@ -131,15 +128,19 @@ function mount(card) {
   if (!card) return;
   card.querySelectorAll('.gl-frame[data-demo]').forEach(fr => {
     if (fr.firstChild) return;
+    fr.parentNode.querySelector('.gl-cap').textContent = '';
     const f = document.createElement('iframe');
     f.src = `./?demo=${fr.dataset.demo}`; fit(fr, f); f.tabIndex = -1; f.setAttribute('aria-hidden', 'true'); f.loading = 'eager';
     fr.appendChild(f);
   });
 }
-function fit(fr, f) {
-  const [x, y, w] = fr.dataset.crop.split(',').map(Number), k = fr.clientWidth / w;
-  f.style.transform = `translate(${-x * k}px, ${-y * k}px) scale(${k})`;
-}
+function fit(fr, f) { f.style.transform = `scale(${fr.clientWidth / 390})`; }
+addEventListener('message', e => {
+  if (e.origin !== location.origin || !e.data || typeof e.data.demoCap !== 'string') return;
+  const f = [...document.querySelectorAll('#gd-track .gl-frame iframe')].find(x => x.contentWindow === e.source);
+  const c = f && f.closest('.gd-live').querySelector('.gl-cap');
+  if (c) { c.textContent = e.data.demoCap; c.classList.remove('new'); void c.offsetWidth; c.classList.add('new'); }
+});
 addEventListener('resize', () => document.querySelectorAll('#gd-track .gl-frame iframe').forEach(f => fit(f.parentNode, f)));
 let refresh = null, goTo = () => {};
 export function openGuide() {
