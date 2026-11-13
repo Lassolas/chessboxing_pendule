@@ -1349,3 +1349,7 @@ html.flip #ptr { top: auto; bottom: 0; }
   border-radius: 1.5px; background: color-mix(in srgb, var(--c) 50%, transparent); transform: rotate(45deg); }
 .rb.off .rb-c::before, .rb.off .rb-c::after { opacity: .5; }
 .phase-ready .bar-round { padding-top: 4px; }
+/* 0.2.115: "Round suivant" over the round's kind (Échecs bone, Boxe red) */
+.bn-cap b { display: block; margin-top: 2px; font-weight: 700; letter-spacing: .16em; }
+.bn-cap b.bn-chess { color: var(--bone); } .bn-cap b.bn-box { color: var(--red); }
+#bar-btn:has(.bn-cap) { flex-direction: column; gap: 2px; }

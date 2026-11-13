@@ -876,8 +876,9 @@ function render() {
   const skipTo = ['chess', 'boxing', 'break'].includes(s.phase) && !untimed && !s.awaitReady && !s.roundOver ? nextStep(s) : null;
   $('bar-next').hidden = !skipTo;
   // Its word underneath: Round suivant, Boxe (red) or Pause (blue).
+  // Before a round: "Round suivant" and its kind, Échecs or Boxe (red); before a pause: Pause (blue).
   const nextCap = t => t.phase === 'break' ? '<small class="bn-cap bn-pause">Pause</small>'
-    : roundType(t.round) === 'chess' ? '<small class="bn-cap">Round suivant</small>' : '<small class="bn-cap bn-box">Boxe</small>';
+    : `<small class="bn-cap">Round suivant<b class="${roundType(t.round) === 'chess' ? 'bn-chess' : 'bn-box'}">${roundType(t.round) === 'chess' ? 'Échecs' : 'Boxe'}</b></small>`;
   if (skipTo) setHTML($('bar-next'), `<span class="bn-row">${ICONS.next}${skipTo.phase === 'break' ? ICONS.hourglass : roundTag(skipTo.round)}</span>${nextCap(skipTo)}`);
   $('bar-timer').hidden = replay || (!!skipTo && s.phase !== 'chess');
   document.querySelector('.bar').classList.toggle('next-t', !!skipTo && s.phase === 'chess');
@@ -891,7 +892,7 @@ function render() {
   $('bar-btn').hidden = s.phase === 'ready' || (s.phase === 'over' && !overAction);
   const btnText = overAction || (s.roundOver && !s.paused ? 'Stop' : '');
   // Open pause: the button starts the next round, so it says which one (→ IV in its colour).
-  setHTML($('bar-btn'), btnText || (untimed && s.phase === 'break' && !s.paused ? `<span class="bb-next">${ICONS.next}${roundTag(s.nextRound)}</span>`
+  setHTML($('bar-btn'), btnText || (untimed && s.phase === 'break' && !s.paused ? `<span class="bb-next">${ICONS.next}${roundTag(s.nextRound)}</span>${nextCap({ phase: 'round', round: s.nextRound })}`
     : s.paused || (untimed && s.phase === 'break') ? ICONS.play : ICONS.pause));
   $('bar-btn').classList.toggle('long', !!btnText);
   $('bar-btn').setAttribute('aria-label', btnText || (s.paused ? 'Reprendre' : 'Pause'));
