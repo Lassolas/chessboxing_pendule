@@ -14,12 +14,12 @@ const frieze = (cur = -1) => `<div class="gd-frieze">${['chess', 'pause', 'box',
   k === 'pause' ? `<i class="gf-p${i === cur ? ' now' : ''}"></i>` : `<b class="gf-${k}${i === cur ? ' now' : ''}">${k === 'chess' ? ICONS.pawn : ICONS.glove}</b>`).join('')}</div>`;
 
 const CARDS = [
-  { t: 'Comment ça marche', s: "Échecs et boxe, une seule pendule, comment on gagne", h: `<div class="gd-hero">${ICONS.pawn}<span>+</span>${ICONS.glove}</div>`, b: `
+  { t: "Une pendule chessboxing : qu'est-ce que c'est ?", s: "Échecs et boxe, une seule pendule, comment on gagne", h: `<div class="gd-hero">${ICONS.pawn}<span>+</span>${ICONS.glove}</div>`, b: `
     <p class="gd-lead">Le chessboxing alterne des <b>rounds d'échecs</b> et des <b>rounds de boxe</b>.</p>
     <p>L'appli est la <b>pendule d'échecs</b> des deux joueurs et le <b>chrono des rounds</b> : elle sonne la cloche et enchaîne tout le combat seule.</p>
     <p>Pose le téléphone entre les deux joueurs : chacun a sa moitié d'écran, tournée vers lui.</p>
     <p class="gd-win">On gagne par <b>mat</b>, par <b>K.-O.</b>, au <b>temps</b> (pendule à 0), ou si l'autre prend trop de <b>comptes</b> (fiche 7).</p>` },
-  { t: 'Round par round', s: "L'ordre des rounds et les deux chronos", h: frieze(), b: `
+  { t: 'Rounds et transitions', s: "L'ordre des rounds et les deux chronos", h: frieze(), b: `
     <ul class="gd-leg"><li><b class="gf-chess">${ICONS.pawn}</b>Échecs <em>3:00</em></li><li><i class="gf-p"></i>Transition <em>1:00</em></li><li><b class="gf-box">${ICONS.glove}</b>Boxe <em>3:00</em></li></ul>
     <p class="gd-lead">Le combat classique fait <b>5 rounds</b> : 3 d'échecs, 2 de boxe, une transition entre chaque.</p>
     <p>Il y a <b>deux chronos</b> : le <b>round</b>, le même pour les deux, et la <b>pendule</b> de chaque joueur, qui ne tourne que pendant ses coups (<b>4:30</b> pour 5 rounds, <b>6:00</b> pour 7…).</p>
