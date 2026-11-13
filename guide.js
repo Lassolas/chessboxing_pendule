@@ -73,7 +73,7 @@ function build() {
   const toc = `<ol class="gd-toc">${CARDS.slice(1).map((c, i) => `<li><button type="button" data-go="${i + 1}"><span>${i + 1}</span><em class="gd-tt">${c.t}<small>${c.s}</small></em><i>›</i></button></li>`).join('')}</ol>
     <p class="gd-hint">Glisse à gauche ou à droite, ou touche les flèches en bas, pour changer de page.</p>`;
   $('gd-track').innerHTML = CARDS.map((c, i) => `<section class="gd-card" data-i="${i}"><div class="gd-in">
-    ${c.toc ? `<h2>${c.t}</h2>${toc}` : `<p class="gd-k">${i} / ${CARDS.length - 1}</p><h2>${c.t}</h2>${c.h ? `<div class="gd-fig">${c.h}</div>` : ''}${c.l || ''}<div class="gd-body">${c.b}</div>`}</div></section>`).join('');
+    ${c.toc ? `<h2>${c.t}</h2>${toc}` : `<p class="gd-k"><span>${i} / ${CARDS.length - 1}</span>${CARDS[i + 1] ? `<button type="button" class="gd-nx" data-go="${i + 1}">Suivant : ${CARDS[i + 1].t} ›</button>` : ''}</p><h2>${c.t}</h2>${c.h ? `<div class="gd-fig">${c.h}</div>` : ''}${c.l || ''}<div class="gd-body">${c.b}</div>`}</div></section>`).join('');
   $('gd-toc').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>`;
   $('gd-dots').innerHTML = CARDS.map((_, i) => `<i data-go="${i}"></i>`).join('');
   $('gd-close').innerHTML = ICONS.close;
@@ -86,9 +86,7 @@ function build() {
     const i = cur;
     tr.querySelectorAll('.gd-card').forEach((c, k) => { c.hidden = k !== i; });
     $('gd-dots').querySelectorAll('i').forEach((d, k) => d.classList.toggle('on', k === i));
-    const nx = CARDS[i + 1];
-    $('gd-n').innerHTML = `<small>${i ? `${i} / ${CARDS.length - 1}` : 'Sommaire'}</small>`
-      + (nx ? `<b>Suivant : ${nx.t}</b>` : '<b>Bon combat !</b>');
+    $('gd-n').textContent = i ? `${i} / ${CARDS.length - 1}` : 'Sommaire';
     $('gd-toc').classList.toggle('on', i === 0);
     $('gd-prev').disabled = i === 0; $('gd-next').disabled = i === CARDS.length - 1;
     mount(tr.children[i]);
@@ -112,7 +110,6 @@ function build() {
   }, { passive: true });
   $('gd-prev').addEventListener('click', () => go(cur - 1));
   $('gd-next').addEventListener('click', () => go(cur + 1));
-  $('gd-n').addEventListener('click', () => go(cur + 1));
   $('gd-dots').addEventListener('click', e => { const d = e.target.closest('[data-go]'); if (d) go(+d.dataset.go); });
   tr.addEventListener('click', e => { const d = e.target.closest('[data-go]'); if (d) go(+d.dataset.go); });
   $('gd-toc').addEventListener('click', () => go(0));
