@@ -1456,3 +1456,13 @@ html.flip #ptr { top: auto; bottom: 0; }
 .rb-rounds .rb-c { width: calc(var(--rb) * 1.2) !important; height: calc(var(--rb) * 1.2) !important; margin: 0 !important; }
 .phase-ready .bar { padding-top: 12px !important; padding-bottom: 12px !important; }
 @media (max-height: 640px) and (orientation: portrait) { .phase-ready .bar { padding-top: 8px !important; padding-bottom: 8px !important; } }
+/* 0.2.129: pause strip: ↺ Combat (the whole fight) and ↺ Round (this round from its start) */
+.pm-lbl { flex: none; width: 58px; display: flex !important; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 0 !important;
+  border-radius: 14px; border: 1px solid var(--hair); background: transparent; color: var(--text-2); }
+.pm-lbl .ic { width: 20px; height: 20px; margin: 0; }
+.pm-lbl small { font: 600 9.5px/1 var(--font-display); letter-spacing: .14em; text-transform: uppercase; }
+#pm-round { color: var(--bone); border-color: rgba(235, 229, 214, .4); }
+.pm-lbl[hidden] { display: none !important; }
+.pm-main { display: flex !important; gap: 10px; }
+.pm-main .pm-go { flex: 1 1 auto; min-width: 0; }
+#pause-menu.ready .pm-main .pm-lbl { display: none !important; }

@@ -117,6 +117,16 @@ function startPhase(s, round, events, auto = false) {
     s.phaseRemaining = s.cfg.boxRoundMs;
   }
   events.push(s.awaitReady ? 'ready' : 'roundStart');
+  // The clock as the round starts, to start the round over from the pause menu.
+  s.snap = JSON.parse(JSON.stringify({ ...s, snap: null, cfg: null }));
+}
+
+// Start the current round over: clocks, counts and moves as they were when it began; paused.
+export function restartRound(s, now) {
+  if (!s.snap || (s.phase !== 'chess' && s.phase !== 'boxing')) return [];
+  const { cfg, snap } = s;
+  Object.assign(s, JSON.parse(JSON.stringify(snap)), { cfg, snap, paused: true, awaitReady: false, lastTick: now });
+  return ['undo'];
 }
 
 // Every round ends on a pause (timed, or open until the coach restarts).

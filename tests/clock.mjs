@@ -3,7 +3,7 @@
 
 import {
   defaultConfig, newFight, tick, start, press, togglePause, skipPhase,
-  illegalMove, removeIllegal, undoCount, averageMove, nextChessRound, goToNextChess, nextStep, goToNextStep, reopen, adjustTime, moveStage, moveCountdownLeft, countsOf, playerTime, formatClock,
+  illegalMove, removeIllegal, undoCount, averageMove, nextChessRound, goToNextChess, nextStep, goToNextStep, reopen, adjustTime, moveStage, moveCountdownLeft, countsOf, playerTime, formatClock, restartRound,
 } from '../clock.js';
 
 // Most checks were written for the v1 defaults.
@@ -308,6 +308,15 @@ check(formatClock(9960) === '9.9' && formatClock(10000) === '0:10', 'tenths unde
   check(s.phase === 'chess' && countsOf(s, 0) === 1, 'plain clock: one illegal move is one count');
   press(s, 0, 4000); press(s, 1, 5000); illegalMove(s, 0, 5000);
   check(s.phase === 'over' && s.result.loser === 0 && s.result.method.includes('total'), 'plain clock: the 2nd illegal move loses on the total');
+}
+{ // restart the round: clocks and counts back to the round's start, paused
+  const s = fight({ moveLimit: false });
+  start(s, 0, 1); tick(s, 5000); press(s, s.turn, 5000); tick(s, 9000);
+  const before = s.remaining.slice();
+  restartRound(s, 9000);
+  check(s.paused && s.remaining[0] === playerTime(s.cfg) && s.remaining[1] === playerTime(s.cfg) && s.phaseRemaining === s.cfg.chessRoundMs, 'restart round: clocks back to the start of round 1');
+  check(before[0] !== s.remaining[0] || before[1] !== s.remaining[1], 'restart round: time had run before');
+  check(s.snap && s.round === 1 && s.phase === 'chess', 'restart round: still round 1, snapshot kept');
 }
 if (errors.length) {
   console.error(`pendule-clock: ${errors.length} failure(s)`);

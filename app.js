@@ -1,6 +1,6 @@
 import { count } from './stats.js';
 import {
-  PRESETS, playerTime, defaultConfig, newFight, tick, start, press, togglePause, skipPhase,
+  PRESETS, playerTime, defaultConfig, newFight, tick, start, press, togglePause, skipPhase, restartRound,
   illegalMove, removeIllegal, undoCount, averageMove, nextChessRound, goToNextChess, nextStep, goToNextStep, reopen, endFight, moveStage, moveCountdownLeft,
   countsOf, roundType, formatClock,
 } from './clock.js';
@@ -970,6 +970,10 @@ function fitTrack() {
 function renderPauseMenu() {
   // Prêt ?: nothing in the middle but Prêt ? (no pause settings).
   $('pm-tgs').hidden = $('pm-restart').hidden = !!s.awaitReady;
+  // Two ways back: this round from its start, or the whole fight.
+  $('pm-round').hidden = !!s.awaitReady || !s.snap || (s.phase !== 'chess' && s.phase !== 'boxing');
+  setHTML($('pm-restart'), `${ICONS.replay}<small>Combat</small>`);
+  setHTML($('pm-round'), `${ICONS.replay}<small>Round</small>`);
   setHTML($('pm-resume'), s.awaitReady ? '<i class="ready-txt">Prêt ?</i>' : `${ICONS.play}<span>GO</span>`);
   // Switches for the rest of the fight: counts, illegal moves, sound, Éco; and Réglages.
   const sound = !!cfg.sound;
@@ -1019,6 +1023,7 @@ function restart() {
   act(['undo']);
 }
 $('pm-restart').addEventListener('click', restart);
+$('pm-round').addEventListener('click', () => { act(restartRound(s, performance.now())); persist(); });
 $('bar-replay').addEventListener('click', restart);
 
 // ── MANUAL END ──
