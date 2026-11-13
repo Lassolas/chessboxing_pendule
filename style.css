@@ -1818,3 +1818,8 @@ body.eco .tr.next, body.eco .bar-next .nx-v { -webkit-animation: none; animation
   #fight:not([data-orient="normal"]) .half.top .h-counts { left: auto; right: 16px; }
   #fight:not([data-orient="normal"]) .half.bottom .h-counts { right: auto; left: 16px; }
 }
+/* 0.2.168 (Val): explicit chapter titles in the Sommaire, each with one line saying what is inside. */
+.gd-toc button { min-height: 66px; padding: 10px 14px; letter-spacing: .06em; font-size: 15px; }
+.gd-tt { display: grid; gap: 4px; font-style: normal; min-width: 0; }
+.gd-tt small { font: 500 13px/1.25 var(--font-display); letter-spacing: .02em; text-transform: none; color: var(--text-2); }
+.gd-in h2 { font-size: 26px; }
