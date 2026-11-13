@@ -1659,3 +1659,4 @@ body.eco .tr.next, body.eco .bar-next .nx-v { -webkit-animation: none; animation
   color: var(--bone); font: 500 30px/1 var(--font-display); display: grid; place-items: center; padding: 0; touch-action: manipulation; }
 .q-pmb:active { background: rgba(235, 229, 214, .2); }
 .q-pmb:disabled { opacity: .3; }
+.q-t { text-wrap: balance; }

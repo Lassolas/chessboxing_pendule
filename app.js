@@ -131,12 +131,12 @@ const PM_HAND = { ...REFEREE, fill: 'url(#skin-pm)', defs: REFEREE.defs.replace(
 const SET_HAND = { ...REFEREE, fill: 'url(#skin-set)', defs: REFEREE.defs.replace('id="skin"', 'id="skin-set"') };
 // key: value in cfg, on/tap: state, icon, label, strip step/min/max, kind
 const TILES = [
-  { key: 'chessRoundMs', row: 1, icon: () => ICONS.pawn, label: 'Échecs', step: 10000, min: 30000, max: 600000,
+  { key: 'chessRoundMs', row: 1, title: "Durée du round d'échecs", icon: () => ICONS.pawn, label: 'Échecs', step: 10000, min: 30000, max: 600000,
     on: () => cfg.intervals, tap: () => { cfg.intervals = !cfg.intervals; } },
-  { key: 'breakMs', row: 1, icon: () => ICONS.hourglass, label: 'Pause', step: 10000, min: 0, max: 300000,
+  { key: 'breakMs', row: 1, title: "Durée de la pause", icon: () => ICONS.hourglass, label: 'Pause', step: 10000, min: 0, max: 300000,
     on: () => cfg.intervals && cfg.breakOn,
     tap: () => { cfg.breakOn = !(cfg.intervals && cfg.breakOn); if (cfg.breakOn) cfg.intervals = true; } },
-  { key: 'boxRoundMs', row: 1, icon: () => ICONS.glove, label: 'Boxe', step: 10000, min: 30000, max: 300000,
+  { key: 'boxRoundMs', row: 1, title: "Durée du round de boxe", icon: () => ICONS.glove, label: 'Boxe', step: 10000, min: 30000, max: 300000,
     on: () => cfg.intervals && cfg.boxTimer,
     tap: () => { cfg.boxTimer = !(cfg.intervals && cfg.boxTimer); if (cfg.boxTimer) cfg.intervals = true; } },
   { key: 'moveCountdownMs', flag: 'countdownOn', row: 2, icon: () => countHands(8, SET_HAND), label: 'Compte', step: 1000, min: 1000, max: () => countMax(cfg) },
@@ -728,7 +728,7 @@ function renderQuick() {
   // Increment and classic time: − / + for small changes (Val), beside the ruler.
   const pm = k === 'incrementMs' || k === 'plainMs'
     ? `<div class="q-pm"><button type="button" class="q-pmb" data-step="-1" aria-label="Moins"${cfg[k] <= t.min ? ' disabled' : ''}>−</button><b>${k === 'incrementMs' ? '+' : ''}${fmtValue(cfg[k], t.kind)}</b><button type="button" class="q-pmb" data-step="1" aria-label="Plus"${cfg[k] >= t.max ? ' disabled' : ''}>+</button></div>` : '';
-  $('quick-box').innerHTML = `<p class="q-t">${t.label}</p>` + rulerHTML(t) + pm + (t.always
+  $('quick-box').innerHTML = `<p class="q-t">${t.title || t.label}</p>` + rulerHTML(t) + pm + (t.always
     ? `<div class="q-act q-act-one"><button type="button" class="q-btn q-ok" data-qclose>OK</button></div>`
     : `<div class="q-act q-act-two">
     <button type="button" class="q-btn" data-tile="${k}">${on ? 'Désactiver' : 'Activer'}</button>
