@@ -1148,14 +1148,21 @@ async function install() {
 function installHow() {
   const ua = navigator.userAgent;
   const b = t => `<b>${t}</b>`;
-  if (/Instagram|FBAN|FBAV|FB_IAB|Line\/|TikTok|Snapchat/i.test(ua)) {
-    return /iphone|ipad|ipod/i.test(ua)
-      ? `Ouvre d'abord dans ${b('Safari')} : ${b('⋯')} → ${b('Ouvrir dans le navigateur')}`
-      : `Ouvre d'abord dans ${b('Chrome')} : ${b('⋮')} → ${b('Ouvrir dans le navigateur')}`;
+  const ico = n => ` <span class="ih-ico">${ICONS[n]}</span>`;
+  const steps = list => `<ol class="ih-steps">${list.map((t, i) => `<li><i>${roman(i + 1)}</i><span>${t}</span></li>`).join('')}</ol>`;
+  const ios = /iphone|ipad|ipod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  const inApp = /Instagram|FBAN|FBAV|FB_IAB|Line\/|TikTok|Snapchat/i.test(ua);
+  if (ios) {
+    // Safari: Share at the bottom; Chrome, Firefox, Edge on iPhone: Share in the address bar, at the top.
+    const where = /CriOS|FxiOS|EdgiOS/.test(ua) ? 'en haut' : 'en bas';
+    return steps([
+      ...(inApp ? [`${b('⋯')} → ${b('Ouvrir dans le navigateur externe')}`] : []),
+      `${b('Partager')}${ico('share')} ${inApp ? 'en bas' : where}`,
+      `${b("Sur l'écran d'accueil")}${ico('addHome')}`,
+      b('Ajouter'),
+    ]);
   }
-  if (/iphone|ipad|ipod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) {
-    return `${b('Partager')} <span class="ih-ico">${ICONS.share}</span> → ${b("Sur l'écran d'accueil")}`;
-  }
+  if (inApp) return steps([`${b('⋮')} en haut → ${b('Ouvrir dans Chrome')}`, `Touche ${b('Installer')} à nouveau`]);
   if (/SamsungBrowser/i.test(ua)) return `Menu ${b('☰')} → ${b('Ajouter page à')} → ${b("Écran d'accueil")}`;
   if (/Firefox/i.test(ua)) return `Menu ${b('⋮')} → ${b('Installer')}`;
   if (/Android/i.test(ua)) return `Menu ${b('⋮')} → ${b("Ajouter à l'écran d'accueil")}`;
