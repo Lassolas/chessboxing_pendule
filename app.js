@@ -953,6 +953,7 @@ function renderPauseMenu() {
     + tg('ill', !!s.cfg.illegalMoves, redFlag, 'Illégal')
     + tg('sound', sound, sound ? ICONS.sound : ICONS.mute, 'Son')
     + tg('eco', !!cfg.eco, ICONS.eco, 'Éco')
+    + tg('orient', false, ICONS.rotate, 'Sens')
     + `<button type="button" class="pt pt-set" data-pt="set">${SET_ICON}<small>Réglages</small></button>`);
 }
 // Counts and illegal moves switched during a fight: the clock takes them at once.
@@ -972,6 +973,7 @@ $('pm-tgs').addEventListener('click', e => {
   const k = b.dataset.pt;
   if (k === 'set') { openSettings(false); return; }
   if (k === 'sound' || k === 'eco') { toggleSoundOrEco(k); return; }
+  if (k === 'orient') { cycleOrient(); return; }  // the clock turns at once, still paused
   if (k === 'count') { cfg.countdownOn = !s.cfg.countdownOn; if (cfg.countdownOn) cfg.warnOn = true; }
   else cfg.illegalMoves = !s.cfg.illegalMoves;
   save(CFG_KEY, cfg);
