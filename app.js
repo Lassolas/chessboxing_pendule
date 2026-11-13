@@ -501,6 +501,8 @@ function nameOf(p) {
   return s.cfg.names[p] || colourOf(p) || `Joueur ${p + 1}`;
 }
 
+// Mode d'emploi: an open book.
+const BOOK_ICON = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5zM12 6.5v13"/></svg>';
 const SET_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="7" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="10" cy="17" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
 const halves = [...document.querySelectorAll('.half')].sort((a, b) => a.dataset.p - b.dataset.p);
 
@@ -513,7 +515,7 @@ function buildHalves() {
       <div class="h-rt"></div>
       <div class="h-up"><div class="h-phase"><small></small><b></b></div></div>
       <div class="h-clock"></div>
-      <div class="h-down"><div class="h-move"></div><button type="button" class="h-set">${SET_ICON}Réglages</button><div class="h-counts"></div></div>
+      <div class="h-down"><div class="h-move"></div><span class="h-btns"><button type="button" class="h-set">${SET_ICON}Réglages</button><button type="button" class="h-set h-guide">${BOOK_ICON}Mode d'emploi</button></span><div class="h-counts"></div></div>
       <div class="h-avg"></div>
       <div class="h-notice" hidden></div>
       <div class="h-card"><em class="hc-num"></em><span class="hc-rule"></span><b class="hc-label"></b><i class="hc-ready">Prêt ?</i></div>
@@ -526,6 +528,7 @@ function buildHalves() {
     });
     // Before the start: Réglages, turned towards the player who asked for them.
     const far = () => h.classList.contains('top') && (cfg.orient || 'normal') === 'normal' && matchMedia('(orientation: portrait)').matches;
+    h.querySelector('.h-guide').addEventListener('click', e => { e.stopPropagation(); openGuide(); });
     h.querySelector('.h-set').addEventListener('click', e => {
       e.stopPropagation();
       openSettings(far());
@@ -790,12 +793,9 @@ $('chess-set').addEventListener('click', e => {
 $('quick').addEventListener('click', onOptions);
 ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach((ev, i) =>
   $('quick').addEventListener(ev, [onRulerDown, onRulerMove, endRuler, endRuler][i]));
-// Mode d'emploi: an open book.
-const BOOK_ICON = '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6.5C10 5 7 4.5 3.5 5v13c3.5-.5 6.5 0 8.5 1.5 2-1.5 5-2 8.5-1.5V5C17 4.5 14 5 12 6.5zM12 6.5v13"/></svg>';
 function renderBarToggles() {
   // Son, Éco and Sens live only at the top of Réglages (Val).
-  $('bar-tg').innerHTML = `<button type="button" class="tg tg-guide" data-tg="guide" aria-label="Mode d'emploi">${BOOK_ICON}</button>`
-    + `<button type="button" class="tg tg-std" data-tg="std" aria-label="Standard">${ICONS.replay}</button>`
+  $('bar-tg').innerHTML = `<button type="button" class="tg tg-std" data-tg="std" aria-label="Standard">${ICONS.replay}</button>`
     + (inBrowser() ? `<button type="button" class="tg tg-install" data-tg="install" aria-label="Installer">${ICONS.install}</button>` : '');
 }
 
@@ -994,6 +994,7 @@ function render() {
   halves.forEach(h => {
     // Réglages under the time before the start, and in the pause too (Val), never while the clock runs.
     h.querySelector('.h-set').hidden = !(s.phase === 'ready' || (s.paused && !s.awaitReady && s.phase !== 'over'));
+    h.querySelector('.h-guide').hidden = s.phase !== 'ready';  // Mode d'emploi beside Réglages, on the home screen
   });
   if (!$('pause-menu').hidden) renderPauseMenu();
   renderResult();

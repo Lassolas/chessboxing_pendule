@@ -69,29 +69,47 @@ CARDS.unshift({ t: 'Sommaire', toc: true });
 let built = false, $ = id => document.getElementById(id);
 function build() {
   const toc = `<ol class="gd-toc">${CARDS.slice(1).map((c, i) => `<li><button type="button" data-go="${i + 1}"><span>${i + 1}</span>${c.t}<i>›</i></button></li>`).join('')}</ol>
-    <p class="gd-hint">Glisse à gauche ou à droite pour passer d'une page à l'autre.</p>`;
+    <p class="gd-hint">Glisse à gauche ou à droite, ou touche les flèches en bas, pour changer de page.</p>`;
   $('gd-track').innerHTML = CARDS.map((c, i) => `<section class="gd-card" data-i="${i}"><div class="gd-in">
     ${c.toc ? `<h2>${c.t}</h2>${toc}` : `<p class="gd-k">${i} / ${CARDS.length - 1}</p><h2>${c.t}</h2><div class="gd-fig">${c.h}</div><div class="gd-body">${c.b}</div>`}</div></section>`).join('');
   $('gd-toc').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>`;
   $('gd-dots').innerHTML = CARDS.map((_, i) => `<i data-go="${i}"></i>`).join('');
   $('gd-close').innerHTML = ICONS.close;
+  // One page at a time in a single vertical scroller (no nested scrolling, which iPhones handled badly);
+  // a horizontal swipe, the arrows, the dots or the Sommaire change the page.
   const tr = $('gd-track');
-  const at = () => Math.round(tr.scrollLeft / tr.clientWidth);
+  let cur = 0;
+  const at = () => cur;
   const show = () => {
-    const i = at();
+    const i = cur;
+    tr.querySelectorAll('.gd-card').forEach((c, k) => { c.hidden = k !== i; });
     $('gd-dots').querySelectorAll('i').forEach((d, k) => d.classList.toggle('on', k === i));
     $('gd-n').textContent = i ? `${i} / ${CARDS.length - 1}` : 'Sommaire';
     $('gd-toc').classList.toggle('on', i === 0);
     $('gd-prev').disabled = i === 0; $('gd-next').disabled = i === CARDS.length - 1;
   };
-  const go = i => { const c = tr.children[i]; if (c) c.scrollTop = 0; tr.scrollTo({ left: Math.max(0, Math.min(CARDS.length - 1, i)) * tr.clientWidth, behavior: 'smooth' }); };
-  tr.addEventListener('scroll', () => requestAnimationFrame(show), { passive: true });
-  $('gd-prev').addEventListener('click', () => go(at() - 1));
-  $('gd-next').addEventListener('click', () => go(at() + 1));
+  const go = (i, dir = 0) => {
+    i = Math.max(0, Math.min(CARDS.length - 1, i));
+    if (i === cur) return;
+    dir = dir || (i > cur ? 1 : -1);
+    cur = i; show(); tr.scrollTop = 0;
+    const c = tr.children[i];
+    c.classList.remove('in-l', 'in-r'); void c.offsetWidth; c.classList.add(dir > 0 ? 'in-r' : 'in-l');
+  };
+  goTo = i => { cur = -1; go(i); };
+  let t0 = null;
+  tr.addEventListener('touchstart', e => { const t = e.touches[0]; t0 = e.touches.length === 1 ? { x: t.clientX, y: t.clientY, at: Date.now() } : null; }, { passive: true });
+  tr.addEventListener('touchend', e => {
+    if (!t0) return;
+    const t = e.changedTouches[0], dx = t.clientX - t0.x, dy = t.clientY - t0.y;
+    if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5 && Date.now() - t0.at < 800) go(cur + (dx < 0 ? 1 : -1));
+    t0 = null;
+  }, { passive: true });
+  $('gd-prev').addEventListener('click', () => go(cur - 1));
+  $('gd-next').addEventListener('click', () => go(cur + 1));
   $('gd-dots').addEventListener('click', e => { const d = e.target.closest('[data-go]'); if (d) go(+d.dataset.go); });
   tr.addEventListener('click', e => { const d = e.target.closest('[data-go]'); if (d) go(+d.dataset.go); });
   $('gd-toc').addEventListener('click', () => go(0));
-  $('gd-track').querySelectorAll('.gd-card').forEach(c => { c.tabIndex = -1; });
   $('gd-close').addEventListener('click', closeGuide);
   document.addEventListener('keydown', e => {
     if ($('guide').hidden) return;
@@ -100,11 +118,10 @@ function build() {
   built = true;
   return show;
 }
-let refresh = null;
+let refresh = null, goTo = () => {};
 export function openGuide() {
   if (!built) refresh = build();
   $('guide').hidden = false;
-  $('gd-track').scrollLeft = 0;
-  refresh();
+  goTo(0);
 }
 export function closeGuide() { $('guide').hidden = true; }
