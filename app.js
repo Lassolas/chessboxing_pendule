@@ -982,7 +982,10 @@ function fitTrack() {
 // Pause menu: big Continue, ↺ restart from zero (tap twice), ⌂ home.
 function renderPauseMenu() {
   // Prêt ?: nothing in the middle but Prêt ? (no pause settings).
-  $('pm-tgs').hidden = $('pm-restart').hidden = !!s.awaitReady;
+  // Only Réglages, Accueil, Round and GO (Val): counts and illegal moves are switched in Réglages.
+  $('pm-tgs').hidden = true;
+  $('pm-set').hidden = $('pm-restart').hidden = !!s.awaitReady;
+  setHTML($('pm-set'), `${SET_ICON}<small>Réglages</small>`);
   // Two ways back: this round from its start, or the whole fight.
   $('pm-round').hidden = !!s.awaitReady || !s.snap || (s.phase !== 'chess' && s.phase !== 'boxing');
   setHTML($('pm-restart'), `${ICONS.home}<small>Accueil</small>`);  // ⌂: the fight dropped, back to a fresh clock
@@ -1032,6 +1035,7 @@ function restart() {
   act(['undo']);
 }
 $('pm-restart').addEventListener('click', closeFight);
+$('pm-set').addEventListener('click', () => openSettings(false));
 $('pm-round').addEventListener('click', () => { act(restartRound(s, performance.now())); persist(); });
 $('bar-replay').addEventListener('click', restart);
 
