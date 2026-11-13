@@ -426,10 +426,11 @@ function backToClock() {
   } else readyClock();
 }
 
-// ↺ Standard: the club's usual fight (5 rounds, 3:00 / 3:00 / 1:00, counts off);
+// ↺ Standard: the club's usual fight (5 rounds, 3:00 / 3:00 / 1:00);
+// the counts and illegal moves stay as set (Val);
 // how the app looks and sounds stays as set.
 function standard() {
-  const keep = ['eco', 'sound', 'volAlerts', 'volClicks', 'digits', 'orient', 'showAvg', 'moveCountdownMs', 'moveWarnMs', 'countsPerRound', 'countsTotal'];
+  const keep = ['eco', 'sound', 'volAlerts', 'volClicks', 'digits', 'orient', 'showAvg', 'countdownOn', 'warnOn', 'illegalMoves', 'moveCountdownMs', 'moveWarnMs', 'countsPerRound', 'countsTotal'];  // the referee settings stay (Val)
   const old = cfg;
   cfg = { ...homeDefaults(), names: cfg.names, moveGraceMs: cfg.moveGraceMs };
   keep.forEach(k => { if (old[k] !== undefined) cfg[k] = old[k]; });
