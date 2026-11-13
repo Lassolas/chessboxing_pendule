@@ -916,8 +916,9 @@ function render() {
   };
   if (skipTo) setHTML($('bar-next'), nextHTML(skipTo));
   $('bar-next').dataset.k = skipTo ? (skipTo.phase === 'break' ? 'pause' : roundType(skipTo.round)) : '';
-  $('bar-timer').hidden = replay || (!!skipTo && s.phase !== 'chess');
-  document.querySelector('.bar').classList.toggle('next-t', !!skipTo && s.phase === 'chess');
+  // Chess: no round timer in the middle (each half shows it); the next-step button takes its place.
+  $('bar-timer').hidden = replay || !!skipTo || s.phase === 'chess';
+  document.querySelector('.bar').classList.remove('next-t');
   document.querySelector('.bar-info').hidden = replay;
   $('bar-replay').hidden = !replay;
   document.querySelector('.bar').classList.toggle('alert', s.roundOver && !s.paused && s.phase !== 'over');

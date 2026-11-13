@@ -1440,3 +1440,12 @@ html.flip #ptr { top: auto; bottom: 0; }
 .h-rt small { font: 600 11px/1 var(--font-display); letter-spacing: .22em; text-transform: uppercase; color: var(--text-2); }
 .h-rt b { font: var(--clock-weight, 600) 26px/1 var(--font-clock); font-variant-numeric: tabular-nums; color: var(--bone); opacity: .85; }
 .eco .h-rt b { opacity: .6; }
+/* 0.2.126: counting figures = serif italic with old-style figures (unlike the clock digits) */
+.ri-n, .trk, .rtag, .nx-v i, .q-rounds button b, .hc-num { font-variant-numeric: oldstyle-nums proportional-nums; }
+/* the Rounds tile stays inside the bar */
+.rb-rounds .rb-c { margin-top: 0 !important; }
+.phase-ready .bar { padding-top: 14px !important; }
+/* next-step button: roomier now that the middle timer is gone */
+.bar-next { min-height: 50px; padding: 6px 18px !important; }
+.nx-k { font-size: 10px; } .nx-v i { font-size: 24px; } .nx-v b { font-size: 15px; }
+@media (max-width: 380px) { .bar-next { padding: 5px 12px !important; } .nx-k { font-size: 9px; } .nx-v i { font-size: 21px; } .nx-v b { font-size: 13px; } }

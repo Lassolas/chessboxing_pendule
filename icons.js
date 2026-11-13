@@ -29,9 +29,8 @@ export const ICONS = {
   close: svg('<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>'),
 };
 
-const ROMAN = [[10, 'X'], [9, 'IX'], [5, 'V'], [4, 'IV'], [1, 'I']];
+// Numbers that count (rounds): plain figures now (Val, 0.2.126), set in the serif
+// italic so they read as a count, never as a time.
 export function roman(n) {
-  let out = '';
-  for (const [v, r] of ROMAN) while (n >= v) { out += r; n -= v; }
-  return out;
+  return String(n);
 }
