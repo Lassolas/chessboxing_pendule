@@ -3,7 +3,11 @@
 import { ICONS } from './icons.js';
 
 // The real clock, live and small: the app itself in a demo scene (see runDemo in app.js).
-const live = (kind, cap = '') => `<figure class="gd-live"><div class="gl-frame" data-demo="${kind}"></div>${cap ? `<figcaption>${cap}</figcaption>` : ''}</figure>`;
+// crop = the part of the 390 x 844 screen to show, zoomed to the frame's width: [x, y, w, h].
+const CROP = { full: [0, 0, 390, 844], top: [0, 0, 390, 400], bottom: [0, 444, 390, 400], bar: [0, 380, 390, 84],
+  mid: [0, 300, 390, 300], low: [0, 560, 390, 284] };
+const live = (kind, cap = '', crop = 'full') => { const c = CROP[crop] || crop;
+  return `<figure class="gd-live${c[3] / c[2] > 1.4 ? ' tall' : ''}"><div class="gl-frame" data-demo="${kind}" data-crop="${c.join(',')}" style="aspect-ratio:${c[2]}/${c[3]}"></div>${cap ? `<figcaption>${cap}</figcaption>` : ''}</figure>`; };
 const lives = (...xs) => `<div class="gd-lives">${xs.map(x => live(...x)).join('')}</div>`;
 const ic = k => `<span class="gd-ic">${ICONS[k] || ''}</span>`;
 // A tiny clock: two halves and the bar, coloured like the real one.
@@ -13,55 +17,53 @@ const frieze = (cur = -1) => `<div class="gd-frieze">${['chess', 'pause', 'box',
   k === 'pause' ? `<i class="gf-p${i === cur ? ' now' : ''}"></i>` : `<b class="gf-${k}${i === cur ? ' now' : ''}">${k === 'chess' ? ICONS.pawn : ICONS.glove}</b>`).join('')}</div>`;
 
 const CARDS = [
-  { t: 'Usage de la pendule chessboxing', s: "Ce que fait l'appli, où poser le téléphone, comment on gagne", l: lives(['home', 'Posée entre les joueurs']), h: `<div class="gd-hero">${ICONS.pawn}<span>+</span>${ICONS.glove}</div>`, b: `
+  { t: 'Comment ça marche', s: "Échecs et boxe, une seule pendule, comment on gagne", h: `<div class="gd-hero">${ICONS.pawn}<span>+</span>${ICONS.glove}</div>`, b: `
     <p class="gd-lead">Le chessboxing alterne des <b>rounds d'échecs</b> et des <b>rounds de boxe</b>.</p>
-    <p>Cette appli est à la fois la <b>pendule d'échecs</b> des deux joueurs et le <b>chrono des rounds</b> : elle sonne la cloche, compte les pauses et enchaîne tout le combat toute seule.</p>
+    <p>L'appli est la <b>pendule d'échecs</b> des deux joueurs et le <b>chrono des rounds</b> : elle sonne la cloche et enchaîne tout le combat seule.</p>
     <p>Pose le téléphone entre les deux joueurs : chacun a sa moitié d'écran, tournée vers lui.</p>
-    <p class="gd-win">On gagne par <b>mat</b>, par <b>K.-O.</b>, au <b>temps</b>, ou si l'autre prend trop de <b>comptes</b>.</p>` },
-  { t: "Déroulé d'un combat", s: "L'ordre des rounds d'échecs, de boxe et des pauses", l: lives(['chess', 'Échecs'], ['break', 'Pause'], ['boxing', 'Boxe']), h: frieze(), b: `
-    <p class="gd-lead">Échecs, pause, boxe, pause, échecs… jusqu'à la fin.</p>
-    <ul class="gd-leg"><li><b class="gf-chess">${ICONS.pawn}</b>Round d'échecs : <em>3:00</em></li><li><i class="gf-p"></i>Pause : <em>1:00</em></li><li><b class="gf-box">${ICONS.glove}</b>Round de boxe : <em>3:00</em></li></ul>
-    <p>Le combat classique fait <b>5 rounds</b> (3 d'échecs, 2 de boxe). Le dernier round d'échecs dure jusqu'à la fin du temps à la pendule.</p>
-    <p>Le temps à la pendule de chaque joueur dépend du nombre de rounds : <b>4:30</b> pour 5 rounds, <b>6:00</b> pour 7…</p>` },
-  { t: "Préparer le combat (accueil)", s: 'Nombre de rounds, durées, Standard, Installer', l: lives(['home', 'Accueil'], ['rounds', 'Nombre de rounds'], ['classic', 'Pendule classique']), h: `<div class="gd-bar"><span class="gb-r">5</span><span class="gb-c">3:00</span><span class="gb-c red">3:00</span><span class="gb-c blue">1:00</span><span class="gb-t">${ICONS.replay}</span></div>`, b: `
+    <p class="gd-win">On gagne par <b>mat</b>, par <b>K.-O.</b>, au <b>temps</b> (pendule à 0), ou si l'autre prend trop de <b>comptes</b> (fiche 7).</p>` },
+  { t: 'Round par round', s: "L'ordre des rounds et les deux chronos", h: frieze(), b: `
+    <ul class="gd-leg"><li><b class="gf-chess">${ICONS.pawn}</b>Échecs <em>3:00</em></li><li><i class="gf-p"></i>Pause <em>1:00</em></li><li><b class="gf-box">${ICONS.glove}</b>Boxe <em>3:00</em></li></ul>
+    <p class="gd-lead">Le combat classique fait <b>5 rounds</b> : 3 d'échecs, 2 de boxe, une pause entre chaque.</p>
+    <p>Il y a <b>deux chronos</b> : le <b>round</b>, le même pour les deux, et la <b>pendule</b> de chaque joueur, qui ne tourne que pendant ses coups (<b>4:30</b> pour 5 rounds, <b>6:00</b> pour 7…).</p>
+    <p>Le dernier round d'échecs n'a pas de limite : il continue jusqu'à ce qu'une pendule tombe à 0.</p>` },
+  { t: 'Régler le combat', s: 'Nombre de rounds, durées, installer', l: lives(['home', 'Les rounds et les trois durées', [0, 368, 390, 110]], ['rounds', 'Touche le carré des rounds', [0, 245, 390, 345]]), b: `
     <ul class="gd-steps">
       <li><b>Rounds</b> : touche le carré pour choisir 5, 7, 9 ou 11 rounds, ou la <b>pendule classique</b> (sans rounds, temps et incrément réglables).</li>
-      <li><b>Échecs, Boxe, Pause</b> : touche un chrono pour changer sa durée. Fais glisser la règle. Boxe à <em>0:00</em> = pas de round de boxe, uniquement des rounds d'échecs avec des pauses.</li>
-      <li>${ic('replay')} <b>Standard</b> : remet le combat classique (5 rounds, 3:00 / 3:00 / 1:00).</li>
-      <li>${ic('install')} <b>Installer</b> : met la pendule sur l'écran d'accueil du téléphone ; elle marche ensuite sans réseau.</li>
-      <li><b>Réglages</b> : sous le temps de chaque joueur.</li></ul>` },
-  { t: "Jouer un round d'échecs", s: 'Qui commence, taper sa pendule, à qui de jouer', l: lives(['chess', 'Vert = à toi de jouer']), h: '', b: `
+      <li><b>Échecs, Boxe, Pause</b> : touche une durée, puis fais glisser la règle qui s'ouvre.</li>
+      <li>${ic('replay')} remet le combat classique : 5 rounds, 3:00 / 3:00 / 1:00.</li>
+      <li>${ic('install')} <b>Installer</b> : met la pendule sur l'écran d'accueil du téléphone ; elle marche ensuite sans réseau.</li></ul>
+    <p class="gd-note">Boxe à <em>0:00</em> : pas de boxe, seulement des rounds d'échecs avec des pauses.</p>` },
+  { t: 'Jouer aux échecs', s: 'Qui a les Blancs, taper sa moitié, le vert', l: lives(['chess', 'Vert = à toi de jouer', [0, 300, 390, 544]]), b: `
     <ul class="gd-steps">
       <li>Le premier qui touche sa moitié prend les <b>Noirs</b> : la pendule des Blancs démarre.</li>
-      <li>Après chaque coup, <b>touche ta moitié</b> : ta pendule s'arrête, celle de l'autre repart.</li>
+      <li>Après ton coup, <b>touche ta moitié</b> : ta pendule s'arrête, celle de l'autre repart.</li>
       <li>La moitié <b class="g-green">verte</b> est celle du joueur qui doit jouer.</li>
-      <li>En haut de chaque moitié, le petit <b>ROUND 2:59</b> dit combien de temps reste au round.</li>
-      <li>À la fin du round : la cloche, puis la pause.</li></ul>` },
-  { t: 'Pauses et rounds de boxe', s: 'Les couleurs, le chrono du round, Prêt ?', l: lives(['break', 'Pause'], ['boxing', 'Boxe']), h: '', b: `
+      <li>En haut, <b>ROUND 2:58</b> : le temps qui reste au round. À 0, la cloche sonne.</li></ul>` },
+  { t: 'Pause et boxe', s: 'Bleu = pause, rouge = boxe, cloche, Prêt ?', l: lives(['break', 'Pause', [0, 456, 390, 290]], ['boxing', 'Boxe', [0, 456, 390, 290]]), b: `
     <ul class="gd-steps">
-      <li><b class="g-blue">Bleu</b> = pause. <b class="g-red">Rouge</b> = boxe. Le grand chrono est celui du round.</li>
-      <li>Le temps à la pendule de chacun reste écrit en petit, en haut : <b>PENDULE 4:29</b>.</li>
-      <li>Dans la barre, le <b>prochain round clignote</b> pendant la pause.</li>
-      <li>Le claquoir sonne 10 s avant la fin, puis la cloche.</li>
-      <li><b>Prêt ?</b> : avant chaque round d'échecs, la pendule attend qu'on touche l'écran (les gants s'enlèvent…).</li></ul>` },
-  { t: 'Mettre en pause, reprendre, recommencer', s: 'Le bouton pause : GO, Round, Accueil', l: lives(['pause', 'En pause']), h: `<div class="gd-pm"><span class="gb-t">${ICONS.home}</span><span class="gd-pill">${ICONS.replay}ROUND</span><span class="gd-go">${ICONS.play}GO</span></div>`, b: `
-    <p class="gd-lead">Le bouton ${ic('pause')} au bout de la barre arrête tout.</p>
+      <li><b class="g-blue">Bleu</b> = pause, <b class="g-red">rouge</b> = boxe. Le grand chrono est celui du round ; la pendule de chacun reste en petit, en haut.</li>
+      <li>Le claquoir (toc toc toc) sonne 10 s avant la fin, puis la cloche.</li>
+      <li>Pendant la pause, le <b>prochain round clignote</b> dans la barre du milieu.</li>
+      <li><b>Prêt ?</b> : avant chaque round d'échecs, la pendule attend qu'on touche l'écran, le temps d'enlever les gants.</li></ul>` },
+  { t: 'Arrêter ou refaire', s: 'Mettre en pause, refaire le round, nouveau combat', l: lives(['pause', 'Le combat est arrêté', [0, 250, 390, 330]]), b: `
+    <p class="gd-lead">Le bouton ${ic('pause')} au bout de la barre du milieu arrête tout.</p>
     <ul class="gd-steps">
-      <li><b>GO</b> : on reprend. Toucher ailleurs reprend aussi.</li>
-      <li>${ic('replay')} <b>Round</b> : recommence le round en cours, comme il était à son début.</li>
-      <li>${ic('home')} <b>Accueil</b> : abandonne le combat et revient à une pendule neuve.</li>
-      <li><b>Réglages</b> : sous le temps de chaque joueur.</li></ul>` },
-  { t: 'Arbitrage : comptes et coups illégaux', s: 'Alerte, compte de 10 s, drapeau, combat perdu', l: lives(['count', 'Le compte'], ['illegal', 'Coup illégal']), h: `<div class="gd-hero gd-ref"><span class="gd-flag">⚑</span><span class="gd-ten">10</span></div>`, b: `
-    <p class="gd-lead">Dans Réglages › <b>Arbitre</b>, deux aides pour l'arbitre :</p>
+      <li>${ic('play')} <b>GO</b> : on reprend. Toucher l'écran ailleurs reprend aussi.</li>
+      <li>${ic('replay')} <b>Round</b> : refait le round en cours depuis son début.</li>
+      <li>${ic('home')} <b>Accueil</b> : arrête le combat et remet une pendule neuve. C'est aussi ce qu'on fait après un mat, un K.-O. ou un abandon.</li></ul>` },
+  { t: "Pour l'arbitre", s: 'Joueur trop lent, coup illégal, défaite', l: lives(['count', 'Le compte : il réfléchit trop', [0, 456, 390, 388]], ['illegal', 'Coup illégal signalé', [0, 456, 390, 388]]), b: `
+    <p class="gd-lead">Deux aides, à allumer dans les réglages, carte <b>Arbitre</b>.</p>
     <ul class="gd-steps">
-      <li><b>Comptes</b> : si un joueur réfléchit trop longtemps, une alerte sonne, puis l'arbitre compte 10 s : chaque compte commencé est noté. <b>Si le compte arrive à 0, le combat est perdu.</b></li>
-      <li><b>Coups illégaux</b> : un drapeau dans chaque moitié. On le touche quand l'autre a joué un coup illégal : il rejoue, et ça compte aussi.</li>
-      <li><b>Perdu à</b> : au bout de 3 comptes dans un round, ou 4 au total, le combat est perdu (réglable).</li></ul>` },
-  { t: "Réglages de l'appli", s: 'Son, Éco, Sens, Chiffres, Temps par coup', l: lives(['settings', 'Réglages']), h: `<div class="gd-sq"><span>${ICONS.sound}<b>Son</b></span><span>${ICONS.eco}<b>Éco</b></span><span>${ICONS.rotate}<b>Sens</b></span></div>`, b: `
+      <li><b>Comptes</b> (rien à voir avec le compte en boxe) : si un joueur réfléchit trop longtemps, un toc d'alerte, puis la pendule compte 10 s, avec des mains comme un arbitre. Chaque compte commencé est noté. <b>À 0, le combat est perdu.</b></li>
+      <li><b>Coups illégaux</b> : chacun a un drapeau dans sa moitié. Tu le touches quand l'autre a joué un coup illégal : il rejoue, et ça lui fait un compte.</li>
+      <li><b>3 comptes dans un round, ou 4 au total</b> : combat perdu (réglable).</li></ul>` },
+  { t: 'Réglages', s: 'Son, batterie, sens de l’écran, chiffres', l: lives(['settings', 'Le haut des réglages', [0, 0, 390, 250]]), b: `
+    <p class="gd-lead">Le bouton <b>Réglages</b> est sous le temps de chaque joueur.</p>
     <ul class="gd-steps">
-      <li><b>Son</b> : coupe ou remet la cloche, le claquoir et les appuis. Plus bas dans les réglages, tu peux régler séparément le volume des alertes et celui des appuis.</li>
-      <li><b>Éco</b> : écran noir, moins de lumière et d'animations, pour garder la batterie.</li>
-      <li><b>Sens</b> : face à face, ou les deux chiffres tournés d'un côté. Pencher le téléphone le fait aussi.</li>
+      <li><b>Son</b> : coupe ou remet tous les sons. Plus bas, le volume des alertes et celui des appuis se règlent à part.</li>
+      <li><b>Éco</b> : écran noir, moins de lumière, pour garder la batterie.</li>
+      <li><b>Sens</b> : face à face, ou les deux chiffres tournés du même côté. Pencher le téléphone le fait aussi.</li>
       <li><b>Chiffres</b> : le style des chiffres de la pendule.</li>
       <li><b>Temps par coup</b> : la moyenne de chaque joueur, montrée aux pauses.</li></ul>
     <p class="gd-end">Bon combat !</p>` },
@@ -130,10 +132,15 @@ function mount(card) {
   card.querySelectorAll('.gl-frame[data-demo]').forEach(fr => {
     if (fr.firstChild) return;
     const f = document.createElement('iframe');
-    f.src = `./?demo=${fr.dataset.demo}`; f.tabIndex = -1; f.setAttribute('aria-hidden', 'true'); f.loading = 'eager';
+    f.src = `./?demo=${fr.dataset.demo}`; fit(fr, f); f.tabIndex = -1; f.setAttribute('aria-hidden', 'true'); f.loading = 'eager';
     fr.appendChild(f);
   });
 }
+function fit(fr, f) {
+  const [x, y, w] = fr.dataset.crop.split(',').map(Number), k = fr.clientWidth / w;
+  f.style.transform = `translate(${-x * k}px, ${-y * k}px) scale(${k})`;
+}
+addEventListener('resize', () => document.querySelectorAll('#gd-track .gl-frame iframe').forEach(f => fit(f.parentNode, f)));
 let refresh = null, goTo = () => {};
 export function openGuide() {
   if (!built) refresh = build();

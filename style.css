@@ -1823,15 +1823,12 @@ body.eco .tr.next, body.eco .bar-next .nx-v { -webkit-animation: none; animation
 .gd-tt { display: grid; gap: 4px; font-style: normal; min-width: 0; }
 .gd-tt small { font: 500 13px/1.25 var(--font-display); letter-spacing: .02em; text-transform: none; color: var(--text-2); }
 .gd-in h2 { font-size: 26px; }
-/* 0.2.169 (Val): pictures from the real app. Each is the app itself in a tiny phone frame playing a scripted scene. */
-.gd-lives { --s: .3; display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 12px; margin: 0 0 18px; }
-.gd-live { margin: 0; display: grid; justify-items: center; gap: 8px; }
-.gl-frame { position: relative; width: calc(390px * var(--s)); height: calc(844px * var(--s)); overflow: hidden; border-radius: 16px; border: 2px solid #3a4248; background: #0e1215; box-shadow: 0 6px 18px rgba(0,0,0,.45); }
-.gl-frame iframe { position: absolute; left: 0; top: 0; width: 390px; height: 844px; border: 0; transform: scale(var(--s)); transform-origin: 0 0; pointer-events: none; }
-.gd-live figcaption { font: 600 11px/1.2 var(--font-display); letter-spacing: .1em; text-transform: uppercase; color: var(--text-2); text-align: center; max-width: calc(390px * var(--s) + 20px); }
-.gd-lives:has(> :only-child) { --s: .42; }
-@media (max-width: 380px) { .gd-lives { --s: .26; } .gd-lives:has(> :only-child) { --s: .4; } }
-.gd-lives:has(> :nth-child(3)) { --s: .24; gap: 12px 8px; }
-@media (max-width: 380px) { .gd-lives:has(> :nth-child(3)) { --s: .215; } }
 /* 0.2.170 (Val): BOXE / PAUSE a little further from the round timer. */
 .phase-boxing #fight .h-phase small, .phase-break #fight .h-phase small { margin-bottom: clamp(12px, max(4.5cqh, 4.5cqw), 26px) !important; }
+/* 0.2.173 (Val): the real app, zoomed on the part each page talks about; one picture per idea, full width. */
+.gd-lives { display: grid; gap: 16px; margin: 0 0 18px; justify-items: center; }
+.gd-live { margin: 0; width: min(100%, 360px); display: grid; gap: 8px; }
+.gl-frame { position: relative; width: 100%; overflow: hidden; border-radius: 14px; border: 1px solid #3a4248; background: #0e1215; box-shadow: 0 6px 18px rgba(0,0,0,.45); }
+.gl-frame iframe { position: absolute; left: 0; top: 0; width: 390px; height: 844px; border: 0; transform-origin: 0 0; pointer-events: none; }
+.gd-live figcaption { font: 600 11px/1.2 var(--font-display); letter-spacing: .1em; text-transform: uppercase; color: var(--text-2); text-align: center; }
+.gd-note { font-size: .9em; color: var(--text-2); margin-top: 10px; }
