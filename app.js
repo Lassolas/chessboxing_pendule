@@ -1285,7 +1285,7 @@ ptr.innerHTML = ICONS.replay;
 document.body.append(ptr);
 let pull = null;
 function pullAllowed(target) {
-  if (target.closest('[data-ruler], input, .quick-box')) return false;
+  if (DEMO || !$('guide').hidden || target.closest('[data-ruler], input, .quick-box, #guide')) return false;
   if (!$('setup').hidden) {
     const el = $('setup');
     return document.documentElement.classList.contains('flip')
