@@ -972,7 +972,7 @@ function renderPauseMenu() {
   $('pm-tgs').hidden = $('pm-restart').hidden = !!s.awaitReady;
   // Two ways back: this round from its start, or the whole fight.
   $('pm-round').hidden = !!s.awaitReady || !s.snap || (s.phase !== 'chess' && s.phase !== 'boxing');
-  setHTML($('pm-restart'), `${ICONS.replay}<small>Combat</small>`);
+  setHTML($('pm-restart'), `${ICONS.home}<small>Accueil</small>`);  // ⌂: the fight dropped, back to a fresh clock
   setHTML($('pm-round'), `${ICONS.replay}<small>Round</small>`);
   setHTML($('pm-resume'), s.awaitReady ? '<i class="ready-txt">Prêt ?</i>' : `${ICONS.play}<span>GO</span>`);
   // Switches for the rest of the fight: counts, illegal moves, sound, Éco; and Réglages.
@@ -1022,7 +1022,7 @@ function restart() {
   buildHalves();
   act(['undo']);
 }
-$('pm-restart').addEventListener('click', restart);
+$('pm-restart').addEventListener('click', closeFight);
 $('pm-round').addEventListener('click', () => { act(restartRound(s, performance.now())); persist(); });
 $('bar-replay').addEventListener('click', restart);
 

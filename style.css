@@ -1466,3 +1466,9 @@ html.flip #ptr { top: auto; bottom: 0; }
 .pm-main { display: flex !important; gap: 10px; }
 .pm-main .pm-go { flex: 1 1 auto; min-width: 0; }
 #pause-menu.ready .pm-main .pm-lbl { display: none !important; }
+/* 0.2.130: ⌂ Accueil (quiet, round) vs ↺ Round (bone, square): told apart at a glance */
+#pm-restart { border-radius: 50%; width: 56px; height: 56px; align-self: center; min-height: 0 !important; }
+#pm-restart small { display: none; }
+#pm-restart .ic { width: 24px; height: 24px; }
+#pm-round { width: auto; padding: 0 14px !important; flex-direction: row; gap: 7px; border-radius: 14px; background: rgba(235, 229, 214, .08); border-color: rgba(235, 229, 214, .5); }
+#pm-round small { font-size: 12px; letter-spacing: .12em; }
