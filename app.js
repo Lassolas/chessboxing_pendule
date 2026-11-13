@@ -480,6 +480,7 @@ function buildHalves() {
     const p = +h.dataset.p;
     h.innerHTML = `<div class="h-in">
       <div class="h-name"></div>
+      <div class="h-rt"></div>
       <div class="h-up"><div class="h-phase"><small></small><b></b></div></div>
       <div class="h-clock"></div>
       <div class="h-down"><div class="h-move"></div><button type="button" class="h-set">${SET_ICON}Réglages</button><div class="h-counts"></div></div>
@@ -860,6 +861,9 @@ function render() {
     // No text over the timers (Val): the rounds are in the bar.
     setHTML(phaseEl.firstChild, '');
     setDigits(phaseEl.lastChild, (s.phase === 'boxing' || s.phase === 'break') && !untimed ? roundClock(s.phaseRemaining) : (s.phase === 'break' ? '∞' : ''), cfg.digits);
+    // Chess round: its timer, small, at the top of each player's half (the far edge, facing them).
+    const rt = s.phase === 'chess' && s.phaseRemaining !== null && !s.awaitReady;
+    setHTML(h.querySelector('.h-rt'), rt ? `<small>Round</small><b>${roundClock(s.phaseRemaining)}</b>` : '');
     const move = h.querySelector('.h-move');
     if (active && cd !== null) move.innerHTML = countHands(cd);
     else if (active && stage === 'warn') move.textContent = `${Math.floor(s.moveElapsed / 1000)} s`;
