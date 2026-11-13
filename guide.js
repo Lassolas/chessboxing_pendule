@@ -51,7 +51,7 @@ const CARDS = [
   { t: "L'arbitre", h: `<div class="gd-hero gd-ref"><span class="gd-flag">⚑</span><span class="gd-ten">10</span></div>`, b: `
     <p class="gd-lead">Dans Réglages › <b>Arbitre</b>, deux aides pour l'arbitre :</p>
     <ul class="gd-steps">
-      <li><b>Comptes</b> : si un joueur réfléchit trop longtemps, une alerte sonne, puis un compte de 10 s. À 0, c'est un compte.</li>
+      <li><b>Comptes</b> : si un joueur réfléchit trop longtemps, une alerte sonne, puis l'arbitre compte 10 s : chaque compte commencé est noté. <b>Si le compte arrive à 0, le combat est perdu.</b></li>
       <li><b>Coups illégaux</b> : un drapeau dans chaque moitié. On le touche quand l'autre a joué un coup illégal : il rejoue, et ça compte aussi.</li>
       <li><b>Perdu à</b> : au bout de 3 comptes dans un round, ou 4 au total, le combat est perdu (réglable).</li></ul>` },
   { t: 'Réglages', h: `<div class="gd-sq"><span>${ICONS.sound}<b>Son</b></span><span>${ICONS.eco}<b>Éco</b></span><span>${ICONS.rotate}<b>Sens</b></span></div>`, b: `
