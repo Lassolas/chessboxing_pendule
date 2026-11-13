@@ -136,7 +136,7 @@ const TILES = [
   { key: 'breakMs', row: 1, title: "Durée de la pause", icon: () => ICONS.hourglass, label: 'Pause', step: 10000, min: 0, max: 300000,
     on: () => cfg.intervals && cfg.breakOn,
     tap: () => { cfg.breakOn = !(cfg.intervals && cfg.breakOn); if (cfg.breakOn) cfg.intervals = true; } },
-  { key: 'boxRoundMs', row: 1, title: "Durée du round de boxe", icon: () => ICONS.glove, label: 'Boxe', step: 10000, min: 30000, max: 300000,
+  { key: 'boxRoundMs', row: 1, title: "Durée du round de boxe", icon: () => ICONS.glove, label: 'Boxe', step: 10000, min: 30000, max: 300000, zero: true,  // 0:00 = no boxing round (Val)
     on: () => cfg.intervals && cfg.boxTimer,
     tap: () => { cfg.boxTimer = !(cfg.intervals && cfg.boxTimer); if (cfg.boxTimer) cfg.intervals = true; } },
   { key: 'moveCountdownMs', flag: 'countdownOn', row: 2, icon: () => countHands(8, SET_HAND), label: 'Compte', step: 1000, min: 1000, max: () => countMax(cfg) },
@@ -172,7 +172,7 @@ function clampCount(c) {
 // Turning the count on brings the warning with it.
 tileOf('moveCountdownMs').tap = () => { cfg.countdownOn = !cfg.countdownOn; if (cfg.countdownOn) cfg.warnOn = true; };
 
-const valuesOf = t => { const v = [], max = typeof t.max === 'function' ? t.max() : t.max; for (let x = t.min; x <= max; x += t.step) v.push(x); return v; };
+const valuesOf = t => { const v = t.zero ? [0] : [], max = typeof t.max === 'function' ? t.max() : t.max; for (let x = t.min; x <= max; x += t.step) v.push(x); return v; };
 // Durées: one ruler per step, like a radio dial. Slide the scale under the
 // needle (or tap either side for one step); tap the drawing to switch the step on / off.
 const TICK_PX = 10;  // one step (10 s) of the scale
@@ -365,6 +365,7 @@ function fightConfig() {
   const c = structuredClone(cfg);
   // Plain clock: no boxing; counts and illegal moves stay, judged on the total only.
   if (!c.intervals) Object.assign(c, { boxTimer: false, countsPerRound: 999 });
+  if (!(c.boxRoundMs > 0)) c.boxTimer = false;  // boxing round set to 0:00 = no boxing round
   if (!c.breakOn) c.breakMs = null;
   if (!c.countdownOn) c.warnOn = false;  // the warning comes with the count
   clampCount(c);
@@ -696,7 +697,7 @@ function readyInfoHTML(c) {
     + item('incrementMs', `<span class="rb-t">+${fmtValue(c.incrementMs)}</span>`, 'Incrément');
   return item('rounds', `<span class="ri-n">${roman(c.rounds)}</span>`, 'Rounds')
     + item('chessRoundMs', t('chessRoundMs', c.intervals, '—'), 'Échecs', !c.intervals)
-    + item('boxRoundMs', t('boxRoundMs', c.intervals && c.boxTimer, '—'), 'Boxe', !(c.intervals && c.boxTimer))
+    + item('boxRoundMs', t('boxRoundMs', c.intervals && c.boxTimer && c.boxRoundMs > 0, '—'), 'Boxe', !(c.intervals && c.boxTimer && c.boxRoundMs > 0))
     + item('breakMs', t('breakMs', c.intervals && c.breakOn, '∞'), 'Pause', !(c.intervals && c.breakOn));
 }
 // Quick panel over the waiting clock: the step's ruler, on / off and back to the
