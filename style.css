@@ -1472,3 +1472,28 @@ html.flip #ptr { top: auto; bottom: 0; }
 #pm-restart .ic { width: 24px; height: 24px; }
 #pm-round { width: auto; padding: 0 14px !important; flex-direction: row; gap: 7px; border-radius: 14px; background: rgba(235, 229, 214, .08); border-color: rgba(235, 229, 214, .5); }
 #pm-round small { font-size: 12px; letter-spacing: .12em; }
+
+/* 0.2.131 (Val picked idea D): rounds = numbers in circles, like a bib number (Oswald). */
+:root { --font-count: 'Oswald', 'Arial Narrow', sans-serif; }
+.tr, .rb-rounds .ri-n, .nx-v i, .q-rounds button b, .hc-num, .rtag {
+  font-family: var(--font-count) !important; font-style: normal !important; font-weight: 700 !important; font-variant-numeric: lining-nums tabular-nums; }
+/* the frieze */
+.trk { align-items: center !important; gap: 7px !important; }
+.tr { --d: 24px; width: var(--d); height: var(--d); flex: none; display: grid; place-items: center; border-radius: 50%; border: 1.5px solid currentColor;
+  font-size: calc(var(--d) * .54) !important; line-height: 1 !important; color: rgba(235, 229, 214, .35); }
+.tr-box { color: rgba(217, 83, 74, .55); }
+.tr.prev { color: rgba(235, 229, 214, .7); font-size: calc(var(--d) * .54) !important; }
+.tr-box.prev { color: rgba(217, 83, 74, .8); }
+.tr.now { --d: 28px; font-size: calc(var(--d) * .54) !important; background: var(--bone); border-color: var(--bone); color: #0d1114 !important; }
+.tr-box.now { background: var(--red); border-color: var(--red); color: #0d1114 !important; }
+.trk.more { gap: 5px !important; } .trk.more .tr { --d: 21px; } .trk.more .tr.now { --d: 25px; }
+.trk.many { gap: 3px !important; } .trk.many .tr { --d: 17px; } .trk.many .tr.now { --d: 21px; }
+@media (max-width: 380px) { .trk { gap: 5px !important; } .tr { --d: 21px; } .tr.now { --d: 25px; } .trk.more .tr { --d: 18px; } .trk.more .tr.now { --d: 22px; } .trk.many .tr { --d: 15px; } .trk.many .tr.now { --d: 18px; } }
+/* the Rounds tile: a big bib number */
+.rb-rounds .ri-n { width: calc(var(--rb) * .78); height: calc(var(--rb) * .78); display: grid; place-items: center; border-radius: 50%;
+  border: 2px solid var(--bone); font-size: calc(var(--rb) * .48) !important; text-shadow: none; background: rgba(13, 17, 20, .35); }
+/* round suivant */
+.nx-v { align-items: center !important; }
+.nx-v i { width: 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; border: 1.5px solid currentColor; font-size: 14px !important; }
+/* rounds pick */
+.q-rounds button b { width: 40px; height: 40px; display: grid; place-items: center; border-radius: 50%; border: 2px solid currentColor; font-size: 20px !important; }
