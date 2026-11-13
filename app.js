@@ -416,6 +416,10 @@ function backToClock() {
   const saved = load(FIGHT_KEY);
   if (saved && saved.phase !== 'ready' && saved.phase !== 'over') {
     s = saved;
+    // Counts and illegal moves switched in Réglages during the fight: the clock takes them at once.
+    const f = fightConfig();
+    COUNT_KEYS.forEach(c => { s.cfg[c] = f[c]; });
+    s.cfg.eco = cfg.eco;
     s.paused = true;
     s.lastTick = performance.now();
     openFight();
