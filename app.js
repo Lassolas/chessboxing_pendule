@@ -725,7 +725,10 @@ function renderQuick() {
     return;
   }
   const t = tileOf(k), on = t.on();
-  $('quick-box').innerHTML = `<p class="q-t">${t.label}</p>` + rulerHTML(t) + (t.always
+  // Increment and classic time: − / + for small changes (Val), beside the ruler.
+  const pm = k === 'incrementMs' || k === 'plainMs'
+    ? `<div class="q-pm"><button type="button" class="q-pmb" data-step="-1" aria-label="Moins"${cfg[k] <= t.min ? ' disabled' : ''}>−</button><b>${k === 'incrementMs' ? '+' : ''}${fmtValue(cfg[k], t.kind)}</b><button type="button" class="q-pmb" data-step="1" aria-label="Plus"${cfg[k] >= t.max ? ' disabled' : ''}>+</button></div>` : '';
+  $('quick-box').innerHTML = `<p class="q-t">${t.label}</p>` + rulerHTML(t) + pm + (t.always
     ? `<div class="q-act q-act-one"><button type="button" class="q-btn q-ok" data-qclose>OK</button></div>`
     : `<div class="q-act q-act-two">
     <button type="button" class="q-btn" data-tile="${k}">${on ? 'Désactiver' : 'Activer'}</button>
@@ -744,6 +747,15 @@ $('quick').addEventListener('click', e => {
     if (+r.dataset.qr) { cfg.rounds = +r.dataset.qr; cfg.intervals = true; } else cfg.intervals = false;
     save(CFG_KEY, cfg); renderSetup();
   }
+});
+$('quick').addEventListener('click', e => {
+  const b = e.target.closest('[data-step]');
+  if (!b || !quickKey) return;
+  const t = tileOf(quickKey);
+  cfg[t.key] = Math.min(t.max, Math.max(t.min, (cfg[t.key] || 0) + +b.dataset.step * t.step));
+  save(CFG_KEY, cfg);
+  if (navigator.vibrate) navigator.vibrate(6);
+  renderSetup(); render();
 });
 $('quick').addEventListener('click', onTiles);
 // Réglages › Comptes: drag the rulers, ↺ resets; the drawings are not switches here.
