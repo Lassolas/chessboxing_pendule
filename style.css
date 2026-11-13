@@ -1583,3 +1583,15 @@ body::after { opacity: .035 !important; }
   font-size: calc(var(--clock-scale) * 24px) !important; opacity: .85; color: var(--bone) !important; }
 .phase-boxing #fight .half .h-clock::before, .phase-break #fight .half .h-clock::before {
   content: 'Pendule'; font: 600 11px/1 var(--font-display); letter-spacing: .22em; text-transform: uppercase; color: var(--text-2); }
+/* 0.2.142 (Val: "Pendule 4:30" did not fit the narrow buttons): the rounds choices are now full-width rows,
+   number + "rounds" on the left, "PENDULE 4:30" on the right, readable on any phone. */
+.q-rounds { grid-template-columns: 1fr !important; gap: 6px; }
+.q-rounds button { flex-direction: row !important; justify-content: flex-start; gap: 12px !important; padding: 7px 16px 7px 10px !important; min-height: 52px; }
+.q-rounds button b { flex: none; width: 36px !important; height: 36px !important; font-size: 18px !important; }
+.q-rounds .q-w { font: 600 13px/1 var(--font-display); letter-spacing: .2em; text-transform: uppercase; color: var(--text-2); }
+.q-rounds button.on .q-w { color: var(--bone); }
+.q-rounds button small, .q-classic small { margin-left: auto; flex-direction: row !important; align-items: baseline !important; gap: 10px !important;
+  font: var(--clock-weight, 600) 20px/1 var(--font-clock) !important; letter-spacing: 0 !important; text-transform: none !important; color: var(--bone) !important; }
+.q-rounds .q-k { font-size: 10px !important; letter-spacing: .2em !important; }
+.q-rounds { width: 100%; box-sizing: border-box; } .q-rounds button { width: 100% !important; box-sizing: border-box; min-width: 0; margin: 0 !important; }
+.q-rounds button { gap: 10px !important; } .q-rounds .q-w { letter-spacing: .14em; } .q-rounds button small { gap: 8px !important; white-space: nowrap; } .q-classic small { font-size: 17px !important; } .q-classic small em { font-size: .8em; font-style: normal; color: var(--text-2); }
