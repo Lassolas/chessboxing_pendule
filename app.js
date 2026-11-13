@@ -898,10 +898,15 @@ function render() {
   const skipTo = ['chess', 'boxing', 'break'].includes(s.phase) && !untimed && !s.awaitReady && !s.roundOver ? nextStep(s) : null;
   $('bar-next').hidden = !skipTo;
   // Its word underneath: Round suivant, Boxe (red) or Pause (blue).
-  // Before a round: "Round suivant" and its kind, Échecs or Boxe (red); before a pause: Pause (blue).
-  const nextCap = t => t.phase === 'break' ? '<small class="bn-cap bn-pause">Pause</small>'
-    : `<small class="bn-cap">Round suivant<b class="${roundType(t.round) === 'chess' ? 'bn-chess' : 'bn-box'}">${roundType(t.round) === 'chess' ? 'Échecs' : 'Boxe'}</b></small>`;
-  if (skipTo) setHTML($('bar-next'), `<span class="bn-row">${ICONS.next}${skipTo.phase === 'break' ? ICONS.hourglass : roundTag(skipTo.round)}</span>${nextCap(skipTo)}`);
+  // What comes next, centred on two lines: "Round suivant" over the round's numeral and kind
+  // (Échecs bone, Boxe red), or "Suivant" over Pause (blue). No arrow (Val).
+  const nextHTML = t => {
+    if (t.phase === 'break') return `<small class="nx-k">Suivant</small><span class="nx-v nx-pause">${ICONS.hourglass}<b>Pause</b></span>`;
+    const chess = roundType(t.round) === 'chess';
+    return `<small class="nx-k">Round suivant</small><span class="nx-v ${chess ? 'nx-chess' : 'nx-box'}"><i>${roman(t.round)}</i><b>${chess ? 'Échecs' : 'Boxe'}</b></span>`;
+  };
+  if (skipTo) setHTML($('bar-next'), nextHTML(skipTo));
+  $('bar-next').dataset.k = skipTo ? (skipTo.phase === 'break' ? 'pause' : roundType(skipTo.round)) : '';
   $('bar-timer').hidden = replay || (!!skipTo && s.phase !== 'chess');
   document.querySelector('.bar').classList.toggle('next-t', !!skipTo && s.phase === 'chess');
   document.querySelector('.bar-info').hidden = replay;
@@ -914,7 +919,7 @@ function render() {
   $('bar-btn').hidden = s.phase === 'ready' || (s.phase === 'over' && !overAction);
   const btnText = overAction || (s.roundOver && !s.paused ? 'Stop' : '');
   // Open pause: the button starts the next round, so it says which one (→ IV in its colour).
-  setHTML($('bar-btn'), btnText || (untimed && s.phase === 'break' && !s.paused ? `<span class="bb-next">${ICONS.next}${roundTag(s.nextRound)}</span>${nextCap({ phase: 'round', round: s.nextRound })}`
+  setHTML($('bar-btn'), btnText || (untimed && s.phase === 'break' && !s.paused ? `<span class="nx">${nextHTML({ phase: 'round', round: s.nextRound })}</span>`
     : s.paused || (untimed && s.phase === 'break') ? ICONS.play : ICONS.pause));
   $('bar-btn').classList.toggle('long', !!btnText);
   $('bar-btn').setAttribute('aria-label', btnText || (s.paused ? 'Reprendre' : 'Pause'));
