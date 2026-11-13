@@ -875,8 +875,8 @@ function render() {
     // the last 10 s of the pause (and before the first one), above the timer.
     // No round names on the clock (Val): only Boxe / Pause over their timer; the rounds are in the bar.
     phaseEl.classList.remove('soon');
-    // No text over the timers (Val): the rounds are in the bar.
-    setHTML(phaseEl.firstChild, '');
+    // Boxe / Pause written big over their timer (Val); never Échecs, that is obvious.
+    setHTML(phaseEl.firstChild, s.phase === 'boxing' ? 'Boxe' : s.phase === 'break' ? 'Pause' : '');
     setDigits(phaseEl.lastChild, (s.phase === 'boxing' || s.phase === 'break') && !untimed ? roundClock(s.phaseRemaining) : (s.phase === 'break' ? '∞' : ''), cfg.digits);
     // Chess round: its timer, small, at the top of each player's half (the far edge, facing them).
     const rt = s.phase === 'chess' && s.phaseRemaining !== null && !s.awaitReady;

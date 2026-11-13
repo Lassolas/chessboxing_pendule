@@ -1647,3 +1647,8 @@ body.eco .tr.next, body.eco .bar-next .nx-v { -webkit-animation: none; animation
 /* 0.2.149 (Val): the pause shows only Réglages, Accueil, Round and GO. */
 #pm-tgs[hidden] { display: none !important; } .pm-lbl svg { width: 20px; height: 20px; margin: 0; }
 #pm-set { border-radius: 50%; width: 56px; height: 56px; align-self: center; min-height: 0 !important; } #pm-set small { display: none; } #pm-set svg { width: 24px; height: 24px; }
+/* 0.2.150 (Val): BOXE / PAUSE written big over the round timer on each player's half (not ÉCHECS). */
+.phase-boxing #fight .h-phase small, .phase-break #fight .h-phase small { display: block !important;
+  font: 700 clamp(26px, 9cqw, 46px)/1 var(--font-display) !important; letter-spacing: .3em !important; text-indent: .3em;
+  text-transform: uppercase; color: #fff !important; opacity: .92; margin-bottom: 4px; }
+.eco.phase-boxing #fight .h-phase small, .eco.phase-break #fight .h-phase small { color: var(--text-2) !important; }
