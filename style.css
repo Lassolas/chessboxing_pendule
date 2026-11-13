@@ -1415,3 +1415,22 @@ html.flip #ptr { top: auto; bottom: 0; }
 .sw-ico > svg { width: 40px !important; height: 30px !important; }
 .sw-ico > svg.ico { width: 26px !important; height: 26px !important; }
 .sw-ico .hands { display: flex; gap: 1px; } .sw-ico .hands svg { width: 18px !important; height: 26px !important; }
+/* 0.2.124 (Val): the Rounds button with character — bigger, raised, a canvas texture like a ring floor,
+   red and blue corners like the ring's posts; bone numeral, no yellow. */
+.rb-rounds { --c: var(--bone); }
+.rb-rounds .rb-c { position: relative; width: calc(var(--rb) * 1.3); height: calc(var(--rb) * 1.3); margin-top: calc(var(--rb) * -.3);
+  border-radius: 14px; border: 1px solid rgba(235, 229, 214, .35);
+  background:
+    repeating-linear-gradient(45deg, rgba(235, 229, 214, .035) 0 2px, transparent 2px 5px),
+    repeating-linear-gradient(-45deg, rgba(0, 0, 0, .12) 0 2px, transparent 2px 5px),
+    linear-gradient(160deg, #3a4148 0%, #262c31 55%, #1a1e22 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .14), inset 0 -3px 6px rgba(0, 0, 0, .45), 0 4px 10px rgba(0, 0, 0, .55), 0 1px 2px rgba(0, 0, 0, .6);
+  overflow: hidden; }
+.rb-rounds .rb-c::before, .rb-rounds .rb-c::after { content: ''; position: absolute; width: 26%; height: 26%; pointer-events: none; }
+.rb-rounds .rb-c::before { top: 0; left: 0; background: linear-gradient(135deg, var(--red) 0 50%, transparent 50%); opacity: .9; }
+.rb-rounds .rb-c::after { right: 0; bottom: 0; background: linear-gradient(-45deg, var(--blue) 0 50%, transparent 50%); opacity: .9; }
+.rb-rounds .ri-n { position: relative; z-index: 1; font-size: calc(var(--rb) * .72) !important; color: var(--bone) !important; text-shadow: 0 2px 3px rgba(0, 0, 0, .6); }
+.rb-rounds .no-rounds { position: relative; z-index: 1; color: var(--bone); width: calc(var(--rb) * .7); height: calc(var(--rb) * .7); }
+.rb-rounds .rb-cap { color: var(--bone) !important; }
+.rb-rounds:active .rb-c, .rb-rounds.open .rb-c { transform: translateY(2px); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .1), inset 0 -1px 3px rgba(0, 0, 0, .4), 0 1px 3px rgba(0, 0, 0, .5); background-color: transparent; }
+.eco .rb-rounds .rb-c { background: #0d1114; box-shadow: none; }
