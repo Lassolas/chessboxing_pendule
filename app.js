@@ -33,7 +33,7 @@ const homeDefaults = () => ({
   sound: true, showAvg: true,         // Son (all sounds on / off), average per move
   volAlerts: 100, volClicks: 100,     // volumes: alerts (bell, clapper...) and the clock presses
   plainMs: 5 * 60000, incrementMs: 2000,  // classic clock (no rounds): time per player + increment
-  v: 12,
+  v: 13,
 });
 let cfg = { ...homeDefaults(), ...(load(CFG_KEY) || {}) };
 cfg.incrementMs = Math.min(30000, cfg.incrementMs);  // the increment goes up to 30 s
@@ -88,6 +88,10 @@ if (cfg.v < 12) {  // v12: classic clock 5:00 + 0:02 by default
   cfg.plainMs = 5 * 60000;
   cfg.incrementMs = 2000;
   cfg.v = 12;
+}
+if (cfg.v < 13) {  // v13: Prêt ? on for everyone (Val: by default the chess round waits for Prêt ?)
+  cfg.readyCheck = true;
+  cfg.v = 13;
 }
 cfg.countsPerRound = Math.min(5, Math.max(1, cfg.countsPerRound || 3));  // limits picked from 1 to 5
 cfg.countsPerRound = Math.min(4, cfg.countsPerRound);
@@ -393,7 +397,7 @@ function backToClock() {
 // ↺ Standard: the club's usual fight (5 rounds, 3:00 / 3:00 / 1:00, counts off);
 // how the app looks and sounds stays as set.
 function standard() {
-  const keep = ['eco', 'sound', 'volAlerts', 'volClicks', 'digits', 'orient', 'showAvg', 'readyCheck', 'moveCountdownMs', 'moveWarnMs', 'countsPerRound', 'countsTotal'];
+  const keep = ['eco', 'sound', 'volAlerts', 'volClicks', 'digits', 'orient', 'showAvg', 'moveCountdownMs', 'moveWarnMs', 'countsPerRound', 'countsTotal'];
   const old = cfg;
   cfg = { ...homeDefaults(), names: cfg.names, moveGraceMs: cfg.moveGraceMs };
   keep.forEach(k => { if (old[k] !== undefined) cfg[k] = old[k]; });
