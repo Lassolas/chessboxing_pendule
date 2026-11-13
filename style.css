@@ -1575,3 +1575,11 @@ body::after { opacity: .035 !important; }
 /* 0.2.140 (Val): each rounds choice says what its time is: "Pendule" above 4:30 / 6:00 (time per player). */
 .q-rounds button small { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .q-rounds .q-k { font: 600 9px/1 var(--font-ui, 'Barlow Condensed', sans-serif); font-style: normal; letter-spacing: .18em; text-transform: uppercase; color: var(--text-2); opacity: .8; }
+/* 0.2.141 (Val): during boxing and breaks the chess time moves to the top of each half (the bar side),
+   where the round time sits during chess, labelled "Pendule"; the player's edge keeps the name and logo. */
+.phase-boxing #fight .half .h-clock, .phase-break #fight .half .h-clock,
+.phase-boxing #fight .half.top .h-clock, .phase-break #fight .half.top .h-clock {
+  top: 14px !important; bottom: auto !important; display: flex; align-items: center; justify-content: center; gap: 8px;
+  font-size: calc(var(--clock-scale) * 24px) !important; opacity: .85; color: var(--bone) !important; }
+.phase-boxing #fight .half .h-clock::before, .phase-break #fight .half .h-clock::before {
+  content: 'Pendule'; font: 600 11px/1 var(--font-display); letter-spacing: .22em; text-transform: uppercase; color: var(--text-2); }
