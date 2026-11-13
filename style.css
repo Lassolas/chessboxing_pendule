@@ -1833,3 +1833,5 @@ body.eco .tr.next, body.eco .bar-next .nx-v { -webkit-animation: none; animation
 @media (max-width: 380px) { .gd-lives { --s: .26; } .gd-lives:has(> :only-child) { --s: .4; } }
 .gd-lives:has(> :nth-child(3)) { --s: .24; gap: 12px 8px; }
 @media (max-width: 380px) { .gd-lives:has(> :nth-child(3)) { --s: .215; } }
+/* 0.2.170 (Val): BOXE / PAUSE a little further from the round timer. */
+.phase-boxing #fight .h-phase small, .phase-break #fight .h-phase small { margin-bottom: clamp(12px, max(4.5cqh, 4.5cqw), 26px) !important; }
