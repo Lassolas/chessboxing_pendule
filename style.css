@@ -1534,3 +1534,4 @@ body::after { opacity: .035 !important; }
   #fight .half.top::after { background: radial-gradient(90% 120% at 100% 50%, rgba(120,145,160,.30), rgba(120,145,160,.04)); }
   #fight .half.bottom::after { background: radial-gradient(90% 120% at 0% 50%, rgba(120,145,160,.30), rgba(120,145,160,.04)); }
 }
+.h-logo img { height: 15px !important; opacity: .4 !important; }
