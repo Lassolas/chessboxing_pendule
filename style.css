@@ -1765,3 +1765,21 @@ body.eco .tr.next, body.eco .bar-next .nx-v { -webkit-animation: none; animation
 .bar-next:active { transform: scale(.97); background: color-mix(in srgb, var(--c) 25%, transparent) !important; }
 @media (max-width: 380px) { .bar-next { height: 52px !important; min-height: 52px; } }
 @media (min-width: 700px) { .bar-next { height: 76px !important; min-height: 76px; } }
+/* 0.2.161: the guide as a grid so each card has a definite height (Safari did not let the cards scroll),
+   a Sommaire first page (one tap per chapter) and a Sommaire button at the top. */
+.guide { display: grid !important; grid-template-rows: auto minmax(0, 1fr) auto; }
+.guide[hidden] { display: none !important; }
+.gd-track { height: 100%; align-items: stretch; touch-action: pan-x pan-y; }
+.gd-card { height: auto; max-height: 100%; align-self: stretch; overflow-y: scroll; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; }
+.gd-tocb.on { background: rgba(235, 229, 214, .12); }
+.gd-tocb svg { width: 20px; height: 20px; }
+.gd-toc { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 8px; }
+.gd-toc button { width: 100%; display: flex; align-items: center; gap: 14px; min-height: 58px; padding: 0 16px; border-radius: 14px;
+  border: 1px solid rgba(235, 229, 214, .2); background: rgba(235, 229, 214, .04); color: var(--bone);
+  font: 700 17px/1.1 var(--font-display); letter-spacing: .1em; text-transform: uppercase; text-align: left; touch-action: manipulation; }
+.gd-toc button:active { background: rgba(235, 229, 214, .14); }
+.gd-toc span { flex: none; width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid rgba(235, 229, 214, .55); display: grid; place-items: center;
+  font: 700 14px/1 var(--font-count, 'Oswald'), sans-serif; letter-spacing: 0; }
+.gd-toc i { margin-left: auto; font: 400 26px/1 var(--font-display); font-style: normal; color: var(--text-2); }
+.gd-hint { margin: 16px 0 0; font: 500 14px var(--font-display); color: var(--text-2); text-align: center; }
+.gd-title { white-space: nowrap; font-size: 12px; letter-spacing: .18em; } .gd-dots { min-width: 0; gap: 6px; } @media (max-width: 360px) { .gd-title { display: none; } }
