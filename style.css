@@ -1628,3 +1628,7 @@ body.eco .tr.next, body.eco .bar-next .nx-v { -webkit-animation: none; animation
 .sq.on { border-color: rgba(235, 229, 214, .6); background: rgba(235, 229, 214, .08); color: var(--bone); }
 .sq.on small { color: rgba(235, 229, 214, .75); }
 .sq:active { transform: scale(.97); }
+.q-rounds .q-adj { font: 600 15px/1 var(--font-display); letter-spacing: .12em; text-transform: uppercase; color: var(--bone); }
+.q-rounds .q-adj { font-size: 13px; letter-spacing: .06em; }
+.q-classic .q-w { letter-spacing: .08em; } .q-classic small { gap: 6px !important; }
+.q-rounds button.q-classic { gap: 8px !important; } .q-classic .q-k { letter-spacing: .1em !important; }

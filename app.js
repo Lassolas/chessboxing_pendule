@@ -710,7 +710,7 @@ function renderQuick() {
   if (k === 'rounds') {
     $('quick-box').innerHTML = `<p class="q-t">Nombre de rounds</p><div class="q-rounds">${Object.keys(PRESETS).map(r =>
       `<button type="button" class="${cfg.intervals && +r === cfg.rounds ? 'on' : ''}" data-qr="${r}"><b>${roman(+r)}</b><span class="q-w">rounds</span><small><i class="q-k">Pendule</i>${formatClock(playerTime({ ...cfg, intervals: true, rounds: +r }))}</small></button>`).join('')}`
-      + `<button type="button" class="q-classic${cfg.intervals ? '' : ' on'}" data-qr="0"><b>${NO_ROUNDS}</b><span class="q-w">Classique</span><small><i class="q-k">Pendule</i>${formatClock(cfg.plainMs || 300000)}${cfg.incrementMs ? `<em>+${Math.round(cfg.incrementMs / 1000)}s</em>` : ''}</small></button></div>`;
+      + `<button type="button" class="q-classic${cfg.intervals ? '' : ' on'}" data-qr="0"><b>${NO_ROUNDS}</b><span class="q-w">Classique</span><small><i class="q-k">Pendule</i><span class="q-adj">réglable</span></small></button></div>`;
     return;
   }
   if (k === 'vol') {  // long press on Son: the two volumes
