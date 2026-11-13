@@ -27,6 +27,9 @@
 
   <button type="button" id="btn-back" class="set-back" data-icon="next">Pendule</button>
 
+  <!-- Son, Éco, Sens: only here, at the very top (Val), not in the bar nor the pause. -->
+  <div class="set-quick" id="set-quick"></div>
+
   <!-- Réglages grouped by use: each card = numeral, title, what it is for, then its settings. -->
   <div class="sc">
     <header class="sc-h"><div><h2>Arbitre</h2><p>Ce que la pendule surveille pendant les échecs.</p></div></header>
@@ -42,8 +45,7 @@
 
   <div class="sc">
     <header class="sc-h"><div><h2>Écran</h2><p>Comment la pendule s'affiche.</p></div></header>
-    <p class="sc-l">Sens</p>
-    <div class="orient-pick" id="orient-pick"></div>
+    <div class="orient-pick" id="orient-pick" hidden></div>
     <p class="sc-l">Chiffres</p>
     <div class="options" id="digit-pick"></div>
     <div id="opt-avg"></div>

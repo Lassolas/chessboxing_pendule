@@ -1616,3 +1616,15 @@ body:not(.eco).phase-boxing #fight .h-phase b, body:not(.eco).phase-break #fight
 .phase-break .tr.next, .phase-break .bar-next[data-k] .nx-v, .phase-break #pm-next .nx-v {
   -webkit-animation: tr-blink2 1s steps(2, jump-none) infinite; animation: tr-blink2 1s steps(2, jump-none) infinite; }
 body.eco .tr.next, body.eco .bar-next .nx-v { -webkit-animation: none; animation: none; }
+/* 0.2.145 (Val): Son, Éco and Sens only at the very top of Réglages, three big switches side by side;
+   gone from the clock bar and from the pause, to leave room. */
+.set-quick { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 4px 0 14px; }
+.sq { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; min-height: 92px; padding: 10px 6px;
+  border-radius: 14px; border: 1px solid rgba(235, 229, 214, .16); background: rgba(235, 229, 214, .03); color: var(--text-2);
+  touch-action: manipulation; min-width: 0; }
+.sq svg, .sq .ic { width: 28px; height: 28px; margin: 0; }
+.sq b { font: 700 14px/1 var(--font-display); letter-spacing: .2em; text-transform: uppercase; }
+.sq small { font: 500 12px/1.1 var(--font-display); letter-spacing: .04em; color: var(--text-2); text-align: center; }
+.sq.on { border-color: rgba(235, 229, 214, .6); background: rgba(235, 229, 214, .08); color: var(--bone); }
+.sq.on small { color: rgba(235, 229, 214, .75); }
+.sq:active { transform: scale(.97); }

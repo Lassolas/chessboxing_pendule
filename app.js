@@ -322,6 +322,7 @@ function renderSetup() {
   $('digit-pick').innerHTML = `<div class="digit-pick">${DIGIT_STYLES.map(d =>
     `<button type="button" class="digit-opt${cfg.digits === d ? ' on' : ''}" data-digits="${d}" aria-label="Chiffres ${d}"><span></span></button>`).join('')}</div>`;
   $('digit-pick').querySelectorAll('.digit-opt span').forEach(sp => setDigits(sp, '4:30', sp.parentNode.dataset.digits));
+  renderSetQuick();
   $('orient-pick').innerHTML = ORIENT_PICK.map(([o, icon, label]) =>
     `<button type="button" class="orient-opt${(cfg.orient || 'normal') === o ? ' on' : ''}" data-orient="${o}" aria-label="${label}">${icon}<small>${label}</small></button>`).join('');
   // The clock waiting to start follows the settings at once.
@@ -337,6 +338,20 @@ const ORIENT_PICK = [
   ['right', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h18M16 7l5 5-5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>', 'Côté droit'],
   ['left', '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12H3M8 7l-5 5 5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>', 'Côté gauche'],
 ];
+// Top of Réglages: Son, Éco, Sens as three big switches (Sens: each tap turns to the next way).
+function renderSetQuick() {
+  const sound = !!cfg.sound, o = ORIENT_PICK.find(x => x[0] === (cfg.orient || 'normal')) || ORIENT_PICK[0];
+  const b = (k, on, icon, label, sub) => `<button type="button" class="sq${on ? ' on' : ''}" data-sq="${k}" aria-pressed="${on}">${icon}<b>${label}</b><small>${sub}</small></button>`;
+  $('set-quick').innerHTML = b('sound', sound, sound ? ICONS.sound : ICONS.mute, 'Son', sound ? 'Activé' : 'Coupé')
+    + b('eco', !!cfg.eco, ICONS.eco, 'Éco', cfg.eco ? 'Activé' : 'Désactivé')
+    + b('orient', true, ICONS.rotate, 'Sens', o[2]);
+}
+$('set-quick').addEventListener('click', e => {
+  const b = e.target.closest('[data-sq]');
+  if (!b) return;
+  if (b.dataset.sq === 'orient') cycleOrient(); else toggleSoundOrEco(b.dataset.sq);
+  renderSetup();
+});
 $('orient-pick').addEventListener('click', e => {
   const b = e.target.closest('[data-orient]');
   if (!b) return;
@@ -747,11 +762,8 @@ $('quick').addEventListener('click', onOptions);
 ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach((ev, i) =>
   $('quick').addEventListener(ev, [onRulerDown, onRulerMove, endRuler, endRuler][i]));
 function renderBarToggles() {
-  const sound = !!cfg.sound;
-  $('bar-tg').innerHTML = `<button type="button" class="tg${sound ? ' on' : ''}" data-tg="sound" aria-label="Son">${sound ? ICONS.sound : ICONS.mute}</button>`
-    + `<button type="button" class="tg${cfg.eco ? ' on' : ''}" data-tg="eco" aria-label="Éco">${ICONS.eco}</button>`
-    + `<button type="button" class="tg tg-orient" data-tg="orient" aria-label="Orientation">${ICONS.rotate}</button>`
-    + `<button type="button" class="tg tg-std" data-tg="std" aria-label="Standard">${ICONS.replay}</button>`
+  // Son, Éco and Sens live only at the top of Réglages (Val).
+  $('bar-tg').innerHTML = `<button type="button" class="tg tg-std" data-tg="std" aria-label="Standard">${ICONS.replay}</button>`
     + (inBrowser() ? `<button type="button" class="tg tg-install" data-tg="install" aria-label="Installer">${ICONS.install}</button>` : '');
 }
 
@@ -976,14 +988,10 @@ function renderPauseMenu() {
   setHTML($('pm-restart'), `${ICONS.home}<small>Accueil</small>`);  // ⌂: the fight dropped, back to a fresh clock
   setHTML($('pm-round'), `${ICONS.replay}<small>Round</small>`);
   setHTML($('pm-resume'), s.awaitReady ? '<i class="ready-txt">Prêt ?</i>' : `${ICONS.play}<span>GO</span>`);
-  // Switches for the rest of the fight: counts, illegal moves, sound, Éco; and Réglages.
-  const sound = !!cfg.sound;
+  // Switches for the rest of the fight: counts, illegal moves; and Réglages (Son, Éco, Sens are there).
   const tg = (k, on, icon, label) => `<button type="button" class="pt${on ? ' on' : ''}" data-pt="${k}" aria-pressed="${on}">${icon}<small>${label}</small></button>`;
   setHTML($('pm-tgs'), tg('count', !!s.cfg.countdownOn, countIcon(!!s.cfg.countdownOn, PM_HAND), 'Compte')
     + tg('ill', !!s.cfg.illegalMoves, redFlag, 'Illégal')
-    + tg('sound', sound, sound ? ICONS.sound : ICONS.mute, 'Son')
-    + tg('eco', !!cfg.eco, ICONS.eco, 'Éco')
-    + tg('orient', false, ICONS.rotate, 'Sens')
     + `<button type="button" class="pt pt-set" data-pt="set">${SET_ICON}<small>Réglages</small></button>`);
 }
 // Counts and illegal moves switched during a fight: the clock takes them at once.
