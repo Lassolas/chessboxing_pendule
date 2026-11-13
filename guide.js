@@ -59,7 +59,7 @@ const CARDS = [
       <li><b>Perdu à</b> : au bout de 3 comptes dans un round, ou 4 au total, le combat est perdu (réglable).</li></ul>` },
   { t: "Réglages de l'appli", s: 'Son, Éco, Sens, Chiffres, Temps par coup', l: lives(['settings', 'Réglages']), h: `<div class="gd-sq"><span>${ICONS.sound}<b>Son</b></span><span>${ICONS.eco}<b>Éco</b></span><span>${ICONS.rotate}<b>Sens</b></span></div>`, b: `
     <ul class="gd-steps">
-      <li><b>Son</b> : coupe ou remet la cloche, le claquoir et les appuis. Les volumes sont plus bas, dans la carte Son.</li>
+      <li><b>Son</b> : coupe ou remet la cloche, le claquoir et les appuis. Plus bas dans les réglages, tu peux régler séparément le volume des alertes et celui des appuis.</li>
       <li><b>Éco</b> : écran noir, moins de lumière et d'animations, pour garder la batterie.</li>
       <li><b>Sens</b> : face à face, ou les deux chiffres tournés d'un côté. Pencher le téléphone le fait aussi.</li>
       <li><b>Chiffres</b> : le style des chiffres de la pendule.</li>
