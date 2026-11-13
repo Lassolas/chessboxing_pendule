@@ -1441,7 +1441,7 @@ html.flip #ptr { top: auto; bottom: 0; }
 .h-rt b { font: var(--clock-weight, 600) 26px/1 var(--font-clock); font-variant-numeric: tabular-nums; color: var(--bone); opacity: .85; }
 .eco .h-rt b { opacity: .6; }
 /* 0.2.126: counting figures = serif italic with old-style figures (unlike the clock digits) */
-.ri-n, .trk, .rtag, .nx-v i, .q-rounds button b, .hc-num { font-variant-numeric: oldstyle-nums proportional-nums; }
+.ri-n, .trk, .rtag, .nx-v i, .q-rounds button b, .hc-num { font-variant-numeric: lining-nums proportional-nums; }  /* lining: old-style figures dropped below the line and off centre (Val) */
 /* the Rounds tile stays inside the bar */
 .rb-rounds .rb-c { margin-top: 0 !important; }
 .phase-ready .bar { padding-top: 14px !important; }
@@ -1449,3 +1449,10 @@ html.flip #ptr { top: auto; bottom: 0; }
 .bar-next { min-height: 50px; padding: 6px 18px !important; }
 .nx-k { font-size: 10px; } .nx-v i { font-size: 24px; } .nx-v b { font-size: 15px; }
 @media (max-width: 380px) { .bar-next { padding: 5px 12px !important; } .nx-k { font-size: 9px; } .nx-v i { font-size: 21px; } .nx-v b { font-size: 13px; } }
+/* 0.2.128: all four items on one grid: same row height for the tile and the stopwatches,
+   so the tile is centred with them, the words sit on one line, and nothing touches the bar's edge. */
+.phase-ready .bar-round { align-items: start !important; }
+.rb { display: grid !important; grid-template-rows: calc(var(--rb) * 1.24) auto; justify-items: center; align-items: center; row-gap: 6px; }
+.rb-rounds .rb-c { width: calc(var(--rb) * 1.2) !important; height: calc(var(--rb) * 1.2) !important; margin: 0 !important; }
+.phase-ready .bar { padding-top: 12px !important; padding-bottom: 12px !important; }
+@media (max-height: 640px) and (orientation: portrait) { .phase-ready .bar { padding-top: 8px !important; padding-bottom: 8px !important; } }
