@@ -1667,3 +1667,10 @@ body.eco .tr.next, body.eco .bar-next .nx-v { -webkit-animation: none; animation
 .paused:not(.await) .h-logo { display: none; }
 @media (orientation: landscape) and (max-height: 560px) { .paused:not(.await) .h-down .h-set { bottom: 40px; padding: 8px 16px; font-size: 12px; } }
 @container (max-height: 320px) { .paused:not(.await) .h-down .h-set { bottom: 40px; padding: 6px 14px !important; font-size: 11px !important; gap: 6px; } .paused:not(.await) .h-down .h-set svg { width: 14px; height: 14px; } }
+/* 0.2.155 (Val): each Réglages card on its own tinted ground, with a coloured edge, to tell them apart at a glance. */
+.sc { border-left-width: 4px !important; }
+.sc.sc-ref { background: linear-gradient(160deg, #2b2116, #1d1813) !important; border-color: rgba(230, 150, 70, .35) !important; border-left-color: #e0963f !important; }
+.sc.sc-between { background: linear-gradient(160deg, #142634, #111c25) !important; border-color: rgba(134, 188, 210, .3) !important; border-left-color: var(--blue) !important; }
+.sc.sc-screen { background: linear-gradient(160deg, #24272b, #1a1d20) !important; border-color: rgba(235, 229, 214, .22) !important; border-left-color: var(--bone) !important; }
+.sc.sc-sound { background: linear-gradient(160deg, #15291f, #111d17) !important; border-color: rgba(98, 179, 148, .3) !important; border-left-color: var(--green) !important; }
+.sc.sc-ref h2 { color: #f0b46a; } .sc.sc-between h2 { color: var(--blue); } .sc.sc-sound h2 { color: #7fc9a8; }
