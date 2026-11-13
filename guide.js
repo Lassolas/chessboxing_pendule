@@ -31,7 +31,7 @@ const CARDS = [
       <li>${ic('replay')} remet le combat classique : 5 rounds, 3:00 / 3:00 / 1:00.</li>
       <li>${ic('install')} <b>Installer</b> : met la pendule sur l'écran d'accueil du téléphone ; elle marche ensuite sans réseau.</li></ul>
     <p class="gd-note">Boxe à <em>0:00</em> : pas de boxe, seulement des rounds d'échecs avec des transitions.</p>` },
-  { t: 'Jouer aux échecs', s: 'Qui a les Blancs, taper sa moitié, le vert', l: lives(['chess']), b: `
+  { t: 'Lancer la pendule', s: 'Qui a les Blancs, taper sa moitié, le vert', l: lives(['chess']), b: `
     <ul class="gd-steps">
       <li>Le premier qui touche sa moitié prend les <b>Noirs</b> : la pendule des Blancs démarre.</li>
       <li>Après ton coup, <b>touche ta moitié</b> : ta pendule s'arrête, celle de l'autre repart.</li>
