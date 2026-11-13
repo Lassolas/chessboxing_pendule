@@ -1848,3 +1848,8 @@ body.eco .tr.next, body.eco .bar-next .nx-v { -webkit-animation: none; animation
 .gd-lives { margin-bottom: 22px; }
 /* 0.2.176 (Val): the break is called TRANSITION: a longer word, so tighter and a little smaller. */
 .phase-break #fight .h-phase small { letter-spacing: .14em !important; text-indent: .14em; font-size: clamp(22px, 7.4cqw, 40px) !important; }
+/* 0.2.177 (Val): the nav says which section comes next; a tap on it goes there. */
+.gd-nav { gap: 12px; }
+.gd-n { flex: 1; min-width: 0; max-width: 240px; display: grid; gap: 3px; cursor: pointer; letter-spacing: 0; }
+.gd-n small { font: 600 11px var(--font-display); letter-spacing: .2em; color: var(--text-2); }
+.gd-n b { font: 600 14px/1.2 var(--font-body); letter-spacing: 0; color: var(--bone); text-wrap: balance; }

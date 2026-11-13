@@ -86,7 +86,9 @@ function build() {
     const i = cur;
     tr.querySelectorAll('.gd-card').forEach((c, k) => { c.hidden = k !== i; });
     $('gd-dots').querySelectorAll('i').forEach((d, k) => d.classList.toggle('on', k === i));
-    $('gd-n').textContent = i ? `${i} / ${CARDS.length - 1}` : 'Sommaire';
+    const nx = CARDS[i + 1];
+    $('gd-n').innerHTML = `<small>${i ? `${i} / ${CARDS.length - 1}` : 'Sommaire'}</small>`
+      + (nx ? `<b>Suivant : ${nx.t}</b>` : '<b>Bon combat !</b>');
     $('gd-toc').classList.toggle('on', i === 0);
     $('gd-prev').disabled = i === 0; $('gd-next').disabled = i === CARDS.length - 1;
     mount(tr.children[i]);
@@ -110,6 +112,7 @@ function build() {
   }, { passive: true });
   $('gd-prev').addEventListener('click', () => go(cur - 1));
   $('gd-next').addEventListener('click', () => go(cur + 1));
+  $('gd-n').addEventListener('click', () => go(cur + 1));
   $('gd-dots').addEventListener('click', e => { const d = e.target.closest('[data-go]'); if (d) go(+d.dataset.go); });
   tr.addEventListener('click', e => { const d = e.target.closest('[data-go]'); if (d) go(+d.dataset.go); });
   $('gd-toc').addEventListener('click', () => go(0));
