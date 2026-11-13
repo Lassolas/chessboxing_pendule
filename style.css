@@ -1609,3 +1609,10 @@ body:not(.eco).phase-boxing #fight .h-phase b, body:not(.eco).phase-break #fight
   body:not(.eco).phase-break #fight .half.top { background: linear-gradient(90deg, #22597a, #173d55) !important; }
   body:not(.eco).phase-break #fight .half.bottom { background: linear-gradient(270deg, #22597a, #173d55) !important; }
 }
+/* 0.2.144 (Val misses the blinking next round in pauses): the next round blinks in the frieze AND in the
+   "Round suivant" button (its number and name), with -webkit- for older iPhones. */
+@-webkit-keyframes tr-blink2 { 50% { opacity: .2; } }
+@keyframes tr-blink2 { 50% { opacity: .2; } }
+.phase-break .tr.next, .phase-break .bar-next[data-k] .nx-v, .phase-break #pm-next .nx-v {
+  -webkit-animation: tr-blink2 1s steps(2, jump-none) infinite; animation: tr-blink2 1s steps(2, jump-none) infinite; }
+body.eco .tr.next, body.eco .bar-next .nx-v { -webkit-animation: none; animation: none; }
