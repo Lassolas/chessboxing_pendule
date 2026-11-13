@@ -2,7 +2,7 @@
 // A plain GET to the counter, the same request as opening the count link by hand.
 // Only from the real site, never from a test copy.
 const URL_COUNT = 'https://lassolas.goatcounter.com/count';
-const live = /chessboxingparis\.com$|github\.io$/.test(location.hostname);
+const live = /chessboxingparis\.com$|github\.io$/.test(location.hostname) && !/[?&]demo=/.test(location.search);
 
 // path: what is counted ('/' a visit, 'combat-debut' an event); event: true for actions.
 export function count(path, event = false) {

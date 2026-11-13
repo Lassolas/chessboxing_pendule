@@ -16,10 +16,16 @@ document.querySelectorAll('[data-icon]').forEach(el => el.insertAdjacentHTML('af
 const CFG_KEY = 'pendule-cb-config';
 const FIGHT_KEY = 'pendule-cb-fight';
 
+// Demo (?demo=chess…): the real clock, shown live and small inside the Mode d'emploi.
+// It never reads or writes the user's settings, counts nothing, makes no sound.
+const DEMO = new URLSearchParams(location.search).get('demo');
+if (DEMO) document.documentElement.classList.add('demo');
 function load(key) {
+  if (DEMO) return null;
   try { return JSON.parse(localStorage.getItem(key)); } catch { return null; }
 }
 function save(key, value) {
+  if (DEMO) return;
   try { localStorage.setItem(key, JSON.stringify(value)); } catch { /* private mode */ }
 }
 
@@ -216,7 +222,7 @@ function setRuler(t, el, i, vals) {
   el.querySelector('.rl-strip').style.transform = `translateX(${-i * tickOf(t)}px)`;
   el.querySelector('.rl-cur').textContent = fmtValue(vals[i], t.kind);
   hideNear(t, el, i);
-  if (navigator.vibrate) navigator.vibrate(4);
+  if (navigator.vibrate && !DEMO) navigator.vibrate(4);
   return true;
 }
 const onRulerDown = e => {
@@ -435,7 +441,7 @@ function standard() {
   cfg = { ...homeDefaults(), names: cfg.names, moveGraceMs: cfg.moveGraceMs };
   keep.forEach(k => { if (old[k] !== undefined) cfg[k] = old[k]; });
   save(CFG_KEY, cfg);
-  if (navigator.vibrate) navigator.vibrate(8);
+  if (navigator.vibrate && !DEMO) navigator.vibrate(8);
   renderSetup();
 }
 // Son: all sounds on or off; Éco: dark, silent. Both apply to the clock at once.
@@ -454,7 +460,7 @@ let holdTimer = null, held = false;
 $('bar-tg').addEventListener('pointerdown', e => {
   held = false;
   if (!e.target.closest('[data-tg="sound"]')) return;
-  holdTimer = setTimeout(() => { held = true; if (navigator.vibrate) navigator.vibrate(10); openQuick('vol'); }, 500);
+  holdTimer = setTimeout(() => { held = true; if (navigator.vibrate && !DEMO) navigator.vibrate(10); openQuick('vol'); }, 500);
 });
 ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => $('bar-tg').addEventListener(ev, () => clearTimeout(holdTimer)));
 $('bar-tg').addEventListener('contextmenu', e => e.preventDefault());
@@ -607,6 +613,7 @@ let tilt = { o: null, since: 0 };
 // iOS reports gravity with the opposite sign to Android and the spec.
 const MOTION_SIGN = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ? 1 : -1;
 function onMotion(e) {
+  if (DEMO) return;
   const g = e.accelerationIncludingGravity;
   if (!g || g.x === null || $('fight').hidden) return;
   const x = g.x * MOTION_SIGN, y = g.y * MOTION_SIGN, z = g.z;
@@ -648,7 +655,7 @@ function cycleOrient() {
   setOrient(o);
   tilt.lock = tilt.o;  // the tilt only takes over again once the phone moves
   save(CFG_KEY, cfg);
-  if (navigator.vibrate) navigator.vibrate(6);
+  if (navigator.vibrate && !DEMO) navigator.vibrate(6);
   render();
 }
 
@@ -772,7 +779,7 @@ $('quick').addEventListener('click', e => {
   const t = tileOf(quickKey);
   cfg[t.key] = Math.min(t.max, Math.max(t.min, (cfg[t.key] || 0) + +b.dataset.step * t.step));
   save(CFG_KEY, cfg);
-  if (navigator.vibrate) navigator.vibrate(6);
+  if (navigator.vibrate && !DEMO) navigator.vibrate(6);
   renderSetup(); render();
 });
 $('quick').addEventListener('click', onTiles);
@@ -1043,7 +1050,7 @@ const COUNT_KEYS = ['countdownOn', 'warnOn', 'moveWarnMs', 'moveCountdownMs', 'm
 $('pm-tgs').addEventListener('pointerdown', e => {
   held = false;
   if (!e.target.closest('[data-pt="sound"]')) return;
-  holdTimer = setTimeout(() => { held = true; if (navigator.vibrate) navigator.vibrate(10); openQuick('vol'); }, 500);
+  holdTimer = setTimeout(() => { held = true; if (navigator.vibrate && !DEMO) navigator.vibrate(10); openQuick('vol'); }, 500);
 });
 ['pointerup', 'pointercancel', 'pointerleave'].forEach(ev => $('pm-tgs').addEventListener(ev, () => clearTimeout(holdTimer)));
 $('pm-tgs').addEventListener('contextmenu', e => e.preventDefault());
@@ -1168,6 +1175,7 @@ function ecoKey() {
 // ── SCREEN ON + INSTALL ──
 let wakeLock = null;
 async function requestWakeLock() {
+  if (DEMO) return;
   try {
     wakeLock = await navigator.wakeLock.request('screen');
     // Released by the system (battery saver…): ask again while the clock is shown.
@@ -1266,7 +1274,7 @@ $('install-help').addEventListener('click', () => { $('install-help').hidden = t
 $('btn-install').addEventListener('click', install);
 $('install-box').hidden = standalone;
 $('btn-install').hidden = standalone;
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => {});
+if (!DEMO && 'serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => {});
 
 // Slide down from anywhere (clock stopped, or Réglages scrolled to the top) to
 // reload the app: the newest version, everything set afresh.
@@ -1323,8 +1331,41 @@ function escapeHtml(t) {
 }
 
 renderSetup();
-{  // Opening: on the clock, ready, or the fight left in progress, paused.
+if (DEMO) runDemo(DEMO);
+else {  // Opening: on the clock, ready, or the fight left in progress, paused.
   backToClock();  // a fight left in progress comes back paused
+}
+// The demo scenes of the Mode d'emploi: each one sets the real clock in one situation and plays it.
+function runDemo(kind) {
+  setMuted(true);
+  const now = () => performance.now();
+  if (kind === 'count' || kind === 'illegal') Object.assign(cfg, { countdownOn: true, warnOn: true, illegalMoves: true });
+  if (kind === 'classic') cfg.intervals = false;
+  if (kind === 'settings') { openSettings(false); return; }
+  readyClock();
+  if (kind === 'home' || kind === 'classic') return;
+  if (kind === 'rounds') { openQuick('rounds'); return; }
+  act(start(s, now(), 1));
+  if (kind === 'chess') {  // the players take turns: the green half follows the move
+    setInterval(() => { if (s.phase === 'chess') act(press(s, s.turn, now())); }, 2400);
+    return;
+  }
+  if (kind === 'break' || kind === 'boxing') {
+    act(goToNextStep(s, now()));
+    if (kind === 'boxing') act(goToNextStep(s, now()));
+    return;
+  }
+  if (kind === 'pause') { setTimeout(() => act(togglePause(s, now())), 600); return; }
+  if (kind === 'count') {  // a player who thinks too long: the warning, then the count
+    s.moveElapsed = s.cfg.moveWarnMs + 1500;
+    setTimeout(() => { s.moveElapsed = s.cfg.moveCountdownMs + 2000; render(); }, 2500);
+    setInterval(() => { s.moveElapsed = s.cfg.moveWarnMs + 500; s.counts = []; setTimeout(() => { s.moveElapsed = s.cfg.moveCountdownMs + 1000; }, 2500); }, 6000);
+    return;
+  }
+  if (kind === 'illegal') {
+    const claim = () => { s.counts = []; const pl = s.turn; act(illegalMove(s, pl, now())); showNotice(pl); };
+    setTimeout(claim, 700); setInterval(claim, 4500);
+  }
 }
 // Version shown in Réglages (and in the feedback subject): the newest cache, read again
 // when a new version takes over, so it never lags one version behind.

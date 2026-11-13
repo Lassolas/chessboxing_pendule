@@ -289,5 +289,5 @@ const VIBRATE = {
 export function play(event) {
   group = CLICKS.has(event) ? 'clicks' : 'alerts';
   if (!muted && ctx && vol[group] > 0) SOUNDS[event]?.();
-  if (VIBRATE[event] && navigator.vibrate) navigator.vibrate(VIBRATE[event]);
+  if (VIBRATE[event] && navigator.vibrate && !/[?&]demo=/.test(location.search)) navigator.vibrate(VIBRATE[event]);
 }
