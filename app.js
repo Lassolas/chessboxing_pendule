@@ -32,8 +32,8 @@ const homeDefaults = () => ({
   moveWarnMs: 25000,                  // the warning, 5 s before the count unless moved
   sound: true, showAvg: true,         // Son (all sounds on / off), average per move
   volAlerts: 100, volClicks: 100,     // volumes: alerts (bell, clapper...) and the clock presses
-  plainMs: 5 * 60000, incrementMs: 3000,  // classic clock (no rounds): time per player + increment
-  v: 11,
+  plainMs: 5 * 60000, incrementMs: 2000,  // classic clock (no rounds): time per player + increment
+  v: 12,
 });
 let cfg = { ...homeDefaults(), ...(load(CFG_KEY) || {}) };
 cfg.incrementMs = Math.min(30000, cfg.incrementMs);  // the increment goes up to 30 s
@@ -83,6 +83,11 @@ if (cfg.v < 11) {  // v11: one Son switch, a volume per group
   cfg.sound = !!(cfg.sound || cfg.clicks);
   delete cfg.clicks;
   cfg.v = 11;
+}
+if (cfg.v < 12) {  // v12: classic clock 5:00 + 0:02 by default
+  cfg.plainMs = 5 * 60000;
+  cfg.incrementMs = 2000;
+  cfg.v = 12;
 }
 cfg.countsPerRound = Math.min(5, Math.max(1, cfg.countsPerRound || 3));  // limits picked from 1 to 5
 cfg.countsPerRound = Math.min(4, cfg.countsPerRound);
