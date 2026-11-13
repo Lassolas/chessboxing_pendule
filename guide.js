@@ -46,7 +46,7 @@ const CARDS = [
   { t: 'Mettre en pause ou refaire le round', s: 'Pause, reprendre, refaire le round, nouveau combat', l: lives(['pause']), b: `
     <p class="gd-lead">Le bouton ${ic('pause')} au bout de la barre du milieu met tout en pause.</p>
     <ul class="gd-steps">
-      <li>${ic('play')} <b>GO</b> : on reprend. Toucher l'écran ailleurs reprend aussi.</li>
+      <li>${ic('play')} <b>Continuer</b> : on reprend. Toucher l'écran ailleurs reprend aussi.</li>
       <li>${ic('replay')} <b>Round</b> : refait le round en cours depuis son début.</li>
       <li>${ic('home')} <b>Accueil</b> : arrête le combat et remet une pendule neuve. C'est aussi ce qu'on fait après un mat, un K.-O. ou un abandon.</li></ul>` },
   { t: "Pour l'arbitre", s: 'Joueur trop lent, coup illégal, défaite', l: lives(['referee']), b: `

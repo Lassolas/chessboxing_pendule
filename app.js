@@ -1037,7 +1037,7 @@ function renderPauseMenu() {
   $('pm-round').hidden = !!s.awaitReady || !s.snap || (s.phase !== 'chess' && s.phase !== 'boxing');
   setHTML($('pm-restart'), `${ICONS.home}<small>Accueil</small>`);  // ⌂: the fight dropped, back to a fresh clock
   setHTML($('pm-round'), `${ICONS.replay}<small>Round</small>`);
-  setHTML($('pm-resume'), s.awaitReady ? '<i class="ready-txt">Prêt ?</i>' : `${ICONS.play}<span>GO</span>`);
+  setHTML($('pm-resume'), s.awaitReady ? '<i class="ready-txt">Prêt ?</i>' : `${ICONS.play}<span>Continuer</span>`);
   // Switches for the rest of the fight: counts, illegal moves; and Réglages (Son, Éco, Sens are there).
   const tg = (k, on, icon, label) => `<button type="button" class="pt${on ? ' on' : ''}" data-pt="${k}" aria-pressed="${on}">${icon}<small>${label}</small></button>`;
   setHTML($('pm-tgs'), tg('count', !!s.cfg.countdownOn, countIcon(!!s.cfg.countdownOn, PM_HAND), 'Compte')
@@ -1344,7 +1344,8 @@ function runDemo(kind) {
   const finger = document.createElement('div');
   finger.id = 'demo-finger'; document.body.append(finger);
   const cap = t => { try { parent.postMessage({ demoCap: t }, location.origin); } catch { /* alone */ } };
-  const sleep = ms => new Promise(ok => setTimeout(ok, ms));
+  const SLOW = 1.7;  // time to read each step (Val)
+  const sleep = ms => new Promise(ok => setTimeout(ok, ms * SLOW));
   const el = q => typeof q === 'string' ? document.querySelector(q) : q;
   async function tap(q, fx = .5, fy = .5) {
     const e = el(q); if (!e) return;
@@ -1386,14 +1387,16 @@ function runDemo(kind) {
     },
     async flow() {
       readyClock(); act(start(s, now(), 1)); act(press(s, s.turn, now()));
-      cap("Un round d'échecs se joue…"); await sleep(2000);
-      act(goToNextStep(s, now()));
-      cap('Fin du round : la cloche, puis la transition, en bleu.'); await sleep(2600);
-      cap('Le grand chrono est celui de la transition. Le prochain round clignote dans la barre.'); await sleep(3000);
-      act(goToNextStep(s, now()));
-      cap('Rouge = boxe. La pendule de chacun reste en petit, en haut.'); await sleep(3000);
-      cap('10 s avant la fin, le claquoir. Ce bouton passe tout de suite à la suite.'); await tap('#bar-next'); lift(); await sleep(1800);
-      cap('Dernières secondes de la transition…'); s.phaseRemaining = 2200; await sleep(2600);
+      const skip = async (t, ms = 3400) => { cap(t); s.phaseRemaining = ms * SLOW; await sleep(ms + 300); };
+      cap("Un round d'échecs se joue…"); await sleep(1600);
+      await skip('On saute aux dernières secondes du round…');
+      cap('0:00 : la cloche. La transition commence, en bleu.'); await sleep(2400);
+      cap('Le grand chrono est celui de la transition. Le prochain round clignote dans la barre.'); await sleep(2800);
+      await skip('On saute à la fin de la transition…');
+      cap('Rouge = boxe. La pendule de chacun reste en petit, en haut.'); await sleep(2600);
+      await skip('Fin du round de boxe : le claquoir à 10 s, la cloche à 0.');
+      cap('Une transition, encore…'); await sleep(1500);
+      await skip('… jusqu\'à 0.', 2600);
       cap('Prêt ? La pendule attend que les gants soient enlevés : touche l\'écran.'); await sleep(2400);
       await tap('#pm-resume'); lift();
       cap("La cloche : le round d'échecs repart."); await sleep(2600);
@@ -1403,7 +1406,7 @@ function runDemo(kind) {
       cap('Le combat tourne.'); await sleep(1600);
       cap('Pause : le bouton au bout de la barre arrête tout.'); await tap('#bar-btn'); lift(); await sleep(2000);
       cap('Round : refait le round depuis son début.'); await tap('#pm-round'); lift(); await sleep(1800);
-      cap('GO, ou toucher ailleurs : on reprend.'); await tap('#pm-resume'); lift(); await sleep(2000);
+      cap('Continuer, ou toucher ailleurs : on reprend.'); await tap('#pm-resume'); lift(); await sleep(2000);
       cap('Après un mat ou un K.-O. : pause, puis Accueil.'); await tap('#bar-btn'); await sleep(500); await tap('#pm-restart'); lift(); await sleep(1400);
       cap('Accueil : une pendule neuve, prête pour le combat suivant.'); await sleep(2200);
     },
