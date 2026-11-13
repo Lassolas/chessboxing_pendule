@@ -1632,3 +1632,9 @@ body.eco .tr.next, body.eco .bar-next .nx-v { -webkit-animation: none; animation
 .q-rounds .q-adj { font-size: 13px; letter-spacing: .06em; }
 .q-classic .q-w { letter-spacing: .08em; } .q-classic small { gap: 6px !important; }
 .q-rounds button.q-classic { gap: 8px !important; } .q-classic .q-k { letter-spacing: .1em !important; }
+/* 0.2.147 (Val): ↺ Standard (and Installer) on the same line as Rounds and the stopwatches, stacked at the end. */
+.phase-ready .bar { flex-wrap: nowrap !important; align-items: center !important; }
+.phase-ready .bar-tg { flex: none !important; flex-direction: column; justify-content: center; gap: 8px !important;
+  padding-left: min(10px, 2.4vw) !important; border-left: 1px solid var(--hair) !important; align-self: center; }
+.phase-ready .bar-tg .tg { --rb: 36px; }
+@media (max-height: 640px) and (orientation: portrait) { .phase-ready .bar-tg .tg { --rb: 32px; } .phase-ready .bar-tg { gap: 6px !important; } }
