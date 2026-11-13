@@ -1505,3 +1505,32 @@ html.flip #ptr { top: auto; bottom: 0; }
   background: linear-gradient(135deg, transparent calc(50% - 1px), var(--bone) calc(50% - 1px), var(--bone) calc(50% + 1px), transparent calc(50% + 1px)); opacity: .85; }
 /* the classic clock's barred round is a symbol, not a number: no circle around it */
 .q-rounds button.q-classic b { border: 0 !important; width: 40px; height: 40px; }
+
+/* 0.2.134 (Val picked idea I): whose move = a green lever rising at the player's edge + a calm slate light
+   from the middle bar into that half; the other half stays dark with dimmer digits. No big glove watermark,
+   a much finer texture, the club's logo small at the waiting player's edge. */
+#fight .half::before { display: none !important; }
+body::after { opacity: .035 !important; }
+#fight .half { background: #161b1f; }
+.phase-chess .half.active { background: #161b1f !important; box-shadow: none !important; }
+#fight .half::after { content: ''; position: absolute; inset: 0; pointer-events: none; opacity: 0; transition: opacity .45s; }
+#fight .half.top::after { background: radial-gradient(120% 90% at 50% 100%, rgba(120,145,160,.30) 0%, rgba(120,145,160,.12) 50%, rgba(120,145,160,.04) 100%); }
+#fight .half.bottom::after { background: radial-gradient(120% 90% at 50% 0%, rgba(120,145,160,.30) 0%, rgba(120,145,160,.12) 50%, rgba(120,145,160,.04) 100%); }
+.phase-chess #fight .half.active::after { opacity: 1; }
+.phase-chess .half:not(.active) .h-clock { color: rgba(235, 229, 214, .45) !important; }
+.h-lever { position: absolute; left: 0; right: 0; bottom: 0; height: 14px; border-radius: 14px 14px 0 0; background: var(--green);
+  box-shadow: 0 0 18px rgba(98, 179, 148, .6); transform: translateY(100%); opacity: 0; pointer-events: none; z-index: 2;
+  transition: transform .35s cubic-bezier(.3, 1.4, .5, 1), opacity .3s; }
+.phase-chess .half.active .h-lever { transform: none; opacity: 1; }
+.h-logo { position: absolute; left: 0; right: 0; bottom: 38px; text-align: center; pointer-events: none; transition: opacity .3s; }
+.h-logo img { height: 12px; width: auto; opacity: .28; }
+.phase-chess .half.active .h-logo, .phase-ready .h-logo, .flag .h-logo, .await .h-logo { opacity: 0; }
+.phase-chess .half.active .h-name { color: var(--green) !important; }
+.phase-chess .half.active .h-name { bottom: 22px; }
+.eco .h-lever { box-shadow: none; } .eco #fight .half::after { display: none; } .eco .h-logo { display: none; }
+@media (prefers-reduced-motion: reduce) { .h-lever, #fight .half::after { transition: none; } }
+/* iPhone landscape: halves side by side, the bar along the bottom: the light comes from the middle line */
+@media (orientation: landscape) and (max-height: 560px) {
+  #fight .half.top::after { background: radial-gradient(90% 120% at 100% 50%, rgba(120,145,160,.30), rgba(120,145,160,.04)); }
+  #fight .half.bottom::after { background: radial-gradient(90% 120% at 0% 50%, rgba(120,145,160,.30), rgba(120,145,160,.04)); }
+}

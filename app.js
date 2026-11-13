@@ -483,6 +483,7 @@ function buildHalves() {
   halves.forEach(h => {
     const p = +h.dataset.p;
     h.innerHTML = `<div class="h-in">
+      <i class="h-lever"></i><span class="h-logo"><img src="logo-wide.png" alt=""></span>
       <div class="h-name"></div>
       <div class="h-rt"></div>
       <div class="h-up"><div class="h-phase"><small></small><b></b></div></div>
