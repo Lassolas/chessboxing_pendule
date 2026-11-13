@@ -1503,3 +1503,5 @@ html.flip #ptr { top: auto; bottom: 0; }
 .tr-box.prev:not(.now) { background: rgba(217, 83, 74, .2); border-color: rgba(217, 83, 74, .45); color: rgba(217, 83, 74, .6) !important; }
 .tr.prev:not(.now)::after { content: ''; position: absolute; inset: -2px; border-radius: 50%; pointer-events: none;
   background: linear-gradient(135deg, transparent calc(50% - 1px), var(--bone) calc(50% - 1px), var(--bone) calc(50% + 1px), transparent calc(50% + 1px)); opacity: .85; }
+/* the classic clock's barred round is a symbol, not a number: no circle around it */
+.q-rounds button.q-classic b { border: 0 !important; width: 40px; height: 40px; }
