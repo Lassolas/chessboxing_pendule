@@ -32,6 +32,7 @@ const homeDefaults = () => ({
   moveWarnMs: 25000,                  // the warning, 5 s before the count unless moved
   sound: true, showAvg: true,         // Son (all sounds on / off), average per move
   volAlerts: 100, volClicks: 100,     // volumes: alerts (bell, clapper...) and the clock presses
+  plainMs: 5 * 60000, incrementMs: 3000,  // classic clock (no rounds): time per player + increment
   v: 11,
 });
 let cfg = { ...homeDefaults(), ...(load(CFG_KEY) || {}) };
@@ -127,6 +128,9 @@ const TILES = [
   { key: 'moveCountdownMs', flag: 'countdownOn', row: 2, icon: () => countHands(8, SET_HAND), label: 'Compte', step: 1000, min: 1000, max: () => countMax(cfg) },
   { key: 'illegalMoves', flag: 'illegalMoves', row: 2, icon: () => redFlag, label: 'Coups illégaux', noValue: true },
   { key: 'moveWarnMs', flag: 'warnOn', row: 2, icon: () => watch, label: 'Alerte', step: 1000, min: 0, max: () => Math.max(0, cfg.moveCountdownMs - 1000) },
+  // Classic clock: time per player and increment, always on.
+  { key: 'plainMs', icon: () => ICONS.clock, label: 'Temps', step: 30000, min: 60000, max: 3600000, on: () => true, tap: () => {}, always: true },
+  { key: 'incrementMs', icon: () => ICONS.clock, label: 'Incrément', step: 1000, min: 0, max: 60000, on: () => true, tap: () => {}, always: true },
   // Count limits: rulers too, always on (no drawing to tap).
   { key: 'countsPerRound', kind: 'n', label: 'Max', sub: '/ round', step: 1, min: 1, max: 10, on: () => true, tap: () => {} },
   { key: 'countsTotal', kind: 'n', label: 'Max', sub: 'total', step: 1, min: 1, max: 20, on: () => true, tap: () => {} },
@@ -162,7 +166,7 @@ const tickOf = t => t.kind === 'n' ? 18 : t.step === 1000 ? 5 : TICK_PX;  // cou
 // Scale labels too close to the needle would peek out from under the value: hidden.
 const hidesLabel = (t, k, i) => Math.abs(k - i) * tickOf(t) < (t.kind === 'n' ? 26 : 46);
 function hideNear(t, el, i) { el.querySelectorAll('.rl-strip b').forEach(b => b.classList.toggle('hid', hidesLabel(t, +b.dataset.k, i))); }
-const RULER_TONE = { chessRoundMs: 'chess', boxRoundMs: 'box', breakMs: 'pause', moveCountdownMs: 'count', moveWarnMs: 'count', countsPerRound: 'n', countsTotal: 'n' };
+const RULER_TONE = { plainMs: 'chess', incrementMs: 'chess', chessRoundMs: 'chess', boxRoundMs: 'box', breakMs: 'pause', moveCountdownMs: 'count', moveWarnMs: 'count', countsPerRound: 'n', countsTotal: 'n' };
 function rulerHTML(t, always = false) {
   const on = always || t.on(), px = tickOf(t);
   const dim = !always && (((t.key === 'boxRoundMs' || t.key === 'breakMs') && !cfg.intervals) || (t.key === 'moveWarnMs' && !cfg.countdownOn));
@@ -647,11 +651,17 @@ function openSettings(flip) {
 }
 // Before the start the bar holds round buttons: rounds, chess, boxing, pause.
 // Each part can be tapped to change it right there (see the quick panel).
+// A round, barred: the classic clock, no rounds.
+const NO_ROUNDS = '<svg class="no-rounds" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="7.5"/><path d="M5.6 18.4 18.4 5.6"/></svg>';
 function readyInfoHTML(c) {
   // Four circles: the number of rounds, then each step's time, with its name underneath.
   const item = (q, val, label, off) => `<button type="button" class="rb rb-${q}${off ? ' off' : ''}${quickKey === q ? ' open' : ''}" data-q="${q}">`
     + `<span class="rb-c">${val}</span><small class="rb-cap">${label}</small></button>`;
   const t = (k, on, offTxt) => `<span class="rb-t">${on ? fmtValue(c[k]) : offTxt}</span>`;
+  // Classic clock: the barred round, then time per player and increment.
+  if (!c.intervals) return item('rounds', NO_ROUNDS, 'Classique')
+    + item('plainMs', `<span class="rb-t">${fmtValue(c.plainMs)}</span>`, 'Temps')
+    + item('incrementMs', `<span class="rb-t">+${fmtValue(c.incrementMs)}</span>`, 'Incrément');
   return item('rounds', `<span class="ri-n">${roman(c.rounds)}</span>`, 'Rounds')
     + item('chessRoundMs', t('chessRoundMs', c.intervals, '—'), 'Échecs', !c.intervals)
     + item('boxRoundMs', t('boxRoundMs', c.intervals && c.boxTimer, '—'), 'Boxe', !(c.intervals && c.boxTimer))
@@ -667,7 +677,8 @@ function renderQuick() {
   if (!k) return;
   if (k === 'rounds') {
     $('quick-box').innerHTML = `<p class="q-t">Rounds</p><div class="q-rounds">${Object.keys(PRESETS).map(r =>
-      `<button type="button" class="${+r === cfg.rounds ? 'on' : ''}" data-qr="${r}"><b>${roman(+r)}</b><small>${formatClock(playerTime({ ...cfg, rounds: +r }))}</small></button>`).join('')}</div>`;
+      `<button type="button" class="${cfg.intervals && +r === cfg.rounds ? 'on' : ''}" data-qr="${r}"><b>${roman(+r)}</b><small>${formatClock(playerTime({ ...cfg, intervals: true, rounds: +r }))}</small></button>`).join('')}`
+      + `<button type="button" class="q-classic${cfg.intervals ? '' : ' on'}" data-qr="0"><b>${NO_ROUNDS}</b><small>Classique</small></button></div>`;
     return;
   }
   if (k === 'vol') {  // long press on Son: the two volumes
@@ -682,9 +693,11 @@ function renderQuick() {
     return;
   }
   const t = tileOf(k), on = t.on();
-  $('quick-box').innerHTML = `<p class="q-t">${t.label}</p>` + rulerHTML(t) + `<div class="q-act q-act-two">
+  $('quick-box').innerHTML = `<p class="q-t">${t.label}</p>` + rulerHTML(t) + (t.always
+    ? `<div class="q-act q-act-one"><button type="button" class="q-btn q-ok" data-qclose>OK</button></div>`
+    : `<div class="q-act q-act-two">
     <button type="button" class="q-btn" data-tile="${k}">${on ? 'Désactiver' : 'Activer'}</button>
-    <button type="button" class="q-btn q-ok" data-qclose>OK</button></div>`;
+    <button type="button" class="q-btn q-ok" data-qclose>OK</button></div>`);
 }
 function openQuick(k, flip = false) { quickKey = k; quickFlip = flip; renderQuick(); render(); }
 $('bar-round').addEventListener('click', e => {
@@ -695,7 +708,10 @@ $('bar-round').addEventListener('click', e => {
 $('quick').addEventListener('click', e => {
   if (e.target === $('quick') || e.target.closest('[data-qclose]')) { quickKey = null; renderQuick(); render(); return; }
   const r = e.target.closest('[data-qr]');
-  if (r) { cfg.rounds = +r.dataset.qr; save(CFG_KEY, cfg); renderSetup(); }
+  if (r) {
+    if (+r.dataset.qr) { cfg.rounds = +r.dataset.qr; cfg.intervals = true; } else cfg.intervals = false;
+    save(CFG_KEY, cfg); renderSetup();
+  }
 });
 $('quick').addEventListener('click', onTiles);
 // Réglages › Comptes: drag the rulers, ↺ resets; the drawings are not switches here.

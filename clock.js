@@ -15,7 +15,7 @@ export const PRESETS = {
 // so a shorter chess round gives a shorter clock. A plain clock keeps the
 // preset times.
 export function playerTime(cfg) {
-  if (!cfg.intervals) return PRESETS[cfg.rounds];
+  if (!cfg.intervals) return cfg.plainMs || PRESETS[cfg.rounds];  // classic clock: its own time per player
   return Math.ceil(cfg.rounds / 2) * cfg.chessRoundMs / 2;
 }
 
@@ -214,6 +214,8 @@ export function press(s, player, now) {
   s.moves[player] += 1;
   s.spent[player] += s.curMove || 0;
   s.curMove = 0;
+  // Classic clock: the increment is added to the player who just moved (Fischer).
+  if (!s.cfg.intervals && s.cfg.incrementMs) s.remaining[player] += s.cfg.incrementMs;
   s.turn = 1 - player;
   s.moveElapsed = 0;
   return ['press'];

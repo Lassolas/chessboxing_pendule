@@ -1353,3 +1353,10 @@ html.flip #ptr { top: auto; bottom: 0; }
 .bn-cap b { display: block; margin-top: 2px; font-weight: 700; letter-spacing: .16em; }
 .bn-cap b.bn-chess { color: var(--bone); } .bn-cap b.bn-box { color: var(--red); }
 #bar-btn:has(.bn-cap) { flex-direction: column; gap: 2px; }
+/* 0.2.116: classic clock (no rounds) — the barred round */
+.q-rounds { grid-template-columns: repeat(5, 1fr) !important; }
+.q-rounds .no-rounds { width: 30px; height: 30px; display: block; }
+.q-rounds button small { white-space: nowrap; }
+.q-classic small { font: 600 10px var(--font-display) !important; letter-spacing: .1em; text-transform: uppercase; }
+.rb .no-rounds { width: calc(var(--rb) * .56); height: calc(var(--rb) * .56); color: var(--gold); }
+.rb-incrementMs .rb-t { font-size: calc(var(--rb) * .25); letter-spacing: 0; }
