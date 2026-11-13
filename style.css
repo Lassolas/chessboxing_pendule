@@ -1595,3 +1595,17 @@ body::after { opacity: .035 !important; }
 .q-rounds .q-k { font-size: 10px !important; letter-spacing: .2em !important; }
 .q-rounds { width: 100%; box-sizing: border-box; } .q-rounds button { width: 100% !important; box-sizing: border-box; min-width: 0; margin: 0 !important; }
 .q-rounds button { gap: 10px !important; } .q-rounds .q-w { letter-spacing: .14em; } .q-rounds button small { gap: 8px !important; white-space: nowrap; } .q-classic small { font-size: 17px !important; } .q-classic small em { font-size: .8em; font-style: normal; color: var(--text-2); }
+/* 0.2.143 (Val): boxing and breaks must read at once as "not chess": both halves fill with red (boxing)
+   or blue (break), like the green half of the player to move during chess. Éco stays black. */
+body:not(.eco).phase-boxing #fight .half { background: linear-gradient(0deg, #7c2620, #561a16) !important; }
+body:not(.eco).phase-boxing #fight .half.top { background: linear-gradient(180deg, #7c2620, #561a16) !important; }
+body:not(.eco).phase-break #fight .half { background: linear-gradient(0deg, #22597a, #173d55) !important; }
+body:not(.eco).phase-break #fight .half.top { background: linear-gradient(180deg, #22597a, #173d55) !important; }
+body:not(.eco).phase-boxing #fight .h-phase b, body:not(.eco).phase-break #fight .h-phase b { color: #fff !important; }
+.eco.phase-boxing #fight .half { background: #200b09 !important; } .eco.phase-break #fight .half { background: #0a1822 !important; }
+@media (orientation: landscape) and (max-height: 560px) {
+  body:not(.eco).phase-boxing #fight .half.top { background: linear-gradient(90deg, #7c2620, #561a16) !important; }
+  body:not(.eco).phase-boxing #fight .half.bottom { background: linear-gradient(270deg, #7c2620, #561a16) !important; }
+  body:not(.eco).phase-break #fight .half.top { background: linear-gradient(90deg, #22597a, #173d55) !important; }
+  body:not(.eco).phase-break #fight .half.bottom { background: linear-gradient(270deg, #22597a, #173d55) !important; }
+}
