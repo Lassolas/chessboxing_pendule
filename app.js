@@ -410,6 +410,7 @@ $('bar-tg').addEventListener('click', e => {
   if (held) { held = false; return; }  // that was a long press
   if (b.dataset.tg === 'std') { standard(); return; }
   if (b.dataset.tg === 'orient') { cycleOrient(); return; }
+  if (b.dataset.tg === 'install') { install(); return; }
   toggleSoundOrEco(b.dataset.tg);
 });
 
@@ -729,7 +730,8 @@ function renderBarToggles() {
   $('bar-tg').innerHTML = `<button type="button" class="tg${sound ? ' on' : ''}" data-tg="sound" aria-label="Son">${sound ? ICONS.sound : ICONS.mute}</button>`
     + `<button type="button" class="tg${cfg.eco ? ' on' : ''}" data-tg="eco" aria-label="Éco">${ICONS.eco}</button>`
     + `<button type="button" class="tg tg-orient" data-tg="orient" aria-label="Orientation">${ORIENT_ICON[cfg.orient || 'normal']}</button>`
-    + `<button type="button" class="tg tg-std" data-tg="std" aria-label="Standard">${ICONS.replay}</button>`;
+    + `<button type="button" class="tg tg-std" data-tg="std" aria-label="Standard">${ICONS.replay}</button>`
+    + (inBrowser() ? `<button type="button" class="tg tg-install" data-tg="install" aria-label="Installer">${ICONS.install}</button>` : '');
 }
 
 // Play the sounds and colour flashes of a list of events, then redraw.
@@ -1105,30 +1107,65 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'visible' && s && !$('fight').hidden) { requestWakeLock(); unlockAudio(); }
 });
 
+// Install: a button on the clock (before the start) and in Réglages, only in the browser.
+// Chrome/Edge on Android and computers offer their own prompt; elsewhere (iPhone,
+// Samsung Internet, Firefox, Instagram's browser…) a tap shows the way by hand.
 let installEvent = null;
-const standalone = matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches || navigator.standalone;
+var installed = false;  // var: the clock bar is drawn before this line runs
+function inBrowser() {
+  return !installed && !(matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches || navigator.standalone);
+}
+const standalone = !inBrowser();
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   installEvent = e;
-  $('install-box').hidden = false;
-  $('btn-install').hidden = false;
 });
 // Visits: '/' in the browser, '/app' when opened from the installed app (the one way to count iPhones).
 count(standalone ? '/app' : '/');
-window.addEventListener('appinstalled', () => count('installee', true));
-$('btn-install').addEventListener('click', async () => {
-  if (!installEvent) return;
-  count('installer-tap', true);
-  installEvent.prompt();
-  const choice = await installEvent.userChoice;
-  count(choice && choice.outcome === 'accepted' ? 'installer-oui' : 'installer-non', true);
+window.addEventListener('appinstalled', () => {
+  count('installee', true);
+  installed = true;
   installEvent = null;
   $('install-box').hidden = true;
+  $('install-help').hidden = true;
+  if (s && s.phase === 'ready') renderBarToggles();
 });
-if (!standalone && /iphone|ipad|ipod/i.test(navigator.userAgent)) {
-  $('install-box').hidden = false;
-  $('install-ios').hidden = false;
+async function install() {
+  unlockAudio();
+  if (installEvent) {
+    count('installer-tap', true);
+    installEvent.prompt();
+    const choice = await installEvent.userChoice;
+    count(choice && choice.outcome === 'accepted' ? 'installer-oui' : 'installer-non', true);
+    installEvent = null;
+    return;
+  }
+  count('installer-aide', true);
+  $('install-how').innerHTML = installHow();
+  $('install-help').hidden = false;
 }
+// The steps for this phone, in its own words.
+function installHow() {
+  const ua = navigator.userAgent;
+  const b = t => `<b>${t}</b>`;
+  if (/Instagram|FBAN|FBAV|FB_IAB|Line\/|TikTok|Snapchat/i.test(ua)) {
+    return /iphone|ipad|ipod/i.test(ua)
+      ? `Ouvre d'abord dans ${b('Safari')} : ${b('⋯')} → ${b('Ouvrir dans le navigateur')}`
+      : `Ouvre d'abord dans ${b('Chrome')} : ${b('⋮')} → ${b('Ouvrir dans le navigateur')}`;
+  }
+  if (/iphone|ipad|ipod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)) {
+    return `${b('Partager')} <span class="ih-ico">${ICONS.share}</span> → ${b("Sur l'écran d'accueil")}`;
+  }
+  if (/SamsungBrowser/i.test(ua)) return `Menu ${b('☰')} → ${b('Ajouter page à')} → ${b("Écran d'accueil")}`;
+  if (/Firefox/i.test(ua)) return `Menu ${b('⋮')} → ${b('Installer')}`;
+  if (/Android/i.test(ua)) return `Menu ${b('⋮')} → ${b("Ajouter à l'écran d'accueil")}`;
+  if (/Macintosh/.test(ua) && /Safari/.test(ua) && !/Chrome/.test(ua)) return `${b('Fichier')} → ${b('Ajouter au Dock')}`;
+  return `Menu du navigateur → ${b('Installer')}`;
+}
+$('install-help').addEventListener('click', () => { $('install-help').hidden = true; });
+$('btn-install').addEventListener('click', install);
+$('install-box').hidden = standalone;
+$('btn-install').hidden = standalone;
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => {});
 
 // Slide down from anywhere (clock stopped, or Réglages scrolled to the top) to

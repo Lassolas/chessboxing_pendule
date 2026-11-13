@@ -386,6 +386,13 @@ body {
 @keyframes flash { 0% { opacity: .85; } 100% { opacity: 0; } }
 
 .install { margin-top: 8px; }
+/* Install by hand: one line, tap anywhere to close */
+.install-panel { border-color: var(--hair); padding: 22px 18px 24px; }
+.ih-title { margin: 0 0 12px; font: 600 15px var(--font-display); letter-spacing: .22em; text-transform: uppercase; color: var(--text-2); }
+.ih-how { margin: 0; font: 500 21px/1.5 var(--font-display); color: var(--bone); }
+.ih-how b { font-weight: 700; white-space: nowrap; }
+.ih-ico { display: inline-block; vertical-align: -3px; }
+.ih-ico .ic { width: 22px; height: 22px; }
 
 /* ── FLAG SCREEN: dark, winner's side in gold ── */
 .flag .half { background: #050507 !important; box-shadow: none !important; animation: none !important; filter: none !important; }
