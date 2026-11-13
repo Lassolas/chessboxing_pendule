@@ -1392,9 +1392,9 @@ function runDemo(kind) {
       await skip('On saute aux dernières secondes du round…');
       cap('0:00 : la cloche. La transition commence, en bleu.'); await sleep(2400);
       cap('Le grand chrono est celui de la transition. Le prochain round clignote dans la barre.'); await sleep(2800);
-      await skip('On saute à la fin de la transition…');
+      await skip('On saute à la fin de la transition : le claquoir à 10 s, la cloche à 0.');
       cap('Rouge = boxe. La pendule de chacun reste en petit, en haut.'); await sleep(2600);
-      await skip('Fin du round de boxe : le claquoir à 10 s, la cloche à 0.');
+      cap('Pas besoin d\'attendre : Suivant, au milieu de la barre, passe tout de suite à la suite.'); await sleep(1600); await tap('#bar-next'); lift(); await sleep(1400);
       cap('Une transition, encore…'); await sleep(1500);
       await skip('… jusqu\'à 0.', 2600);
       cap('Prêt ? La pendule attend que les gants soient enlevés : touche l\'écran.'); await sleep(2400);

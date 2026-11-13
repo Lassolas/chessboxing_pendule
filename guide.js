@@ -41,6 +41,7 @@ const CARDS = [
     <ul class="gd-steps">
       <li><b class="g-blue">Bleu</b> = transition, <b class="g-red">rouge</b> = boxe. Le grand chrono est celui du round ; la pendule de chacun reste en petit, en haut.</li>
       <li>Le claquoir (toc toc toc) sonne 10 s avant la fin, puis la cloche.</li>
+      <li><b>Suivant</b>, au milieu de la barre : passe tout de suite au round ou à la transition d'après, sans attendre la fin du chrono.</li>
       <li>Pendant la transition, le <b>prochain round clignote</b> dans la barre du milieu.</li>
       <li><b>Prêt ?</b> : avant chaque round d'échecs, la pendule attend qu'on touche l'écran, le temps d'enlever les gants.</li></ul>` },
   { t: 'Mettre en pause ou refaire le round', s: 'Pause, reprendre, refaire le round, nouveau combat', l: lives(['pause']), b: `
