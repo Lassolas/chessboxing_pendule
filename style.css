@@ -1804,3 +1804,17 @@ body.eco .tr.next, body.eco .bar-next .nx-v { -webkit-animation: none; animation
   .phase-ready .h-btns .h-set { padding: 7px 14px !important; font-size: 11px !important; }
   .phase-ready .h-logo { bottom: auto !important; top: 16px; }
 }
+/* 0.2.166 (Val): the count dots no longer sit on the logo or BLANCS / NOIRS: they go to the player's
+   bottom-right corner (the average per move has the other corner). The warning and the count turn the
+   half orange / red again, over the green of the player to move. */
+.h-counts { position: absolute; right: 16px; bottom: 14px; min-height: 0; gap: 6px; z-index: 3; }
+.h-counts:empty { display: none; }
+.h-counts .dot { width: 14px; height: 14px; }
+.phase-chess #fight .half.active.warn { background: var(--orange-bg) !important; box-shadow: inset 0 0 0 6px var(--orange) !important; }
+.phase-chess #fight .half.active.countdown { background: var(--red-bg) !important; box-shadow: inset 0 0 0 8px var(--red) !important; }
+/* the count dots always in the corner opposite the average per move */
+#fight[data-orient="right"] .half.top .h-counts, #fight[data-orient="left"] .half.bottom .h-counts { right: auto; left: 16px; }
+@media (orientation: landscape) and (max-height: 560px) {
+  #fight:not([data-orient="normal"]) .half.top .h-counts { left: auto; right: 16px; }
+  #fight:not([data-orient="normal"]) .half.bottom .h-counts { right: auto; left: 16px; }
+}
