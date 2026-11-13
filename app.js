@@ -36,6 +36,7 @@ const homeDefaults = () => ({
   v: 11,
 });
 let cfg = { ...homeDefaults(), ...(load(CFG_KEY) || {}) };
+cfg.incrementMs = Math.min(30000, cfg.incrementMs);  // the increment goes up to 30 s
 cfg.names = ['', ''];  // no player names: BLANCS / NOIRS only
 cfg.moveGraceMs = 10000;  // the count always lasts 10 s
 if (!cfg.v || cfg.v < 2) {  // v2: illegal moves off by default
@@ -130,7 +131,7 @@ const TILES = [
   { key: 'moveWarnMs', flag: 'warnOn', row: 2, icon: () => watch, label: 'Alerte', step: 1000, min: 0, max: () => Math.max(0, cfg.moveCountdownMs - 1000) },
   // Classic clock: time per player and increment, always on.
   { key: 'plainMs', icon: () => ICONS.clock, label: 'Temps', step: 30000, min: 60000, max: 3600000, on: () => true, tap: () => {}, always: true },
-  { key: 'incrementMs', icon: () => ICONS.clock, label: 'Incrément', step: 1000, min: 0, max: 60000, on: () => true, tap: () => {}, always: true },
+  { key: 'incrementMs', icon: () => ICONS.clock, label: 'Incrément', step: 1000, min: 0, max: 30000, on: () => true, tap: () => {}, always: true },
   // Count limits: rulers too, always on (no drawing to tap).
   { key: 'countsPerRound', kind: 'n', label: 'Max', sub: '/ round', step: 1, min: 1, max: 10, on: () => true, tap: () => {} },
   { key: 'countsTotal', kind: 'n', label: 'Max', sub: 'total', step: 1, min: 1, max: 20, on: () => true, tap: () => {} },
@@ -162,7 +163,7 @@ const valuesOf = t => { const v = [], max = typeof t.max === 'function' ? t.max(
 // Durées: one ruler per step, like a radio dial. Slide the scale under the
 // needle (or tap either side for one step); tap the drawing to switch the step on / off.
 const TICK_PX = 10;  // one step (10 s) of the scale
-const tickOf = t => t.kind === 'n' ? 18 : t.step === 1000 ? 5 : TICK_PX;  // counts: wider steps; seconds: finer
+const tickOf = t => t.kind === 'n' || t.key === 'incrementMs' ? 18 : t.step === 1000 ? 5 : TICK_PX;  // increment: 0 to 30 s, wide steps  // counts: wider steps; seconds: finer
 // Scale labels too close to the needle would peek out from under the value: hidden.
 const hidesLabel = (t, k, i) => Math.abs(k - i) * tickOf(t) < (t.kind === 'n' ? 26 : 46);
 function hideNear(t, el, i) { el.querySelectorAll('.rl-strip b').forEach(b => b.classList.toggle('hid', hidesLabel(t, +b.dataset.k, i))); }
@@ -171,7 +172,7 @@ function rulerHTML(t, always = false) {
   const on = always || t.on(), px = tickOf(t);
   const dim = !always && (((t.key === 'boxRoundMs' || t.key === 'breakMs') && !cfg.intervals) || (t.key === 'moveWarnMs' && !cfg.countdownOn));
   const vals = valuesOf(t), i = Math.max(0, vals.indexOf(cfg[t.key]));
-  const every = t.kind === 'n' ? 5 : t.step === 1000 ? 10000 : t.step * 6;
+  const every = t.kind === 'n' ? 5 : t.key === 'incrementMs' ? 5000 : t.step === 1000 ? 10000 : t.step * 6;
   const labels = vals.map((v, k) => v % every === 0 ? `<b data-k="${k}"${hidesLabel(t, k, i) ? ' class="hid"' : ''} style="left:${k * px}px">${fmtValue(v, t.kind)}</b>` : '').join('');
   const std = standardOf(t.key);
   // Count limits have no on / off: their name is a plain label, not a button.
