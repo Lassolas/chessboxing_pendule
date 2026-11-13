@@ -260,27 +260,42 @@ const OPTIONS = [
   ['readyCheck', () => ICONS.play, 'Prêt ?', on => on
     ? 'Attend une touche avant chaque round d\'échecs.'
     : 'Les échecs repartent seuls après la pause.'],
+  ['countdownOn', on => countIcon(on, SET_HAND), 'Comptes', on => on
+    ? 'L\'arbitre compte quand un joueur réfléchit trop.'
+    : 'Pas de compte.'],
+  ['illegalMoves', () => redFlag, 'Illégaux', on => on
+    ? 'Un drapeau sur la pendule pour les signaler.'
+    : 'Pas de bouton coup illégal.'],
+  ['showAvg', () => '<b class="avg-ico">s<small>/coup</small></b>', 'Par coup', on => on
+    ? 'Temps moyen par coup, aux pauses et à la fin.'
+    : 'Pas de temps moyen.'],
 ];
+const optOn = key => key === 'showAvg' ? cfg.showAvg !== false : !!cfg[key];
 
 const optRow = ([key, icon, label, note]) => `
-    <button type="button" class="ruler rl-opt${cfg[key] ? ' on' : ''}" data-opt="${key}" aria-pressed="${!!cfg[key]}">
-      <span class="rl-ico">${icon(cfg[key])}<small>${label}</small></span>
-      <span class="rl-note">${note(cfg[key])}</span></button>`;
+    <button type="button" class="ruler rl-opt${optOn(key) ? ' on' : ''}" data-opt="${key}" aria-pressed="${optOn(key)}">
+      <span class="rl-ico">${icon(optOn(key))}<small>${label}</small></span>
+      <span class="rl-note">${note(optOn(key))}</span></button>`;
+const optOf = key => OPTIONS.find(o => o[0] === key);
 
 const mins = ms => fmtValue(ms);
 function renderSetup() {
   document.body.className = cfg.eco ? 'eco' : '';
   document.documentElement.dataset.digits = cfg.digits;
   if (clampCount(cfg)) save(CFG_KEY, cfg);
-  $('opt-ready').innerHTML = optRow(OPTIONS[0]);
+  $('opt-ready').innerHTML = optRow(optOf('readyCheck'));
+  $('opt-ref').innerHTML = optRow(optOf('countdownOn')) + optRow(optOf('illegalMoves'));
+  $('opt-avg').innerHTML = optRow(optOf('showAvg'));
   // Comptes: the count's times and the limits (switched on from the clock). Alerte 0:00 = none.
   // The limits: five plain numbers to tap (1 to 5), no wheel.
   // The total is always above the limit per round (with rounds): the others are greyed out.
   const allowed = (k, n) => !cfg.intervals || (k === 'countsPerRound' ? n < 5 : n > cfg.countsPerRound);
   const pick = (k, label, sub) => `<div class="cnt-pick"><span class="cp-l"><small>${label}</small><em>${sub}</em></span>${[1, 2, 3, 4, 5].map(n =>
     `<button type="button" class="${cfg[k] === n ? 'on' : ''}" data-pick="${k}" data-n="${n}"${allowed(k, n) ? '' : ' disabled'}>${n}</button>`).join('')}</div>`;
-  $('chess-set').innerHTML = ['moveCountdownMs', 'moveWarnMs'].map(k => rulerHTML(tileOf(k), true)).join('')
-    + (cfg.intervals ? pick('countsPerRound', 'Max', '/ round') : '') + pick('countsTotal', 'Max', 'total');
+  // The count's times only when the count is on; the limits when counts or illegal moves are.
+  $('chess-set').innerHTML = (cfg.countdownOn ? ['moveCountdownMs', 'moveWarnMs'].map(k => rulerHTML(tileOf(k), true)).join('') : '')
+    + (cfg.countdownOn || cfg.illegalMoves ? (cfg.intervals ? pick('countsPerRound', 'Max', '/ round') : '') + pick('countsTotal', 'Max', 'total') : '');
+  $('count-note').hidden = !cfg.countdownOn;
   [['vol-alerts', 'volAlerts'], ['vol-clicks', 'volClicks']].forEach(([id, k]) => {
     $(id).value = cfg[k] ?? 100;
     $(id + '-v').textContent = cfg[k] ?? 100;
@@ -330,12 +345,18 @@ function onOptions(e) {
   const d = e.target.closest('[data-digits]');
   if (!t && !d) return;
   if (d) cfg.digits = d.dataset.digits;
-  if (t) cfg[t.dataset.opt] = !cfg[t.dataset.opt];
+  if (t) {
+    const k = t.dataset.opt;
+    cfg[k] = !optOn(k);
+    if (k === 'countdownOn' && cfg.countdownOn) cfg.warnOn = true;  // the warning comes with the count
+  }
   save(CFG_KEY, cfg);
   renderSetup();
 }
 $('digit-pick').addEventListener('click', onOptions);
 $('opt-ready').addEventListener('click', onOptions);
+$('opt-ref').addEventListener('click', onOptions);
+$('opt-avg').addEventListener('click', onOptions);
 // Volume sliders: heard at once on the next sound; a short sample when let go.
 [['vol-alerts', 'volAlerts', 'roundStart'], ['vol-clicks', 'volClicks', 'press']].forEach(([id, k, ev]) => {
   $(id).addEventListener('input', () => { cfg[k] = +$(id).value; $(id + '-v').textContent = cfg[k]; applySound(); });
@@ -372,7 +393,7 @@ function standard() {
 // Son: all sounds on or off; Éco: dark, silent. Both apply to the clock at once.
 function toggleSoundOrEco(which) {
   unlockAudio();
-  if (which === 'eco') { cfg.eco = !cfg.eco; cfg.sound = !cfg.eco; updateMotion(); }  // Éco mutes; leaving it brings the sound back
+  if (which === 'eco') { cfg.eco = !cfg.eco; updateMotion(); }  // Éco only dims: the sound stays as it is (Val)
   else cfg.sound = !cfg.sound;  // the sound can come back on in Éco too
   save(CFG_KEY, cfg);
   applySound();
@@ -447,7 +468,6 @@ function buildHalves() {
       <div class="h-up"><div class="h-phase"><small></small><b></b></div></div>
       <div class="h-clock"></div>
       <div class="h-down"><div class="h-move"></div><button type="button" class="h-set">${SET_ICON}Réglages</button><div class="h-counts"></div></div>
-      <div class="h-tgs"><button type="button" class="h-tg h-avgtg" aria-label="Temps moyen par coup"><b>s</b>/coup</button><button type="button" class="h-tg h-cnttg" aria-label="Comptes"></button><button type="button" class="h-tg h-illtg" aria-label="Coups illégaux">${redFlag}<small>Illégal</small></button></div>
       <div class="h-avg"></div>
       <div class="h-notice" hidden></div>
       <div class="h-card"><em class="hc-num"></em><span class="hc-rule"></span><b class="hc-label"></b><i class="hc-ready">Prêt ?</i></div>
@@ -463,28 +483,6 @@ function buildHalves() {
     h.querySelector('.h-set').addEventListener('click', e => {
       e.stopPropagation();
       openSettings(far());
-    });
-    // s/coup: the average per move shown or not; the hands: the counts panel.
-    h.querySelector('.h-avgtg').addEventListener('click', e => {
-      e.stopPropagation();
-      cfg.showAvg = cfg.showAvg === false;
-      save(CFG_KEY, cfg);
-      renderSetup();
-    });
-    // ✋ only switches the count on / off; its times and limits are in Réglages.
-    h.querySelector('.h-cnttg').addEventListener('click', e => {
-      e.stopPropagation();
-      cfg.countdownOn = !cfg.countdownOn;
-      if (cfg.countdownOn) cfg.warnOn = true;
-      save(CFG_KEY, cfg);
-      renderSetup();
-    });
-    // Before the start: the red flag in the corner switches illegal moves on / off.
-    h.querySelector('.h-illtg').addEventListener('click', e => {
-      e.stopPropagation();
-      cfg.illegalMoves = !cfg.illegalMoves;
-      save(CFG_KEY, cfg);
-      renderSetup();
     });
     h.querySelector('.over-undo').addEventListener('pointerdown', e => {
       e.stopPropagation();
@@ -650,18 +648,15 @@ function openSettings(flip) {
 // Before the start the bar holds round buttons: rounds, chess, boxing, pause.
 // Each part can be tapped to change it right there (see the quick panel).
 function readyInfoHTML(c) {
-  // Round buttons, all the same size: the rounds, and the clock (chess, boxing and pause times).
-  const item = (q, icon, label) => `<button type="button" class="ri ri-${q}${quickKey === q ? ' open' : ''}" data-q="${q}" aria-label="${label}">${icon}</button>`;
-  // The rounds like a wheel: the number set, the other choices peeking out at the edges.
-  // All the choices: the one set big in the middle, the others small and dim along the bottom of the dial.
-  const others = Object.keys(PRESETS).map(Number).filter(n => n !== c.rounds);
-  const ring = others.map((n, i) => `<i class="ri-peek ri-o${i}">${roman(n)}</i>`).join('');
-  return item('rounds', `<span class="ri-n${roman(c.rounds).length > 2 ? ' long' : ''}">${roman(c.rounds)}</span>` + ring, 'Rounds')
-    + item('times', ICONS.clock + timesMarks(c), 'Temps');
+  // Four circles: the number of rounds, then each step's time, with its name underneath.
+  const item = (q, val, label, off) => `<button type="button" class="rb rb-${q}${off ? ' off' : ''}${quickKey === q ? ' open' : ''}" data-q="${q}">`
+    + `<span class="rb-c">${val}</span><small class="rb-cap">${label}</small></button>`;
+  const t = (k, on, offTxt) => `<span class="rb-t">${on ? fmtValue(c[k]) : offTxt}</span>`;
+  return item('rounds', `<span class="ri-n">${roman(c.rounds)}</span>`, 'Rounds')
+    + item('chessRoundMs', t('chessRoundMs', c.intervals, '—'), 'Échecs', !c.intervals)
+    + item('boxRoundMs', t('boxRoundMs', c.intervals && c.boxTimer, '—'), 'Boxe', !(c.intervals && c.boxTimer))
+    + item('breakMs', t('breakMs', c.intervals && c.breakOn, '∞'), 'Pause', !(c.intervals && c.breakOn));
 }
-// Around the clock drawing, a ring in three arcs for the settings behind it:
-// chess (bone), boxing (red), pause (blue); an arc fades when its step is off.
-const timesMarks = c => `<span class="ri-ring${c.intervals && c.boxTimer ? '' : ' no-box'}${c.intervals && c.breakOn ? '' : ' no-pause'}"></span>`;
 // Quick panel over the waiting clock: the step's ruler, on / off and back to the
 // original time; for the rounds, the four numbers. Tap outside to close.
 let quickKey = null, quickFlip = false;
@@ -687,9 +682,8 @@ function renderQuick() {
     return;
   }
   const t = tileOf(k), on = t.on();
-  $('quick-box').innerHTML = rulerHTML(t) + `<div class="q-act">
+  $('quick-box').innerHTML = `<p class="q-t">${t.label}</p>` + rulerHTML(t) + `<div class="q-act q-act-two">
     <button type="button" class="q-btn" data-tile="${k}">${on ? 'Désactiver' : 'Activer'}</button>
-    <button type="button" class="q-btn" data-reset="${k}"${on && cfg[k] !== standardOf(k) ? '' : ' disabled'}>${ICONS.replay}${fmtValue(standardOf(k))}</button>
     <button type="button" class="q-btn q-ok" data-qclose>OK</button></div>`;
 }
 function openQuick(k, flip = false) { quickKey = k; quickFlip = flip; renderQuick(); render(); }
@@ -719,17 +713,11 @@ $('chess-set').addEventListener('click', e => {
 $('quick').addEventListener('click', onOptions);
 ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'].forEach((ev, i) =>
   $('quick').addEventListener(ev, [onRulerDown, onRulerMove, endRuler, endRuler][i]));
-// The way the digits face now: ↕ face to face, → turned right, ← turned left.
-const ORIENT_ICON = {
-  normal: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18M8 7l4-4 4 4M8 17l4 4 4-4"/></svg>',
-  right: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M17 8l4 4-4 4"/></svg>',
-  left: '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12H3M7 8l-4 4 4 4"/></svg>',
-};
 function renderBarToggles() {
   const sound = !!cfg.sound;
   $('bar-tg').innerHTML = `<button type="button" class="tg${sound ? ' on' : ''}" data-tg="sound" aria-label="Son">${sound ? ICONS.sound : ICONS.mute}</button>`
     + `<button type="button" class="tg${cfg.eco ? ' on' : ''}" data-tg="eco" aria-label="Éco">${ICONS.eco}</button>`
-    + `<button type="button" class="tg tg-orient" data-tg="orient" aria-label="Orientation">${ORIENT_ICON[cfg.orient || 'normal']}</button>`
+    + `<button type="button" class="tg tg-orient" data-tg="orient" aria-label="Orientation">${ICONS.rotate}</button>`
     + `<button type="button" class="tg tg-std" data-tg="std" aria-label="Standard">${ICONS.replay}</button>`
     + (inBrowser() ? `<button type="button" class="tg tg-install" data-tg="install" aria-label="Installer">${ICONS.install}</button>` : '');
 }
@@ -848,7 +836,6 @@ function render() {
     const move = h.querySelector('.h-move');
     if (active && cd !== null) move.innerHTML = countHands(cd);
     else if (active && stage === 'warn') move.textContent = `${Math.floor(s.moveElapsed / 1000)} s`;
-    else if (s.phase === 'ready') setHTML(move, `${ICONS.play}Touche`);
     else if (flagScreen && r.loser === p) move.textContent = `⚑ ${methodShort(r.method)}`;
     else if (flagScreen) move.textContent = r.winner === null ? '½' : 'VICTOIRE';
     else move.textContent = '';
@@ -872,8 +859,11 @@ function render() {
   // The fight as a frieze: one mark per round (square = chess, round =
   // boxing), a short dash for each pause; done, current (gold), to come.
   setHTML($('bar-round'), s.phase === 'ready' ? readyInfoHTML(s.cfg) : s.cfg.intervals ? trackHTML() : '');
-  $('bar-phase').textContent = s.phase === 'ready' ? '' : flagScreen ? methodShort(r.method)
-    : s.roundOver ? 'Temps !' : '';
+  // Under the frieze, its name: Rounds (Val), unless there is something to say.
+  const phaseTxt = s.phase === 'ready' ? '' : flagScreen ? methodShort(r.method) : s.roundOver ? 'Temps !' : '';
+  const roundsCap = !phaseTxt && s.phase !== 'ready' && s.phase !== 'over' && !!s.cfg.intervals;
+  $('bar-phase').textContent = phaseTxt || (roundsCap ? 'Rounds' : '');
+  $('bar-phase').classList.toggle('cap', roundsCap);
   setDigits($('bar-timer'), s.phase === 'ready' || s.phase === 'over' || untimed ? '' : roundClock(s.phaseRemaining), cfg.digits);
   // Lost on time or on counts: ↺ Rejouer in the middle of the bar.
   const byCounts = !!flagScreen && r.method.includes('comptes');
@@ -885,7 +875,10 @@ function render() {
   // already show the time, so it takes the timer's place; in chess the round timer stays.
   const skipTo = ['chess', 'boxing', 'break'].includes(s.phase) && !untimed && !s.awaitReady && !s.roundOver ? nextStep(s) : null;
   $('bar-next').hidden = !skipTo;
-  if (skipTo) setHTML($('bar-next'), ICONS.next + (skipTo.phase === 'break' ? ICONS.hourglass : roundTag(skipTo.round)));
+  // Its word underneath: Round suivant, Boxe (red) or Pause (blue).
+  const nextCap = t => t.phase === 'break' ? '<small class="bn-cap bn-pause">Pause</small>'
+    : roundType(t.round) === 'chess' ? '<small class="bn-cap">Round suivant</small>' : '<small class="bn-cap bn-box">Boxe</small>';
+  if (skipTo) setHTML($('bar-next'), `<span class="bn-row">${ICONS.next}${skipTo.phase === 'break' ? ICONS.hourglass : roundTag(skipTo.round)}</span>${nextCap(skipTo)}`);
   $('bar-timer').hidden = replay || (!!skipTo && s.phase !== 'chess');
   document.querySelector('.bar').classList.toggle('next-t', !!skipTo && s.phase === 'chess');
   document.querySelector('.bar-info').hidden = replay;
@@ -913,14 +906,6 @@ function render() {
   if (s.phase === 'ready') renderBarToggles();
   halves.forEach(h => {
     h.querySelector('.h-set').hidden = s.phase !== 'ready';
-    h.querySelector('.h-tgs').hidden = s.phase !== 'ready';
-    [['.h-illtg', !!s.cfg.illegalMoves], ['.h-cnttg', !!cfg.countdownOn], ['.h-avgtg', cfg.showAvg !== false]].forEach(([q, on]) => {
-      const b = h.querySelector(q);
-      b.classList.toggle('on', on);
-      b.setAttribute('aria-pressed', on);
-      // One pair of hands only: skin when on, outline when off.
-      if (q === '.h-cnttg' && b.dataset.on !== String(on)) { b.dataset.on = on; b.innerHTML = countIcon(on) + '<small>Compte</small>'; }
-    });
   });
   if (!$('pause-menu').hidden) renderPauseMenu();
   renderResult();

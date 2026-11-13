@@ -25,6 +25,7 @@ export const ICONS = {
   install: svg('<path d="M12 3.5v11"/><path d="M7.5 10.5 12 15l4.5-4.5"/><path d="M4.5 15.5v3.2c0 .9.7 1.6 1.6 1.6h11.8c.9 0 1.6-.7 1.6-1.6v-3.2"/>'),
   share: svg('<path d="M12 3.5v11"/><path d="M8 7.5l4-4 4 4"/><path d="M8.5 10H6.6c-.9 0-1.6.7-1.6 1.6v7.3c0 .9.7 1.6 1.6 1.6h10.8c.9 0 1.6-.7 1.6-1.6v-7.3c0-.9-.7-1.6-1.6-1.6h-1.9"/>'),
   addHome: svg('<rect x="4" y="4" width="16" height="16" rx="3.5"/><path d="M12 8.5v7M8.5 12h7"/>'),
+  rotate: svg('<rect x="6.6" y="8.4" width="10.8" height="7.2" rx="1.4" transform="rotate(-45 12 12)"/><path d="M3.6 13.2A8.5 8.5 0 0 1 10.8 3.6"/><path d="M8.2 2.6l2.6 1-1 2.6"/><path d="M20.4 10.8a8.5 8.5 0 0 1-7.2 9.6"/><path d="M15.8 21.4l-2.6-1 1-2.6"/>'),
   close: svg('<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>'),
 };
 
