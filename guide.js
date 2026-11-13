@@ -20,31 +20,31 @@ const CARDS = [
     <p>Pose le téléphone entre les deux joueurs : chacun a sa moitié d'écran, tournée vers lui.</p>
     <p class="gd-win">On gagne par <b>mat</b>, par <b>K.-O.</b>, au <b>temps</b> (pendule à 0), ou si l'autre prend trop de <b>comptes</b> (fiche 7).</p>` },
   { t: 'Round par round', s: "L'ordre des rounds et les deux chronos", h: frieze(), b: `
-    <ul class="gd-leg"><li><b class="gf-chess">${ICONS.pawn}</b>Échecs <em>3:00</em></li><li><i class="gf-p"></i>Pause <em>1:00</em></li><li><b class="gf-box">${ICONS.glove}</b>Boxe <em>3:00</em></li></ul>
-    <p class="gd-lead">Le combat classique fait <b>5 rounds</b> : 3 d'échecs, 2 de boxe, une pause entre chaque.</p>
+    <ul class="gd-leg"><li><b class="gf-chess">${ICONS.pawn}</b>Échecs <em>3:00</em></li><li><i class="gf-p"></i>Transition <em>1:00</em></li><li><b class="gf-box">${ICONS.glove}</b>Boxe <em>3:00</em></li></ul>
+    <p class="gd-lead">Le combat classique fait <b>5 rounds</b> : 3 d'échecs, 2 de boxe, une transition entre chaque.</p>
     <p>Il y a <b>deux chronos</b> : le <b>round</b>, le même pour les deux, et la <b>pendule</b> de chaque joueur, qui ne tourne que pendant ses coups (<b>4:30</b> pour 5 rounds, <b>6:00</b> pour 7…).</p>
     <p>Le dernier round d'échecs n'a pas de limite : il continue jusqu'à ce qu'une pendule tombe à 0.</p>` },
   { t: 'Régler le combat', s: 'Nombre de rounds, durées, installer', l: lives(['setup']), b: `
     <ul class="gd-steps">
       <li><b>Rounds</b> : touche le carré pour choisir 5, 7, 9 ou 11 rounds, ou la <b>pendule classique</b> (sans rounds, temps et incrément réglables).</li>
-      <li><b>Échecs, Boxe, Pause</b> : touche une durée, puis fais glisser la règle qui s'ouvre.</li>
+      <li><b>Échecs, Boxe, Transition</b> (la case Pause) : touche une durée, puis fais glisser la règle qui s'ouvre.</li>
       <li>${ic('replay')} remet le combat classique : 5 rounds, 3:00 / 3:00 / 1:00.</li>
       <li>${ic('install')} <b>Installer</b> : met la pendule sur l'écran d'accueil du téléphone ; elle marche ensuite sans réseau.</li></ul>
-    <p class="gd-note">Boxe à <em>0:00</em> : pas de boxe, seulement des rounds d'échecs avec des pauses.</p>` },
+    <p class="gd-note">Boxe à <em>0:00</em> : pas de boxe, seulement des rounds d'échecs avec des transitions.</p>` },
   { t: 'Jouer aux échecs', s: 'Qui a les Blancs, taper sa moitié, le vert', l: lives(['chess']), b: `
     <ul class="gd-steps">
       <li>Le premier qui touche sa moitié prend les <b>Noirs</b> : la pendule des Blancs démarre.</li>
       <li>Après ton coup, <b>touche ta moitié</b> : ta pendule s'arrête, celle de l'autre repart.</li>
       <li>La moitié <b class="g-green">verte</b> est celle du joueur qui doit jouer.</li>
       <li>En haut, <b>ROUND 2:58</b> : le temps qui reste au round. À 0, la cloche sonne.</li></ul>` },
-  { t: 'Pause et boxe', s: 'Bleu = pause, rouge = boxe, cloche, Prêt ?', l: lives(['flow']), b: `
+  { t: 'Transition et boxe', s: 'Bleu = transition, rouge = boxe, cloche, Prêt ?', l: lives(['flow']), b: `
     <ul class="gd-steps">
-      <li><b class="g-blue">Bleu</b> = pause, <b class="g-red">rouge</b> = boxe. Le grand chrono est celui du round ; la pendule de chacun reste en petit, en haut.</li>
+      <li><b class="g-blue">Bleu</b> = transition, <b class="g-red">rouge</b> = boxe. Le grand chrono est celui du round ; la pendule de chacun reste en petit, en haut.</li>
       <li>Le claquoir (toc toc toc) sonne 10 s avant la fin, puis la cloche.</li>
-      <li>Pendant la pause, le <b>prochain round clignote</b> dans la barre du milieu.</li>
+      <li>Pendant la transition, le <b>prochain round clignote</b> dans la barre du milieu.</li>
       <li><b>Prêt ?</b> : avant chaque round d'échecs, la pendule attend qu'on touche l'écran, le temps d'enlever les gants.</li></ul>` },
-  { t: 'Arrêter ou refaire', s: 'Mettre en pause, refaire le round, nouveau combat', l: lives(['pause']), b: `
-    <p class="gd-lead">Le bouton ${ic('pause')} au bout de la barre du milieu arrête tout.</p>
+  { t: 'Mettre en pause ou refaire le round', s: 'Pause, reprendre, refaire le round, nouveau combat', l: lives(['pause']), b: `
+    <p class="gd-lead">Le bouton ${ic('pause')} au bout de la barre du milieu met tout en pause.</p>
     <ul class="gd-steps">
       <li>${ic('play')} <b>GO</b> : on reprend. Toucher l'écran ailleurs reprend aussi.</li>
       <li>${ic('replay')} <b>Round</b> : refait le round en cours depuis son début.</li>
@@ -62,7 +62,7 @@ const CARDS = [
       <li><b>Éco</b> : écran noir, moins de lumière, pour garder la batterie.</li>
       <li><b>Sens</b> : face à face, ou les deux chiffres tournés du même côté. Pencher le téléphone le fait aussi.</li>
       <li><b>Chiffres</b> : le style des chiffres de la pendule.</li>
-      <li><b>Temps par coup</b> : la moyenne de chaque joueur, montrée aux pauses.</li></ul>
+      <li><b>Temps par coup</b> : la moyenne de chaque joueur, montrée aux transitions.</li></ul>
     <p class="gd-end">Bon combat !</p>` },
 ];
 

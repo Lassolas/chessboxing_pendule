@@ -1388,12 +1388,12 @@ function runDemo(kind) {
       readyClock(); act(start(s, now(), 1)); act(press(s, s.turn, now()));
       cap("Un round d'échecs se joue…"); await sleep(2000);
       act(goToNextStep(s, now()));
-      cap('Fin du round : la cloche, puis la pause, en bleu.'); await sleep(2600);
-      cap('Le grand chrono est celui de la pause. Le prochain round clignote dans la barre.'); await sleep(3000);
+      cap('Fin du round : la cloche, puis la transition, en bleu.'); await sleep(2600);
+      cap('Le grand chrono est celui de la transition. Le prochain round clignote dans la barre.'); await sleep(3000);
       act(goToNextStep(s, now()));
       cap('Rouge = boxe. La pendule de chacun reste en petit, en haut.'); await sleep(3000);
       cap('10 s avant la fin, le claquoir. Ce bouton passe tout de suite à la suite.'); await tap('#bar-next'); lift(); await sleep(1800);
-      cap('Dernières secondes de la pause…'); s.phaseRemaining = 2200; await sleep(2600);
+      cap('Dernières secondes de la transition…'); s.phaseRemaining = 2200; await sleep(2600);
       cap('Prêt ? La pendule attend que les gants soient enlevés : touche l\'écran.'); await sleep(2400);
       await tap('#pm-resume'); lift();
       cap("La cloche : le round d'échecs repart."); await sleep(2600);
@@ -1401,18 +1401,18 @@ function runDemo(kind) {
     async pause() {
       readyClock(); act(start(s, now(), 1)); act(press(s, s.turn, now()));
       cap('Le combat tourne.'); await sleep(1600);
-      cap('Ce bouton, au bout de la barre, arrête tout.'); await tap('#bar-btn'); lift(); await sleep(2000);
+      cap('Pause : le bouton au bout de la barre arrête tout.'); await tap('#bar-btn'); lift(); await sleep(2000);
       cap('Round : refait le round depuis son début.'); await tap('#pm-round'); lift(); await sleep(1800);
       cap('GO, ou toucher ailleurs : on reprend.'); await tap('#pm-resume'); lift(); await sleep(2000);
-      cap('Après un mat ou un K.-O. : arrête, puis Accueil.'); await tap('#bar-btn'); await sleep(500); await tap('#pm-restart'); lift(); await sleep(1400);
+      cap('Après un mat ou un K.-O. : pause, puis Accueil.'); await tap('#bar-btn'); await sleep(500); await tap('#pm-restart'); lift(); await sleep(1400);
       cap('Accueil : une pendule neuve, prête pour le combat suivant.'); await sleep(2200);
     },
     async referee() {
       Object.assign(cfg, { countdownOn: true, warnOn: true, illegalMoves: true });
       readyClock(); act(start(s, now(), 1));
       cap('Les Blancs réfléchissent…'); await sleep(1500);
-      s.moveElapsed = s.cfg.moveWarnMs + 100; cap("Trop long : un toc d'alerte, la moitié devient orange."); await sleep(2600);
-      s.moveElapsed = s.cfg.moveCountdownMs + 300; cap("Puis la pendule compte 10 s, comme un arbitre. À 0, combat perdu."); await sleep(3200);
+      s.moveElapsed = s.cfg.moveWarnMs - 300; cap("Trop long : un toc d'alerte, la moitié devient orange."); await sleep(2600);
+      s.moveElapsed = s.cfg.moveCountdownMs - 300; cap("Puis la pendule compte 10 s, comme un arbitre. À 0, combat perdu."); await sleep(3200);
       cap('Il joue à temps : le compte est noté (point rouge).'); await tap('.half.bottom', .5, .45); lift(); await sleep(2400);
       cap('Les Noirs jouent un coup illégal : les Blancs touchent le drapeau de leur moitié.'); await tap('.half.bottom .illegal-btn'); lift(); await sleep(2800);
       cap('Les Noirs rejouent et prennent un compte. 3 dans un round ou 4 au total : perdu.'); await sleep(2800);
@@ -1423,7 +1423,7 @@ function runDemo(kind) {
       cap('Son : coupe ou remet tous les sons.'); await tap('#set-quick .sq:nth-child(1)'); await sleep(900); await tap('#set-quick .sq:nth-child(1)'); lift(); await sleep(900);
       cap('Éco : écran noir, pour garder la batterie.'); await tap('#set-quick .sq:nth-child(2)'); lift(); await sleep(1600); await tap('#set-quick .sq:nth-child(2)'); lift(); await sleep(700);
       cap('Sens : face à face, ou les deux chiffres du même côté.'); await tap('#set-quick .sq:nth-child(3)'); lift(); await sleep(1800);
-      cap("Plus bas : l'arbitre, la pause Prêt ?, les chiffres, les volumes.");
+      cap("Plus bas : l'arbitre, Prêt ?, les chiffres, les volumes.");
       $('digit-pick').scrollIntoView({ behavior: 'smooth', block: 'center' }); await sleep(2600);
     },
   };
